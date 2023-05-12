@@ -70,7 +70,7 @@ const generateSchemas = (Model, tags) => {
   }
 
   const getOrderByEnumValues = () => {
-    const sortFields = [...Object.keys(properties), 'createdAt', 'updatedAt']
+    const sortFields = Object.keys(properties)
     return sortFields.map((field) =>
       field.startsWith('-') ? field.substr(1) : field
     )
@@ -155,7 +155,7 @@ const generateSchemas = (Model, tags) => {
         //       }
         //     }
         //   },
-        //   responses: responseWrapper(
+        //   responses: resolveResponses(
         //     Model.name,
         //     201,
         //     getRequestProperties(),
@@ -166,7 +166,7 @@ const generateSchemas = (Model, tags) => {
       // [`/api/${resourcePlural}/{id}`]: {
       //   get: {
       //     summary: `Get ${Model.name} by ID`,
-      //     responses: responseWrapper(Model.name, 200, getRequestProperties())
+      //     responses: resolveResponses(Model.name, 200, getRequestProperties())
       //   },
       //   put: {
       //     summary: `Update ${Model.name}`,
@@ -180,10 +180,10 @@ const generateSchemas = (Model, tags) => {
       //         }
       //       }
       //     },
-      //     responses: responseWrapper(Model.name, 200, getRequestProperties()),
+      //     responses: resolveResponses(Model.name, 200, getRequestProperties()),
       //     delete: {
       //       summary: `Delete ${Model.name}`,
-      //       responses: responseWrapper(Model.name, 200, getRequestProperties())
+      //       responses: resolveResponses(Model.name, 200, getRequestProperties())
       //     }
       //   }
       // }
@@ -200,7 +200,7 @@ const generateSchemas = (Model, tags) => {
       //           }
       //         }
       //       ],
-      //       responses: responseWrapper('Health', 200, {
+      //       responses: resolveResponses('Health', 200, {
       //         status: { type: 'string' }
       //       })
       //     }

@@ -1,11 +1,11 @@
 const { getAll, getOne, create, update, remove } = require('./routes')
 
-function queryToProperties (schema) {
-  const properties = {}
-  Object.entries(schema).forEach(([_, { name, ...value }]) => {
-    properties[name] = value
+function queryToProperties (properties) {
+  const newProperties = {}
+  Object.entries(properties).forEach(([_, { name, ...value }]) => {
+    newProperties[name] = value.schema
   })
-  return properties
+  return newProperties
 }
 
 function responseToProperties (properties) {
@@ -65,20 +65,17 @@ module.exports.createRoute = ({ fastify, paths, model }) => {
       }
 
       // if (operation.requestBody) {
-      //   route.schema.body = {
-      //     type: 'object',
-      //     properties: toProperties(
-      //       operation.requestBody.content['application/json'].schema
-      //     )
-      //   }
+      //   route.schema.body = responseToProperties(
+      //     operation.requestBody.content['application/json'].schema
+      //   )
       // }
 
-      // if (operation.parameters) {
-      //   const query = operation.parameters.filter((p) => p.in === 'query')
-      //   if (query.length > 0) {
-      //     route.schema.querystring = queryToProperties(query)
-      //   }
-      // }
+      if (operation.parameters) {
+        const query = operation.parameters.filter((p) => p.in === 'query')
+        if (query.length > 0) {
+          route.schema.querystring = queryToProperties(query)
+        }
+      }
 
       fastify.route(route)
     })
