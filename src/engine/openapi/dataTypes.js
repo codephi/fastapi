@@ -68,7 +68,62 @@ const dataTypes = {
   },
   JSONB: {
     type: 'object'
+  },
+  VARCHAR: {
+    type: 'string'
+  },
+  'DOUBLE PRECISION': {
+    type: 'number'
+  },
+  'TIMESTAMP WITH TIME ZONE': {
+    type: 'string',
+    format: 'date-time'
+  },
+  'TIMESTAMP WITHOUT TIME ZONE': {
+    type: 'string',
+    format: 'date-time'
+  },
+  'TIME WITH TIME ZONE': {
+    type: 'string',
+    format: 'time'
+  },
+  'TIME WITHOUT TIME ZONE': {
+    type: 'string',
+    format: 'time'
   }
+
 }
 
-module.exports.dataTypes = dataTypes
+const convertType = (sequelizeType) => {
+  const propertyType = dataTypes[sequelizeType]
+  if (propertyType === undefined) {
+    const occurrence = sequelizeType.search(/[([]/)
+
+    if (occurrence > -1) {
+      const complex = sequelizeType.split(/[([]/)
+      const type = complex[0]
+      const lengthString = complex[1].split(/[)\]]/)[0]
+
+      const maxLength = parseInt(lengthString) || undefined
+
+      const typeDefinition = dataTypes[type]
+
+      if (typeDefinition !== undefined) {
+        if (type !== 'DECIMAL' && maxLength !== undefined) {
+          return {
+            ...typeDefinition,
+            maxLength
+          }
+        }
+
+        return typeDefinition
+      }
+    }
+
+    throw new Error(`Unknown data type: ${sequelizeType}`)
+  }
+
+  return propertyType
+}
+
+module.exports.convertType = convertType

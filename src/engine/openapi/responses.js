@@ -1,28 +1,29 @@
-const statusCodeErrors = require('./statusCodeErrors')
+function errorSchema (description) {
+  return {
+    description,
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            type: { type: 'string' },
+            title: { type: 'string' },
+            status: { type: 'integer' },
+            detail: { type: 'string' }
+          }
+        }
+      }
+    }
+  }
+}
 
-const responseWrapper = (
+const resolveResponses = (
   resourceName,
   defaultSuccessStatusCode,
   successProperties,
   conflict = false
 ) => {
-  const conflictResponse = conflict
-    ? {
-        409: {
-          description: 'Conflict',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: statusCodeErrors.conflict()
-              }
-            }
-          }
-        }
-      }
-    : {}
-
-  return {
+  const responses = {
     [defaultSuccessStatusCode]: {
       description: `Response for get ${resourceName}`,
       content: {
@@ -33,64 +34,24 @@ const responseWrapper = (
           }
         }
       }
-    },
-    400: {
-      description: 'Bad Request',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: statusCodeErrors.badRequest()
-          }
-        }
-      }
-    },
-    401: {
-      description: 'Unauthorized',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: statusCodeErrors.unauthorized()
-          }
-        }
-      }
-    },
-    403: {
-      description: 'Forbidden',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: statusCodeErrors.forbidden()
-          }
-        }
-      }
-    },
-    404: {
-      description: 'Not Found',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: statusCodeErrors.notFound()
-          }
-        }
-      }
-    },
-    ...conflictResponse,
-    500: {
-      description: 'Internal Server Error',
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: statusCodeErrors.internalServerError()
-          }
-        }
-      }
     }
   }
+
+  const errors = {
+    400: 'Bad Request',
+    401: 'Unauthorized',
+    403: 'Forbidden',
+    404: 'Not Found',
+    409: 'Conflict',
+    500: 'Internal Server Error'
+  }
+
+  Object.keys(errors).forEach((statusCode) => {
+    const description = errors[statusCode]
+    responses[statusCode] = errorSchema(description)
+  })
+
+  return responses
 }
 
-module.exports.responseWrapper = responseWrapper
+module.exports.resolveResponses = resolveResponses
