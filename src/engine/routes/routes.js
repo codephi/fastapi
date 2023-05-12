@@ -1,5 +1,5 @@
 const { Op } = require('sequelize')
-const fastify = require('../middle/serve')
+const fastify = require('../../middle/serve')
 
 const getAll = (Model, resourceName) => async (request, reply) => {
   try {

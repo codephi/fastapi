@@ -1,5 +1,5 @@
 const os = require('os')
-const sequelize = require('../middle/database')
+const sequelize = require('../../middle/database')
 
 const health = {
   method: 'GET',

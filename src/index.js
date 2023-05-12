@@ -1,8 +1,11 @@
-require('dotenv').config()
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
+
 const { fastify, start } = require('./middle/serve')
-const { generateSchemas } = require('./engine/generateSchemas')
+const { generateSchemas } = require('./engine/openapi')
 const { Example } = require('./models/Example')
-const { createRoute } = require('./routes')
+const { createRoute } = require('./engine/routes')
 const tags = {
   list: ['List'],
   create: ['Create']
