@@ -141,70 +141,70 @@ const generateSchemas = (Model, tags) => {
             200,
             getAllResponseProperties()
           )
+        },
+        post: {
+          summary: `Create ${Model.name}`,
+          tags: tags.create || [],
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: getPostRequestProperties()
+                }
+              }
+            }
+          },
+          responses: resolveResponses(
+            Model.name,
+            201,
+            getRequestProperties(),
+            true
+          )
         }
-        // post: {
-        //   summary: `Create ${Model.name}`,
-        //   tags: tags.create || [],
-        //   requestBody: {
-        //     content: {
-        //       'application/json': {
-        //         schema: {
-        //           type: 'object',
-        //           properties: getPostRequestProperties()
-        //         }
-        //       }
-        //     }
-        //   },
-        //   responses: resolveResponses(
-        //     Model.name,
-        //     201,
-        //     getRequestProperties(),
-        //     true
-        //   )
-        // }
+      },
+      [`/api/${resourcePlural}/{id}`]: {
+        get: {
+          summary: `Get ${Model.name} by ID`,
+          responses: resolveResponses(Model.name, 200, getRequestProperties())
+        },
+        put: {
+          summary: `Update ${Model.name}`,
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: getPutRequestProperties()
+                }
+              }
+            }
+          },
+          responses: resolveResponses(Model.name, 200, getRequestProperties()),
+          delete: {
+            summary: `Delete ${Model.name}`,
+            responses: resolveResponses(Model.name, 200, getRequestProperties())
+          }
+        }
+      },
+      '/api/health': {
+        get: {
+          summary: 'Health check',
+          parameters: [
+            {
+              name: 'infos',
+              in: 'query',
+              description: 'Show health check infos',
+              schema: {
+                type: 'boolean'
+              }
+            }
+          ],
+          responses: resolveResponses('Health', 200, {
+            status: { type: 'string' }
+          })
+        }
       }
-      // [`/api/${resourcePlural}/{id}`]: {
-      //   get: {
-      //     summary: `Get ${Model.name} by ID`,
-      //     responses: resolveResponses(Model.name, 200, getRequestProperties())
-      //   },
-      //   put: {
-      //     summary: `Update ${Model.name}`,
-      //     requestBody: {
-      //       content: {
-      //         'application/json': {
-      //           schema: {
-      //             type: 'object',
-      //             properties: getPutRequestProperties()
-      //           }
-      //         }
-      //       }
-      //     },
-      //     responses: resolveResponses(Model.name, 200, getRequestProperties()),
-      //     delete: {
-      //       summary: `Delete ${Model.name}`,
-      //       responses: resolveResponses(Model.name, 200, getRequestProperties())
-      //     }
-      //   }
-      // }
-      //   '/api/health': {
-      //     get: {
-      //       summary: 'Health check',
-      //       parameters: [
-      //         {
-      //           name: 'infos',
-      //           in: 'query',
-      //           description: 'Show health check infos',
-      //           schema: {
-      //             type: 'boolean'
-      //           }
-      //         }
-      //       ],
-      //       responses: resolveResponses('Health', 200, {
-      //         status: { type: 'string' }
-      //       })
-      //     }
-      //   }
     }
   }
 }

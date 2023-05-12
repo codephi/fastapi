@@ -42,8 +42,11 @@ const resolveResponses = (
     401: 'Unauthorized',
     403: 'Forbidden',
     404: 'Not Found',
-    409: 'Conflict',
     500: 'Internal Server Error'
+  }
+
+  if (conflict) {
+    errors[409] = 'Conflict'
   }
 
   Object.keys(errors).forEach((statusCode) => {

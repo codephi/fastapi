@@ -10,7 +10,7 @@ function queryToProperties (properties) {
 
 function responseToProperties (properties) {
   const newProperties = {}
-  Object.entries(properties).map(([key, value]) => {
+  Object.entries(properties).forEach(([key, value]) => {
     newProperties[key] = propertiesToItems(value)
   })
   return newProperties
@@ -64,11 +64,11 @@ module.exports.createRoute = ({ fastify, paths, model }) => {
         }
       }
 
-      // if (operation.requestBody) {
-      //   route.schema.body = responseToProperties(
-      //     operation.requestBody.content['application/json'].schema
-      //   )
-      // }
+      if (operation.requestBody) {
+        route.schema.body = responseToProperties(
+          operation.requestBody.content['application/json'].schema
+        )
+      }
 
       if (operation.parameters) {
         const query = operation.parameters.filter((p) => p.in === 'query')
