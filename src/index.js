@@ -30,7 +30,7 @@ start(async (err, address) => {
 
   fastify.log.info(`Server listening on ${address}`)
 
-  if (process.env.DB_EST_CONNECTION_OFF === 'true') {
+  if (process.env.DB_TEST_CONNECTION !== 'off') {
     try {
       await testDatabaseConnection()
       fastify.log.info('Database connection established')
