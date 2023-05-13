@@ -1,4 +1,19 @@
-module.exports = (schemas) => {
+module.exports = (pathSchema) => {
+  const openapi = {
+    openapi: '3.0.0',
+    info: {
+      title: process.env.APP_NAME || 'Fastapi',
+      description: process.env.APP_DESCRIPTION || 'Fastapi',
+      version: process.env.APP_VERSION || '1.0.0'
+    },
+    servers: [
+      {
+        url: process.env.APP_URL || 'http://localhost:3000'
+      }
+    ],
+    paths: resolvePaths(pathSchema)
+  }
+
   return {
     paths: {
       '/documentation/json': {
@@ -10,21 +25,17 @@ module.exports = (schemas) => {
       }
     },
     handler: (_request, reply) => {
-      const openapi = {
-        openapi: '3.0.0',
-        info: {
-          title: process.env.APP_NAME || 'Fastapi',
-          description: process.env.APP_DESCRIPTION || 'Fastapi',
-          version: process.env.APP_VERSION || '1.0.0'
-        },
-        servers: [
-          {
-            url: process.env.SERVER_URL || 'http://localhost:3000'
-          }
-        ],
-        paths: schemas
-      }
       reply.send(openapi)
     }
   }
+}
+
+const resolvePaths = (schemas) => {
+  Object.keys(schemas).forEach((path) => {
+    schemas[path].servers = [
+      {
+        url: process.env.APP_URL || 'http://localhost:3000'
+      }
+    ]
+  })
 }
