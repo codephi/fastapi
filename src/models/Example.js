@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize')
-const sequelize = require('../middle/database')
+const { sequelize } = require('../middle/database')
 
 const Example = sequelize.define('Example', {
   stringField: {

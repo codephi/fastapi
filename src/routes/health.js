@@ -1,5 +1,5 @@
 const os = require('os')
-const sequelize = require('../middle/database')
+const { sequelize } = require('../middle/database')
 const { resolveResponses } = require('../engine/openapi/responses')
 
 module.exports = {
@@ -23,67 +23,71 @@ module.exports = {
           }
         ],
         responses: resolveResponses('health', 200, {
-          200: {
+          server: {
             type: 'object',
             properties: {
-              server: {
-                type: 'object',
-                properties: {
-                  platform: { type: 'string' },
-                  release: { type: 'string' },
-                  arch: { type: 'string' },
-                  uptime: { type: 'number' },
-                  cpus: { type: 'number' }
-                }
-              },
-              memory: {
-                type: 'object',
-                properties: {
-                  total: { type: 'number' },
-                  free: { type: 'number' },
-                  used: { type: 'number' },
-                  active: { type: 'number' },
-                  available: { type: 'number' }
-                }
-              },
-              process: {
-                type: 'object',
-                properties: {
-                  pid: { type: 'number' },
-                  uptime: { type: 'number' },
-                  versions: { type: 'object' },
-                  memoryUsage: { type: 'object' }
-                }
-              },
-              os: {
-                type: 'object',
-                properties: {
-                  hostname: { type: 'string' },
-                  type: { type: 'string' },
-                  platform: { type: 'string' },
-                  release: { type: 'string' },
-                  arch: { type: 'string' },
-                  uptime: { type: 'number' },
-                  cpus: { type: 'number' }
-                }
-              },
-              database: {
-                type: 'object',
-                properties: {
-                  dialect: { type: 'string' },
-                  host: { type: 'string' },
-                  port: { type: 'number' },
-                  database: { type: 'string' },
-                  username: { type: 'string' }
-                }
-              }
+              platform: { type: 'string' },
+              release: { type: 'string' },
+              arch: { type: 'string' },
+              uptime: { type: 'number' },
+              cpus: { type: 'number' }
             }
-          }
+          },
+          memory: {
+            type: 'object',
+            properties: {
+              total: { type: 'number' },
+              free: { type: 'number' },
+              used: { type: 'number' },
+              active: { type: 'number' },
+              available: { type: 'number' }
+            }
+          },
+          process: {
+            type: 'object',
+            properties: {
+              pid: { type: 'number' },
+              uptime: { type: 'number' },
+              versions: { type: 'object' },
+              memoryUsage: { type: 'object' }
+            }
+          },
+          os: {
+            type: 'object',
+            properties: {
+              hostname: { type: 'string' },
+              type: { type: 'string' },
+              platform: { type: 'string' },
+              release: { type: 'string' },
+              arch: { type: 'string' },
+              uptime: { type: 'number' },
+              cpus: { type: 'number' }
+            }
+          },
+          container: {
+            type: 'object',
+            properties: {
+              image: { type: 'string' },
+              version: { type: 'string' },
+              containerId: { type: 'string' }
+            }
+          },
+          database: {
+            type: 'object',
+            properties: {
+              dialect: { type: 'string' },
+              host: { type: 'string' },
+              port: { type: 'number' },
+              database: { type: 'string' },
+              username: { type: 'string' }
+            }
+          },
+          status: { type: 'string' }
         })
       }
     }
   },
-  handler: async (request, reply) => {
+  handler: (request, reply) => {
     const { info } = request.query
 
     if (info === 'all') {
@@ -123,16 +127,23 @@ module.exports = {
         database: sequelize.config.database,
         username: sequelize.config.username
       }
-      reply.status(200).send({
+      const container = {
+        image: process.env.IMAGE,
+        version: process.env.VERSION,
+        containerId: process.env.HOSTNAME
+      }
+
+      reply.send({
         server: serverInfo,
         memory: memoryInfo,
-
         process: processInfo,
         os: osInfo,
-        database: databaseInfo
+        database: databaseInfo,
+        container,
+        status: 'ok'
       })
     } else {
-      reply.status(200).send({ status: 'ok' })
+      reply.send({ status: 'ok' })
     }
   }
 }

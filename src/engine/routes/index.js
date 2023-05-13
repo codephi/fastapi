@@ -26,6 +26,8 @@ const propertiesToItems = (value) => {
 }
 
 const resolveResponses = (responses) => {
+  if (!responses) return {}
+
   const response = {}
   Object.entries(responses).forEach(([code, { description, content }]) => {
     response[code] = {

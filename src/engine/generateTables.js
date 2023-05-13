@@ -1,5 +1,5 @@
 require('dotenv').config()
-const sequelize = require('./database')
+const { sequelize } = require('./database')
 // eslint-disable-next-line no-unused-vars
 const Client = require('./models/Client')
 // eslint-disable-next-line no-unused-vars
