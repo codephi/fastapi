@@ -13,7 +13,8 @@
     "fastify": "^4.17.0",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.31.1"
+    "sequelize": "^6.31.1",
+    "supertest": "^6.3.3"
   },
   "devDependencies": {
     "dotenv": "^16.0.3",

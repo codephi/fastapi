@@ -10,7 +10,10 @@ const { testDatabaseConnection } = require('./middle/database')
 
 const tags = {
   list: ['List'],
-  create: ['Create']
+  create: ['Create'],
+  delete: ['Delete'],
+  update: ['Update'],
+  get: ['Get']
 }
 
 const openApiSchema = generateSchemas(Example, tags)
@@ -21,6 +24,9 @@ createRouteHandler({ fastify, ...health })
 
 const openapi = require('./routes/openapi')({ ...openApiSchema.paths, ...health.paths })
 createRouteHandler({ fastify, ...openapi })
+
+// const apiTest = require('./routes/test')({ ...openApiSchema.paths })
+// createRouteHandler({ fastify, ...apiTest })
 
 start(async (err, address) => {
   if (err) {
