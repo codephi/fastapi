@@ -9,7 +9,6 @@ module.exports = {
         tags: ['Health'],
         summary: 'Get health information',
         description: 'Get health information',
-        operationId: 'getHealth',
         parameters: [
           {
             name: 'info',
@@ -17,9 +16,23 @@ module.exports = {
             description: 'Get all information',
             required: false,
             schema: {
-              type: 'string',
-              enum: ['all', 'off']
-            }
+              type: 'array',
+              items: {
+                type: 'string'
+              }
+            },
+            style: 'form',
+            explode: true,
+            collectionFormat: 'csv',
+            default: [
+              'all',
+              'status',
+              'memory',
+              'process',
+              'os',
+              'container',
+              'database'
+            ]
           }
         ],
         responses: resolveResponses('health', 200, {
@@ -90,60 +103,141 @@ module.exports = {
   handler: (request, reply) => {
     const { info } = request.query
 
-    if (info === 'all') {
-      const serverInfo = {
-        platform: os.platform(),
-        release: os.release(),
-        arch: os.arch(),
-        uptime: os.uptime(),
-        cpus: os.cpus().length
-      }
-      const memoryInfo = {
-        total: os.totalmem(),
-        free: os.freemem(),
-        used: os.totalmem() - os.freemem(),
-        active: os.totalmem() - os.freemem(),
-        available: os.totalmem() - os.freemem()
-      }
-      const processInfo = {
-        pid: process.pid,
-        uptime: process.uptime(),
-        versions: process.versions,
-        memoryUsage: process.memoryUsage()
-      }
-      const osInfo = {
-        hostname: os.hostname(),
-        type: os.type(),
-        platform: os.platform(),
-        release: os.release(),
-        arch: os.arch(),
-        uptime: os.uptime(),
-        cpus: os.cpus().length
-      }
-      const databaseInfo = {
-        dialect: sequelize.getDialect(),
-        host: sequelize.config.host,
-        port: sequelize.config.port,
-        database: sequelize.config.database,
-        username: sequelize.config.username
-      }
-      const container = {
-        image: process.env.IMAGE,
-        version: process.env.VERSION,
-        containerId: process.env.HOSTNAME
-      }
-
+    if (info === undefined) {
+      reply.send({ status: 'ok' })
+    } else if (info === 'all') {
       reply.send({
-        server: serverInfo,
-        memory: memoryInfo,
-        process: processInfo,
-        os: osInfo,
-        database: databaseInfo,
-        container,
+        memory: getMemoryInfo(),
+        process: getProcessInfo(),
+        os: getOsInfo(),
+        database: getDatabaseInfo(),
+        container: getContainerInfo(),
+        app: getAppInfo(),
         status: 'ok'
       })
     } else {
-      reply.send({ status: 'ok' })
+      const response = { status: 'ok' }
+
+      info.forEach(element => {
+        switch (element) {
+          case 'memory':
+            response.memory = getMemoryInfo()
+            break
+          case 'process':
+            response.process = getProcessInfo()
+            break
+          case 'os':
+            response.os = getOsInfo()
+            break
+          case 'database':
+            response.database = getDatabaseInfo()
+            break
+          case 'container':
+            response.container = getContainerInfo()
+            break
+          case 'app':
+            response.app = getAppInfo()
+            break
+          case 'all':
+            response.memory = getMemoryInfo()
+            response.process = getProcessInfo()
+            response.os = getOsInfo()
+            response.database = getDatabaseInfo()
+            response.container = getContainerInfo()
+            response.app = getAppInfo()
+            break
+        }
+      })
+
+      reply.send(response)
     }
+  }
+}
+
+const getMemoryInfo = () => {
+  const total = os.totalmem()
+  const free = os.freemem()
+  const used = total - free
+  const active = total - free
+  const available = total - free
+
+  return {
+    total,
+    free,
+    used,
+    active,
+    available
+  }
+}
+
+const getProcessInfo = () => {
+  const pid = process.pid
+  const uptime = process.uptime()
+  const versions = process.versions
+  const memoryUsage = process.memoryUsage()
+
+  return {
+    pid,
+    uptime,
+    versions,
+    memoryUsage
+  }
+}
+
+const getOsInfo = () => {
+  const hostname = os.hostname()
+  const type = os.type()
+  const platform = os.platform()
+  const release = os.release()
+  const arch = os.arch()
+  const uptime = os.uptime()
+  const cpus = os.cpus().length
+
+  return {
+    hostname,
+    type,
+    platform,
+    release,
+    arch,
+    uptime,
+    cpus
+  }
+}
+
+const getDatabaseInfo = () => {
+  const dialect = sequelize.getDialect()
+  const host = sequelize.config.host
+  const port = sequelize.config.port
+  const database = sequelize.config.database
+  const username = sequelize.config.username
+
+  return {
+    dialect,
+    host,
+    port,
+    database,
+    username
+  }
+}
+
+const getContainerInfo = () => {
+  const image = process.env.IMAGE
+  const version = process.env.VERSION
+  const containerId = process.env.HOSTNAME
+
+  return {
+    image,
+    version,
+    containerId
+  }
+}
+
+const getAppInfo = () => {
+  const image = process.env.NAME
+  const version = process.env.VERSION
+
+  return {
+    image,
+    version
   }
 }

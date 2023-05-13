@@ -12,13 +12,8 @@ const sequelize = new Sequelize(
   }
 )
 
-const testDatabaseConnection = async (fastify) => {
-  try {
-    await sequelize.authenticate()
-    fastify.log.info('Database connection has been established successfully.')
-  } catch (error) {
-    fastify.log.error('Unable to connect to the database:', error)
-  }
+const testDatabaseConnection = (fastify) => {
+  sequelize.authenticate()
 }
 
 module.exports = {

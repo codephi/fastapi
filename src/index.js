@@ -14,16 +14,29 @@ const tags = {
 }
 
 const openApiSchema = generateSchemas(Example, tags)
-// createRouteModel({ fastify, paths: openApiSchema.paths, model: Example })
+createRouteModel({ fastify, paths: openApiSchema.paths, model: Example })
 
 const health = require('./routes/health')
 createRouteHandler({ fastify, ...health })
 
-start((err, address) => {
+const openapi = require('./routes/openapi')({ ...openApiSchema.paths, ...health.paths })
+createRouteHandler({ fastify, ...openapi })
+
+start(async (err, address) => {
   if (err) {
     fastify.log.error(err)
     process.exit(1)
   }
 
   fastify.log.info(`Server listening on ${address}`)
+
+  if (process.env.DB_EST_CONNECTION_OFF === 'true') {
+    try {
+      await testDatabaseConnection()
+      fastify.log.info('Database connection established')
+    } catch (error) {
+      fastify.log.error('Unable to connect to the database:', error)
+      process.exit(1)
+    }
+  }
 })

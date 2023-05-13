@@ -2,7 +2,7 @@ const { getAll, getOne, create, update, remove } = require('./routes')
 
 const queryToProperties = (properties) => {
   const newProperties = {}
-  Object.entries(properties).forEach(([_, { name, ...value }]) => {
+  properties.forEach(({ name, ...value }) => {
     newProperties[name] = value.schema
   })
   return newProperties
@@ -33,7 +33,9 @@ const resolveResponses = (responses) => {
     response[code] = {
       description,
       type: 'object',
-      properties: responseToProperties(content['application/json'].schema.properties)
+      properties: responseToProperties(
+        content['application/json'].schema.properties
+      )
     }
   })
   return response
@@ -76,7 +78,11 @@ const createRoute = ({ fastify, path, method, handler }) => {
   if (operation.parameters) {
     const query = operation.parameters.filter((p) => p.in === 'query')
     if (query.length > 0) {
-      route.schema.querystring = queryToProperties(query)
+      const querySchema = {
+        type: 'object',
+        properties: queryToProperties(query)
+      }
+      route.schema.querystring = querySchema
     }
   }
 
@@ -99,5 +105,6 @@ const createRouteHandler = ({ fastify, paths, handler }) => {
     })
   })
 }
+
 module.exports.createRouteHandler = createRouteHandler
 module.exports.createRouteModel = createRouteModel

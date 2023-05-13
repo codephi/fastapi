@@ -77,11 +77,6 @@ const generateSchemas = (Model, tags) => {
   }
 
   return {
-    openapi: '3.0.0',
-    info: {
-      title: 'API Documentation',
-      version: '1.0.0'
-    },
     paths: {
       [`/api/${resourcePlural}`]: {
         get: {
@@ -183,26 +178,12 @@ const generateSchemas = (Model, tags) => {
           responses: resolveResponses(Model.name, 200, getRequestProperties()),
           delete: {
             summary: `Delete ${Model.name}`,
-            responses: resolveResponses(Model.name, 200, getRequestProperties())
+            responses: resolveResponses(
+              Model.name,
+              200,
+              getRequestProperties()
+            )
           }
-        }
-      },
-      '/api/health': {
-        get: {
-          summary: 'Health check',
-          parameters: [
-            {
-              name: 'infos',
-              in: 'query',
-              description: 'Show health check infos',
-              schema: {
-                type: 'boolean'
-              }
-            }
-          ],
-          responses: resolveResponses('Health', 200, {
-            status: { type: 'string' }
-          })
         }
       }
     }
