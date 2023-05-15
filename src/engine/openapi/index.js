@@ -1,2 +1,1 @@
-
-module.exports.generateSchemas = require('./generateSchema').generateSchemas
+module.exports.generateSchemas = require('./generateSchema').generateSchemas;

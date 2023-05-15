@@ -1,4 +1,4 @@
-const { Sequelize } = require('sequelize')
+const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
   process.env.DB_NAME,
@@ -8,15 +8,15 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: 'postgres',
-    logging: false
+    logging: false,
   }
-)
+);
 
 const testDatabaseConnection = (fastify) => {
-  sequelize.authenticate()
-}
+  sequelize.authenticate();
+};
 
 module.exports = {
   sequelize,
-  testDatabaseConnection
-}
+  testDatabaseConnection,
+};

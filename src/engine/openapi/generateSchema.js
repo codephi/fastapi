@@ -1,34 +1,48 @@
-const { convertType } = require('./dataTypes')
-const { resolveResponses } = require('./responses')
+const { convertType } = require('./dataTypes');
+const { resolveResponses } = require('./responses');
+
+const resolveTags = (Model, tags = []) => {
+  const resourceName = Model.name.toLowerCase();
+
+  tags.map((tag) => {
+    if (tag.indexOf('$name') !== -1) {
+      return tag.replace('$name', resourceName);
+    }
+
+    return tag;
+  });
+
+  return tags;
+};
 
 const generateSchemas = (Model, tags) => {
-  const resourceName = Model.name.toLowerCase()
+  const resourceName = Model.name.toLowerCase();
   const resourcePlural = resourceName.endsWith('s')
     ? resourceName
-    : `${resourceName}s`
-  const attributeKeys = Object.keys(Model.rawAttributes)
-  const properties = {}
+    : `${resourceName}s`;
+  const attributeKeys = Object.keys(Model.rawAttributes);
+  const properties = {};
 
   attributeKeys.forEach((key) => {
-    const attribute = Model.rawAttributes[key]
-    const propertyType = convertType(attribute.type.toString())
+    const attribute = Model.rawAttributes[key];
+    const propertyType = convertType(attribute.type.toString());
 
     const property = {
       ...propertyType,
-      description: `${Model.name} ${key}`
-    }
+      description: `${Model.name} ${key}`,
+    };
 
     if (property.type === 'string') {
-      property.maxLength = 255
+      property.maxLength = 255;
     }
 
     if (attribute.type.constructor.name === 'ENUM') {
-      property.type = 'string'
-      property.enum = attribute.type.values
+      property.type = 'string';
+      property.enum = attribute.type.values;
     }
 
-    properties[key] = property
-  })
+    properties[key] = property;
+  });
 
   const getAllResponseProperties = () => {
     return {
@@ -36,8 +50,8 @@ const generateSchemas = (Model, tags) => {
         type: 'array',
         properties: {
           type: 'object',
-          properties: { ...properties }
-        }
+          properties: { ...properties },
+        },
       },
       meta: {
         type: 'object',
@@ -45,43 +59,43 @@ const generateSchemas = (Model, tags) => {
           page: { type: 'integer' },
           pageSize: { type: 'integer' },
           totalPages: { type: 'integer' },
-          totalItems: { type: 'integer' }
-        }
-      }
-    }
-  }
+          totalItems: { type: 'integer' },
+        },
+      },
+    };
+  };
 
   const getRequestProperties = () => {
-    return { ...properties }
-  }
+    return { ...properties };
+  };
 
   const getPostRequestProperties = () => {
-    const postProperties = { ...properties }
-    delete postProperties.createdAt
-    delete postProperties.updatedAt
-    return postProperties
-  }
+    const postProperties = { ...properties };
+    delete postProperties.createdAt;
+    delete postProperties.updatedAt;
+    return postProperties;
+  };
 
   const getPutRequestProperties = () => {
-    const putProperties = { ...properties }
-    delete putProperties.createdAt
-    delete putProperties.updatedAt
-    return putProperties
-  }
+    const putProperties = { ...properties };
+    delete putProperties.createdAt;
+    delete putProperties.updatedAt;
+    return putProperties;
+  };
 
   const getOrderByEnumValues = () => {
-    const sortFields = Object.keys(properties)
+    const sortFields = Object.keys(properties);
     return sortFields.map((field) =>
       field.startsWith('-') ? field.substr(1) : field
-    )
-  }
+    );
+  };
 
   return {
     paths: {
       [`/api/${resourcePlural}`]: {
         get: {
           summary: `Get ${Model.name}`,
-          tags: tags.list || [],
+          tags: resolveTags(Model, tags.list),
           parameters: [
             {
               name: 'page',
@@ -89,8 +103,8 @@ const generateSchemas = (Model, tags) => {
               description: 'Page number',
               schema: {
                 type: 'integer',
-                minimum: 1
-              }
+                minimum: 1,
+              },
             },
             {
               name: 'page_size',
@@ -99,17 +113,17 @@ const generateSchemas = (Model, tags) => {
               schema: {
                 type: 'integer',
                 minimum: 1,
-                maximum: 100
+                maximum: 100,
               },
-              'x-parameter-name': 'pageSize'
+              'x-parameter-name': 'pageSize',
             },
             {
               name: 'search',
               in: 'query',
               description: 'Search query string',
               schema: {
-                type: 'string'
-              }
+                type: 'string',
+              },
             },
             {
               name: 'order_by',
@@ -117,9 +131,9 @@ const generateSchemas = (Model, tags) => {
               description: 'Order field',
               schema: {
                 type: 'string',
-                enum: getOrderByEnumValues()
+                enum: getOrderByEnumValues(),
               },
-              'x-parameter-name': 'orderBy'
+              'x-parameter-name': 'orderBy',
             },
             {
               name: 'order',
@@ -127,99 +141,99 @@ const generateSchemas = (Model, tags) => {
               description: 'Order direction',
               schema: {
                 type: 'string',
-                enum: ['desc', 'asc']
-              }
-            }
+                enum: ['desc', 'asc'],
+              },
+            },
           ],
           responses: resolveResponses(
             Model.name,
             200,
             getAllResponseProperties()
-          )
+          ),
         },
         post: {
           summary: `Create ${Model.name}`,
-          tags: tags.create || [],
+          tags: resolveTags(Model, tags.create),
           requestBody: {
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: getPostRequestProperties()
-                }
-              }
-            }
+                  properties: getPostRequestProperties(),
+                },
+              },
+            },
           },
           responses: resolveResponses(
             Model.name,
             201,
             getRequestProperties(),
             true
-          )
-        }
+          ),
+        },
       },
       [`/api/${resourcePlural}/{id}`]: {
         get: {
           summary: `Get ${Model.name} by ID`,
-          tags: tags.view || [],
+          tags: resolveTags(Model, tags.get),
           parameters: [
             {
               name: 'id',
               in: 'path',
               description: `${Model.name} ID`,
               schema: {
-                type: 'integer'
+                type: 'integer',
               },
-              required: true
-            }
+              required: true,
+            },
           ],
-          responses: resolveResponses(Model.name, 200, getRequestProperties())
+          responses: resolveResponses(Model.name, 200, getRequestProperties()),
         },
         put: {
           summary: `Update ${Model.name}`,
-          tags: tags.put || [],
+          tags: resolveTags(Model, tags.update),
           parameters: [
             {
               name: 'id',
               in: 'path',
               description: `${Model.name} ID`,
               schema: {
-                type: 'integer'
+                type: 'integer',
               },
-              required: true
-            }
+              required: true,
+            },
           ],
           requestBody: {
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: getPutRequestProperties()
-                }
-              }
-            }
+                  properties: getPutRequestProperties(),
+                },
+              },
+            },
           },
-          responses: resolveResponses(Model.name, 200, getRequestProperties())
+          responses: resolveResponses(Model.name, 200, getRequestProperties()),
         },
         delete: {
           summary: `Delete ${Model.name}`,
-          tags: tags.delete || [],
+          tags: resolveTags(Model, tags.delete),
           parameters: [
             {
               name: 'id',
               in: 'path',
               description: `${Model.name} ID`,
               schema: {
-                type: 'integer'
+                type: 'integer',
               },
-              required: true
-            }
+              required: true,
+            },
           ],
-          responses: resolveResponses(Model.name, 200, getRequestProperties())
-        }
-      }
-    }
-  }
-}
+          responses: resolveResponses(Model.name, 200, getRequestProperties()),
+        },
+      },
+    },
+  };
+};
 
-module.exports.generateSchemas = generateSchemas
+module.exports.generateSchemas = generateSchemas;

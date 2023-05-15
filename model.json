@@ -1,0 +1,169 @@
+{
+  "tables": [
+    {
+      "name": "Clients",
+      "columns": [
+        {
+          "name": "id",
+          "type": "SERIAL",
+          "constraints": ["PRIMARY KEY"]
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "constraints": ["NOT NULL"]
+        }
+      ]
+    },
+    {
+      "name": "Tags",
+      "columns": [
+        {
+          "name": "id",
+          "type": "SERIAL",
+          "constraints": ["PRIMARY KEY"]
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "client_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Clients (id)"]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "SERIAL",
+          "constraints": ["PRIMARY KEY"]
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(100)",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "password",
+          "type": "VARCHAR(100)",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "client_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Clients (id)"]
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "columns": [
+        {
+          "name": "id",
+          "type": "SERIAL",
+          "constraints": ["PRIMARY KEY"]
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(100)",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "created_at",
+          "type": "DATE",
+          "constraints": ["NOT NULL", "DEFAULT CURRENT_DATE"]
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Users (id)"]
+        },
+        {
+          "name": "tag_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Tags (id)"]
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "SERIAL",
+          "constraints": ["PRIMARY KEY"]
+        },
+        {
+          "name": "text",
+          "type": "TEXT",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "created_at",
+          "type": "DATE",
+          "constraints": ["NOT NULL", "DEFAULT CURRENT_DATE"]
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Users (id)"]
+        },
+        {
+          "name": "post_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Posts (id)"]
+        }
+      ]
+    },
+    {
+      "name": "Votes",
+      "columns": [
+        {
+          "name": "id",
+          "type": "SERIAL",
+          "constraints": ["PRIMARY KEY"]
+        },
+        {
+          "name": "type",
+          "type": "INTEGER",
+          "constraints": ["NOT NULL"]
+        },
+        {
+          "name": "created_at",
+          "type": "DATE",
+          "constraints": ["NOT NULL", "DEFAULT CURRENT_DATE"]
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Users (id)"]
+        },
+        {
+          "name": "post_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Posts (id)"]
+        },
+        {
+          "name": "comment_id",
+          "type": "INTEGER",
+          "constraints": ["REFERENCES Comments (id)"]
+        }
+      ]
+    }
+  ]
+}

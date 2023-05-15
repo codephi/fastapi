@@ -1,110 +1,111 @@
-const { getAll, getOne, create, update, remove } = require('./routes')
+const { getAll, getOne, create, update, remove } = require('./routes');
 
 const queryToProperties = (properties) => {
-  const newProperties = {}
+  const newProperties = {};
   properties.forEach(({ name, ...value }) => {
-    newProperties[name] = value.schema
-  })
-  return newProperties
-}
+    newProperties[name] = value.schema;
+  });
+  return newProperties;
+};
 
-const responseToProperties = (properties) => {
-  const newProperties = {}
+const responseToProperties = (properties = {}) => {
+  const newProperties = {};
   Object.entries(properties).forEach(([key, value]) => {
-    newProperties[key] = propertiesToItems(value)
-  })
-  return newProperties
-}
+    newProperties[key] = propertiesToItems(value);
+  });
+  return newProperties;
+};
 
 const propertiesToItems = (value) => {
   if (value.type !== 'object' && value.properties !== undefined) {
-    value.items = value.properties
-    delete value.properties
+    value.items = value.properties;
+    delete value.properties;
   }
 
-  return value
-}
+  return value;
+};
 
 const resolveResponses = (responses) => {
-  if (!responses) return {}
+  if (!responses) return {};
 
-  const response = {}
+  const response = {};
   Object.entries(responses).forEach(([code, { description, content }]) => {
     response[code] = {
       description,
       type: 'object',
       properties: responseToProperties(
         content['application/json'].schema.properties
-      )
-    }
-  })
-  return response
-}
+      ),
+    };
+  });
+  return response;
+};
 
 const getRouteHandler = (method, model, operation) => {
   if (method === 'get') {
     if (operation.responses['200'].description.includes('array')) {
-      return getAll(model, model.name)
+      return getAll(model, model.name);
     } else {
-      return getOne(model, model.name)
+      return getOne(model, model.name);
     }
   } else if (method === 'post') {
-    return create(model, model.name)
+    return create(model, model.name);
   } else if (method === 'put') {
-    return update(model, model.name)
+    return update(model, model.name);
   } else if (method === 'delete') {
-    return remove(model, model.name)
+    return remove(model, model.name);
   }
-}
+};
 
 const createRoute = ({ fastify, path, method, handler }) => {
-  const [methodName, operation] = Object.entries(method)[0]
+  const [methodName, operation] = Object.entries(method)[0];
 
   const route = {
     method: methodName.toUpperCase(),
     url: path,
     schema: {
-      response: resolveResponses(operation.responses)
+      response: resolveResponses(operation.responses),
     },
-    handler
-  }
+    handler,
+  };
 
   if (operation.requestBody) {
     route.schema.body = responseToProperties(
       operation.requestBody.content['application/json'].schema
-    )
+    );
   }
 
   if (operation.parameters) {
-    const query = operation.parameters.filter((p) => p.in === 'query')
+    const query = operation.parameters.filter((p) => p.in === 'query');
     if (query.length > 0) {
       const querySchema = {
         type: 'object',
-        properties: queryToProperties(query)
-      }
-      route.schema.querystring = querySchema
+        properties: queryToProperties(query),
+      };
+      route.schema.querystring = querySchema;
     }
   }
 
-  fastify.route(route)
-}
+  fastify.route(route);
+};
 
 const createRouteModel = ({ fastify, paths, model }) => {
   Object.entries(paths).forEach(([path, operations]) => {
     Object.entries(operations).forEach(([method, operation]) => {
-      const handler = getRouteHandler(method, model, operation)
-      createRoute({ fastify, path, method: { [method]: operation }, handler })
-    })
-  })
-}
+      const handler = getRouteHandler(method, model, operation);
+      createRoute({ fastify, path, method: { [method]: operation }, handler });
+    });
+  });
+};
 
 const createRouteHandler = ({ fastify, paths, handler }) => {
   Object.entries(paths).forEach(([path, operations]) => {
     Object.entries(operations).forEach(([method, operation]) => {
-      createRoute({ fastify, path, method: { [method]: operation }, handler })
-    })
-  })
-}
+      if (!['get', 'post', 'put', 'delete'].includes(method)) return;
+      createRoute({ fastify, path, method: { [method]: operation }, handler });
+    });
+  });
+};
 
-module.exports.createRouteHandler = createRouteHandler
-module.exports.createRouteModel = createRouteModel
+module.exports.createRouteHandler = createRouteHandler;
+module.exports.createRouteModel = createRouteModel;

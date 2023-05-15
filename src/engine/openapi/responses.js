@@ -1,4 +1,4 @@
-function errorSchema (description) {
+function errorSchema(description) {
   return {
     description,
     content: {
@@ -9,12 +9,12 @@ function errorSchema (description) {
             type: { type: 'string' },
             title: { type: 'string' },
             status: { type: 'integer' },
-            detail: { type: 'string' }
-          }
-        }
-      }
-    }
-  }
+            detail: { type: 'string' },
+          },
+        },
+      },
+    },
+  };
 }
 
 const resolveResponses = (
@@ -30,31 +30,31 @@ const resolveResponses = (
         'application/json': {
           schema: {
             type: 'object',
-            properties: successProperties
-          }
-        }
-      }
-    }
-  }
+            properties: successProperties,
+          },
+        },
+      },
+    },
+  };
 
   const errors = {
     400: 'Bad Request',
     401: 'Unauthorized',
     403: 'Forbidden',
     404: 'Not Found',
-    500: 'Internal Server Error'
-  }
+    500: 'Internal Server Error',
+  };
 
   if (conflict) {
-    errors[409] = 'Conflict'
+    errors[409] = 'Conflict';
   }
 
   Object.keys(errors).forEach((statusCode) => {
-    const description = errors[statusCode]
-    responses[statusCode] = errorSchema(description)
-  })
+    const description = errors[statusCode];
+    responses[statusCode] = errorSchema(description);
+  });
 
-  return responses
-}
+  return responses;
+};
 
-module.exports.resolveResponses = resolveResponses
+module.exports.resolveResponses = resolveResponses;
