@@ -3,11 +3,11 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const tags = {
-  create: ['create', 'admin:type:create', 'admin:resource:$name'],
-  read: ['read', 'admin:type:read', 'admin:resource:$name'],
-  update: ['update', 'admin:type:update', 'admin:resource:$name'],
-  delete: ['Delete', 'admin:type:delete', 'admin:resource:$name'],
-  list: ['list', 'admin:type:list', 'admin:resource:$name'],
+  create: ['create'],
+  read: ['read'],
+  update: ['update'],
+  delete: ['Delete'],
+  list: ['list'],
 };
 
 const { fastify, start } = require('./middle/serve');

@@ -4,15 +4,13 @@ const { resolveResponses } = require('./responses');
 const resolveTags = (Model, tags = []) => {
   const resourceName = Model.name.toLowerCase();
 
-  tags.map((tag) => {
-    if (tag.indexOf('$name') !== -1) {
+  return tags.map((tag) => {
+    if (tag.indexOf('$name') > -1) {
       return tag.replace('$name', resourceName);
     }
 
     return tag;
   });
-
-  return tags;
 };
 
 const generateSchemas = (Model, tags) => {
@@ -94,8 +92,30 @@ const generateSchemas = (Model, tags) => {
     paths: {
       [`/api/${resourcePlural}`]: {
         get: {
-          summary: `Get ${Model.name}`,
+          summary: `List ${Model.name}`,
+          description: `List and search ${Model.name}`,
           tags: resolveTags(Model, tags.list),
+          'x-admin': {
+            types: ['list', 'search'],
+            groupName: Model.name,
+            resourceName: 'List',
+            references: {
+              list: {
+                query: {
+                  pageSize: 'page_size',
+                  page: 'page',
+                  orderBy: 'order_by',
+                  order: 'order',
+                  searchTerm: 'search',
+                },
+              },
+              search: {
+                query: {
+                  searchTerm: 'search',
+                },
+              },
+            },
+          },
           parameters: [
             {
               name: 'page',
@@ -115,7 +135,6 @@ const generateSchemas = (Model, tags) => {
                 minimum: 1,
                 maximum: 100,
               },
-              'x-parameter-name': 'pageSize',
             },
             {
               name: 'search',
@@ -153,6 +172,12 @@ const generateSchemas = (Model, tags) => {
         },
         post: {
           summary: `Create ${Model.name}`,
+          'x-admin': {
+            types: ['create'],
+            groupName: Model.name,
+            resourceName: 'Create',
+          },
+          description: `Create ${Model.name}`,
           tags: resolveTags(Model, tags.create),
           requestBody: {
             content: {
@@ -175,6 +200,12 @@ const generateSchemas = (Model, tags) => {
       [`/api/${resourcePlural}/{id}`]: {
         get: {
           summary: `Get ${Model.name} by ID`,
+          'x-admin': {
+            types: ['read'],
+            groupName: Model.name,
+            resourceName: 'Read',
+          },
+          description: `Get ${Model.name} by ID`,
           tags: resolveTags(Model, tags.get),
           parameters: [
             {
@@ -191,6 +222,12 @@ const generateSchemas = (Model, tags) => {
         },
         put: {
           summary: `Update ${Model.name}`,
+          'x-admin': {
+            types: ['update'],
+            groupName: Model.name,
+            resourceName: 'Update',
+          },
+          description: `Update ${Model.name}`,
           tags: resolveTags(Model, tags.update),
           parameters: [
             {
@@ -217,6 +254,12 @@ const generateSchemas = (Model, tags) => {
         },
         delete: {
           summary: `Delete ${Model.name}`,
+          'x-admin': {
+            types: ['delete'],
+            groupName: Model.name,
+            resourceName: 'Delete',
+          },
+          description: `Delete ${Model.name}`,
           tags: resolveTags(Model, tags.delete),
           parameters: [
             {

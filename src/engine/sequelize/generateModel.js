@@ -1,11 +1,21 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const { sequelize } = require('../../middle/database');
+
+function getModelName(name) {
+  return name.charAt(0).toUpperCase() + name.slice(1, -1);
+}
+
+function getTableName(name) {
+  return name.toLowerCase();
+}
 
 function generateSequelizeModelFromJSON(jsonSchema) {
   const models = {};
 
   for (const table of jsonSchema.tables) {
     const tableColumns = {};
+    const tableName = getTableName(table.name);
+    const modelName = getModelName(table.name);
 
     for (const column of table.columns) {
       const columnName = column.name;
@@ -17,25 +27,31 @@ function generateSequelizeModelFromJSON(jsonSchema) {
         allowNull: !columnConstraints.includes('NOT NULL'),
         primaryKey: columnConstraints.includes('PRIMARY KEY'),
         references: parseReferences(columnConstraints),
+        autoIncrement: column.autoIncrement || false,
       };
     }
 
-    models[table.name] = sequelize.define(table.name, tableColumns);
+    models[modelName] = sequelize.define(modelName, tableColumns, {
+      tableName,
+    });
   }
 
   // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
-    const modelName = table.name;
+    const modelName = getModelName(table.name);
     const model = models[modelName];
 
     for (const column of table.columns) {
-      if (column.constraints.includes('REFERENCES')) {
-        const referencedTable = getReferencedTableName(column.constraints);
-        const referencedModel = models[referencedTable];
-        const referencedColumn = 'id'; // Assumindo que a coluna referenciada é sempre 'id'
+      for (const constraints of column.constraints) {
+        if (constraints.indexOf('REFERENCES') > -1) {
+          const referencedTable = getModelName(
+            getReferencedTableName(column.constraints)
+          );
+          const referencedModel = models[referencedTable];
 
-        model.belongsTo(referencedModel, { foreignKey: column.name });
-        referencedModel.hasMany(model, { foreignKey: column.name });
+          model.belongsTo(referencedModel);
+          referencedModel.hasMany(model);
+        }
       }
     }
   }
@@ -53,6 +69,28 @@ function getSequelizeDataType(columnType) {
     return DataTypes.TEXT;
   } else if (columnType === 'DATE') {
     return DataTypes.DATEONLY;
+  } else if (columnType === 'BOOLEAN') {
+    return DataTypes.BOOLEAN;
+  } else if (columnType === 'FLOAT') {
+    return DataTypes.FLOAT;
+  } else if (columnType === 'DOUBLE') {
+    return DataTypes.DOUBLE;
+  } else if (columnType === 'DECIMAL') {
+    return DataTypes.DECIMAL;
+  } else if (columnType === 'UUID') {
+    return DataTypes.UUID;
+  } else if (columnType === 'ENUM') {
+    return DataTypes.ENUM;
+  } else if (columnType === 'JSON') {
+    return DataTypes.JSON;
+  } else if (columnType === 'JSONB') {
+    return DataTypes.JSONB;
+  } else if (columnType === 'BLOB') {
+    return DataTypes.BLOB;
+  } else if (columnType === 'ARRAY') {
+    return DataTypes.ARRAY;
+  } else if (columnType === 'SERIAL') {
+    return DataTypes.INTEGER;
   }
 
   // Se nenhum tipo corresponder, retornar STRING como padrão

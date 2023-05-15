@@ -4,7 +4,6 @@ module.exports = (paths) => {
   const doc = createFullDoc(paths);
 
   return {
-    doc,
     paths: {
       '/documentation/json': {
         get: {
@@ -15,7 +14,7 @@ module.exports = (paths) => {
       },
     },
     handler: (_request, reply) => {
-      reply.send(openapi);
+      reply.send(doc);
     },
   };
 };

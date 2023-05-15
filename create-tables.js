@@ -2,8 +2,8 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const sequelize = require('./database');
-const { importModel } = require('./engine/sequelize/generateModel');
+const { sequelize } = require('./src/middle/database');
+const { importModel } = require('./src/engine/sequelize/generateModel');
 
 const _models = importModel();
 

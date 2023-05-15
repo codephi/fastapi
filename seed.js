@@ -1,10 +1,14 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const { faker } = require('@faker-js/faker');
-const sequelize = require('./src/database');
+const { sequelize } = require('./src/middle/database');
 
 const { importModel } = require('./src/engine/sequelize/generateModel');
 
-const { Client, User, Tag, Post, Comment, Vote } = importModel();
+const models = importModel();
+const { Client, User, Tag, Post, Comment, Vote } = models;
 
 const CLIENTS_COUNT = 50;
 const USERS_COUNT = 20;
@@ -25,7 +29,7 @@ const TAGS_COUNT = 10;
   // Criar usuários
   const users = await User.bulkCreate(
     [...Array(USERS_COUNT)].map(() => ({
-      name: faker.name.fullName(),
+      name: faker.person.fullName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
       client_id: clients[Math.floor(Math.random() * clients.length)].id,
