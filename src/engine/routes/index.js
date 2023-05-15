@@ -1,4 +1,5 @@
 const { getAll, getOne, create, update, remove } = require('./routes');
+const { fastify } = require('../../middle/serve');
 
 const queryToProperties = (properties) => {
   const newProperties = {};
@@ -43,7 +44,7 @@ const resolveResponses = (responses) => {
 
 const getRouteHandler = (method, model, operation) => {
   if (method === 'get') {
-    if (operation.responses['200'].description.includes('array')) {
+    if (operation['x-admin'].types.includes('list')) {
       return getAll(model, model.name);
     } else {
       return getOne(model, model.name);
@@ -57,7 +58,7 @@ const getRouteHandler = (method, model, operation) => {
   }
 };
 
-const createRoute = ({ fastify, path, method, handler }) => {
+const createRoute = ({ path, method, handler }) => {
   const [methodName, operation] = Object.entries(method)[0];
 
   const route = {
@@ -89,7 +90,7 @@ const createRoute = ({ fastify, path, method, handler }) => {
   fastify.route(route);
 };
 
-const createRouteModel = ({ fastify, paths, model }) => {
+const createRouteModel = ({ paths, model }) => {
   Object.entries(paths).forEach(([path, operations]) => {
     Object.entries(operations).forEach(([method, operation]) => {
       const handler = getRouteHandler(method, model, operation);

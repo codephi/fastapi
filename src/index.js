@@ -15,14 +15,13 @@ const { generateSchemas } = require('./engine/openapi');
 const { createRouteModel, createRouteHandler } = require('./engine/routes');
 const { testDatabaseConnection } = require('./middle/database');
 const { importModel } = require('./engine/sequelize/generateModel');
-
 const models = importModel();
 
 let openApiSchemaPaths = {};
 Object.keys(models).forEach((key) => {
   const paths = generateSchemas(models[key], tags).paths;
 
-  createRouteModel({ fastify, paths, model: models[key] });
+  createRouteModel({ paths, model: models[key] });
 
   openApiSchemaPaths = { ...openApiSchemaPaths, ...paths };
 });
@@ -34,8 +33,8 @@ const openapi = require('./routes/openapi')({
   ...health.paths,
 });
 
-createRouteHandler({ fastify, ...health });
-createRouteHandler({ fastify, ...openapi });
+createRouteHandler({ ...health });
+createRouteHandler({ ...openapi });
 
 start(async (err, address) => {
   if (err) {
@@ -54,4 +53,6 @@ start(async (err, address) => {
       process.exit(1);
     }
   }
+
+  console.log(fastify.printRoutes());
 });
