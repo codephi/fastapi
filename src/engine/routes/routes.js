@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const fastify = require('../../middle/serve');
 
-const getAll = (Model, resourceName) => async (request, reply) => {
+const getAll = (model) => async (request, reply) => {
   try {
     const page = parseInt(request.query.page, 10) || 1;
     const pageSize = parseInt(request.query.pageSize, 10) || 10;
@@ -19,7 +19,7 @@ const getAll = (Model, resourceName) => async (request, reply) => {
         }
       : {};
 
-    const data = await Model.findAndCountAll({
+    const data = await model.findAndCountAll({
       where: searchFilter,
       offset,
       limit: pageSize,
@@ -39,13 +39,13 @@ const getAll = (Model, resourceName) => async (request, reply) => {
     });
   } catch (err) {
     fastify.log.error(err);
-    reply.status(500).send({ error: `Failed to fetch ${resourceName}.` });
+    reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
   }
 };
 
-const getOne = (Model, resourceName) => async (request, reply) => {
+const getOne = (model) => async (request, reply) => {
   try {
-    const data = await Model.findByPk(request.params.id);
+    const data = await model.findByPk(request.params.id);
 
     if (!data) {
       reply.status(404).send({ error: `${resourceName} not found.` });
@@ -55,13 +55,13 @@ const getOne = (Model, resourceName) => async (request, reply) => {
     reply.send(data);
   } catch (err) {
     fastify.log.error(err);
-    reply.status(500).send({ error: `Failed to fetch ${resourceName}.` });
+    reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
   }
 };
 
-const create = (Model, resourceName) => async (request, reply) => {
+const create = (model) => async (request, reply) => {
   try {
-    const data = await Model.create(request.body);
+    const data = await model.create(request.body);
 
     reply.send(data);
   } catch (err) {
@@ -70,9 +70,9 @@ const create = (Model, resourceName) => async (request, reply) => {
   }
 };
 
-const update = (Model, resourceName) => async (request, reply) => {
+const update = (model) => async (request, reply) => {
   try {
-    const data = await Model.findByPk(request.params.id);
+    const data = await model.findByPk(request.params.id);
 
     if (!data) {
       reply.status(404).send({ error: `${resourceName} not found.` });
@@ -88,9 +88,9 @@ const update = (Model, resourceName) => async (request, reply) => {
   }
 };
 
-const remove = (Model, resourceName) => async (request, reply) => {
+const remove = (model) => async (request, reply) => {
   try {
-    const data = await Model.findByPk(request.params.id);
+    const data = await model.findByPk(request.params.id);
 
     if (!data) {
       reply.status(404).send({ error: `${resourceName} not found.` });

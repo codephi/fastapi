@@ -58,12 +58,17 @@ const getRouteHandler = (method, model, operation) => {
   }
 };
 
+const resolvePath = (path) => {
+  const newPath = path.replace(/{/g, ':').replace(/}/g, '');
+  return newPath;
+};
+
 const createRoute = ({ path, method, handler }) => {
   const [methodName, operation] = Object.entries(method)[0];
 
   const route = {
     method: methodName.toUpperCase(),
-    url: path,
+    url: resolvePath(path),
     schema: {
       response: resolveResponses(operation.responses),
     },
