@@ -2,6 +2,9 @@
   "tables": [
     {
       "name": "clients",
+      "meta": {
+        "search": ["name"]
+      },
       "columns": [
         {
           "name": "id",
@@ -18,6 +21,9 @@
     },
     {
       "name": "tags",
+      "meta": {
+        "search": ["name"]
+      },
       "columns": [
         {
           "name": "id",
@@ -39,6 +45,9 @@
     },
     {
       "name": "users",
+      "meta": {
+        "search": ["name", "email"]
+      },
       "columns": [
         {
           "name": "id",
@@ -70,6 +79,9 @@
     },
     {
       "name": "posts",
+      "meta": {
+        "search": ["title", "content"]
+      },
       "columns": [
         {
           "name": "id",
@@ -101,6 +113,9 @@
     },
     {
       "name": "comments",
+      "meta": {
+        "search": ["text"]
+      },
       "columns": [
         {
           "name": "id",

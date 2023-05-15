@@ -1,8 +1,8 @@
 const { convertType } = require('./dataTypes');
 const { resolveResponses } = require('./responses');
 
-const resolveTags = (Model, tags = []) => {
-  const resourceName = Model.name.toLowerCase();
+const resolveTags = (model, tags = []) => {
+  const resourceName = model.name.toLowerCase();
 
   return tags.map((tag) => {
     if (tag.indexOf('$name') > -1) {
@@ -13,21 +13,21 @@ const resolveTags = (Model, tags = []) => {
   });
 };
 
-const generateSchemas = (Model, tags) => {
-  const resourceName = Model.name.toLowerCase();
+const generateSchemas = ({ model }, tags) => {
+  const resourceName = model.name.toLowerCase();
   const resourcePlural = resourceName.endsWith('s')
     ? resourceName
     : `${resourceName}s`;
-  const attributeKeys = Object.keys(Model.rawAttributes);
+  const attributeKeys = Object.keys(model.rawAttributes);
   const properties = {};
 
   attributeKeys.forEach((key) => {
-    const attribute = Model.rawAttributes[key];
+    const attribute = model.rawAttributes[key];
     const propertyType = convertType(attribute.type.toString());
 
     const property = {
       ...propertyType,
-      description: `${Model.name} ${key}`,
+      description: `${model.name} ${key}`,
     };
 
     if (property.type === 'string') {
@@ -92,12 +92,12 @@ const generateSchemas = (Model, tags) => {
     paths: {
       [`/api/${resourcePlural}`]: {
         get: {
-          summary: `List ${Model.name}`,
-          description: `List and search ${Model.name}`,
-          tags: resolveTags(Model, tags.list),
+          summary: `List ${model.name}`,
+          description: `List and search ${model.name}`,
+          tags: resolveTags(model, tags.list),
           'x-admin': {
             types: ['list', 'search'],
-            groupName: Model.name,
+            groupName: model.name,
             resourceName: 'List',
             references: {
               list: {
@@ -112,6 +112,11 @@ const generateSchemas = (Model, tags) => {
               search: {
                 query: {
                   searchTerm: 'search',
+                  pageSize: 'page_size',
+                  orderBy: 'order_by',
+                  order: 'order',
+                  searchTerm: 'search',
+                  page: 'page',
                 },
               },
             },
@@ -165,20 +170,20 @@ const generateSchemas = (Model, tags) => {
             },
           ],
           responses: resolveResponses(
-            Model.name,
+            model.name,
             200,
             getAllResponseProperties()
           ),
         },
         post: {
-          summary: `Create ${Model.name}`,
+          summary: `Create ${model.name}`,
           'x-admin': {
             types: ['create'],
-            groupName: Model.name,
+            groupName: model.name,
             resourceName: 'Create',
           },
-          description: `Create ${Model.name}`,
-          tags: resolveTags(Model, tags.create),
+          description: `Create ${model.name}`,
+          tags: resolveTags(model, tags.create),
           requestBody: {
             content: {
               'application/json': {
@@ -190,7 +195,7 @@ const generateSchemas = (Model, tags) => {
             },
           },
           responses: resolveResponses(
-            Model.name,
+            model.name,
             201,
             getRequestProperties(),
             true
@@ -199,41 +204,41 @@ const generateSchemas = (Model, tags) => {
       },
       [`/api/${resourcePlural}/{id}`]: {
         get: {
-          summary: `Get ${Model.name} by ID`,
+          summary: `Get ${model.name} by ID`,
           'x-admin': {
             types: ['read'],
-            groupName: Model.name,
+            groupName: model.name,
             resourceName: 'Read',
           },
-          description: `Get ${Model.name} by ID`,
-          tags: resolveTags(Model, tags.get),
+          description: `Get ${model.name} by ID`,
+          tags: resolveTags(model, tags.get),
           parameters: [
             {
               name: 'id',
               in: 'path',
-              description: `${Model.name} ID`,
+              description: `${model.name} ID`,
               schema: {
                 type: 'integer',
               },
               required: true,
             },
           ],
-          responses: resolveResponses(Model.name, 200, getRequestProperties()),
+          responses: resolveResponses(model.name, 200, getRequestProperties()),
         },
         put: {
-          summary: `Update ${Model.name}`,
+          summary: `Update ${model.name}`,
           'x-admin': {
             types: ['update'],
-            groupName: Model.name,
+            groupName: model.name,
             resourceName: 'Update',
           },
-          description: `Update ${Model.name}`,
-          tags: resolveTags(Model, tags.update),
+          description: `Update ${model.name}`,
+          tags: resolveTags(model, tags.update),
           parameters: [
             {
               name: 'id',
               in: 'path',
-              description: `${Model.name} ID`,
+              description: `${model.name} ID`,
               schema: {
                 type: 'integer',
               },
@@ -250,29 +255,29 @@ const generateSchemas = (Model, tags) => {
               },
             },
           },
-          responses: resolveResponses(Model.name, 200, getRequestProperties()),
+          responses: resolveResponses(model.name, 200, getRequestProperties()),
         },
         delete: {
-          summary: `Delete ${Model.name}`,
+          summary: `Delete ${model.name}`,
           'x-admin': {
             types: ['delete'],
-            groupName: Model.name,
+            groupName: model.name,
             resourceName: 'Delete',
           },
-          description: `Delete ${Model.name}`,
-          tags: resolveTags(Model, tags.delete),
+          description: `Delete ${model.name}`,
+          tags: resolveTags(model, tags.delete),
           parameters: [
             {
               name: 'id',
               in: 'path',
-              description: `${Model.name} ID`,
+              description: `${model.name} ID`,
               schema: {
                 type: 'integer',
               },
               required: true,
             },
           ],
-          responses: resolveResponses(Model.name, 200, getRequestProperties()),
+          responses: resolveResponses(model.name, 200, getRequestProperties()),
         },
       },
     },

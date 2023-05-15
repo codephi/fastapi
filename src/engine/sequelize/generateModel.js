@@ -31,15 +31,18 @@ function generateSequelizeModelFromJSON(jsonSchema) {
       };
     }
 
-    models[modelName] = sequelize.define(modelName, tableColumns, {
-      tableName,
-    });
+    models[modelName] = {
+      model: sequelize.define(modelName, tableColumns, {
+        tableName,
+      }),
+      meta: table.meta,
+    };
   }
 
   // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
     const modelName = getModelName(table.name);
-    const model = models[modelName];
+    const model = models[modelName].model;
 
     for (const column of table.columns) {
       for (const constraints of column.constraints) {
@@ -47,7 +50,7 @@ function generateSequelizeModelFromJSON(jsonSchema) {
           const referencedTable = getModelName(
             getReferencedTableName(column.constraints)
           );
-          const referencedModel = models[referencedTable];
+          const referencedModel = models[referencedTable].model;
 
           model.belongsTo(referencedModel);
           referencedModel.hasMany(model);

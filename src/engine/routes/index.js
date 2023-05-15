@@ -45,16 +45,16 @@ const resolveResponses = (responses) => {
 const getRouteHandler = (method, model, operation) => {
   if (method === 'get') {
     if (operation['x-admin'].types.includes('list')) {
-      return getAll(model, model.name);
+      return getAll(model);
     } else {
-      return getOne(model, model.name);
+      return getOne(model);
     }
   } else if (method === 'post') {
-    return create(model, model.name);
+    return create(model);
   } else if (method === 'put') {
-    return update(model, model.name);
+    return update(model);
   } else if (method === 'delete') {
-    return remove(model, model.name);
+    return remove(model);
   }
 };
 
