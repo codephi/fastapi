@@ -23,21 +23,19 @@ function generateSequelizeModelFromJSON(jsonSchema) {
     models[table.name] = sequelize.define(table.name, tableColumns);
   }
 
-  // Definir as relações entre os modelos, se houver chaves estrangeiras
+  // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
-    if (
-      table.columns.some((column) => column.constraints.includes('REFERENCES'))
-    ) {
-      const modelName = table.name;
-      const model = models[modelName];
+    const modelName = table.name;
+    const model = models[modelName];
 
-      for (const column of table.columns) {
-        if (column.constraints.includes('REFERENCES')) {
-          const referencedTable = getReferencedTableName(column.constraints);
-          const referencedColumn = 'id'; // Assumindo que a coluna referenciada é sempre 'id'
+    for (const column of table.columns) {
+      if (column.constraints.includes('REFERENCES')) {
+        const referencedTable = getReferencedTableName(column.constraints);
+        const referencedModel = models[referencedTable];
+        const referencedColumn = 'id'; // Assumindo que a coluna referenciada é sempre 'id'
 
-          model.belongsTo(models[referencedTable], { foreignKey: column.name });
-        }
+        model.belongsTo(referencedModel, { foreignKey: column.name });
+        referencedModel.hasMany(model, { foreignKey: column.name });
       }
     }
   }
