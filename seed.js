@@ -20,46 +20,46 @@ const TAGS_COUNT = 10;
   await sequelize.sync({ force: true });
 
   // Criar clientes
-  const clients = await Client.bulkCreate(
+  const clients = await Client.model.bulkCreate(
     [...Array(CLIENTS_COUNT)].map(() => ({
       name: faker.company.name(),
     }))
   );
 
   // Criar usuários
-  const users = await User.bulkCreate(
+  const users = await User.model.bulkCreate(
     [...Array(USERS_COUNT)].map(() => ({
       name: faker.person.fullName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
-      client_id: clients[Math.floor(Math.random() * clients.length)].id,
+      clientId: clients[Math.floor(Math.random() * clients.length)].id,
     }))
   );
 
   // Criar tags
-  const tags = await Tag.bulkCreate(
+  const tags = await Tag.model.bulkCreate(
     [...Array(TAGS_COUNT)].map(() => ({
       name: faker.lorem.word(),
-      client_id: clients[Math.floor(Math.random() * clients.length)].id,
+      clientId: clients[Math.floor(Math.random() * clients.length)].id,
     }))
   );
 
   // Criar posts
-  const posts = await Post.bulkCreate(
+  const posts = await Post.model.bulkCreate(
     [...Array(POSTS_COUNT)].map(() => ({
       title: faker.lorem.sentence(),
       content: faker.lorem.paragraphs(),
-      user_id: users[Math.floor(Math.random() * users.length)].id,
-      tag_id: tags[Math.floor(Math.random() * tags.length)].id,
+      userId: users[Math.floor(Math.random() * users.length)].id,
+      tagId: tags[Math.floor(Math.random() * tags.length)].id,
     }))
   );
 
   // Criar comentários
-  const comments = await Comment.bulkCreate(
+  const comments = await Comment.model.bulkCreate(
     [...Array(COMMENTS_COUNT)].map(() => ({
       text: faker.lorem.paragraph(),
-      user_id: users[Math.floor(Math.random() * users.length)].id,
-      post_id: posts[Math.floor(Math.random() * posts.length)].id,
+      userId: users[Math.floor(Math.random() * users.length)].id,
+      postId: posts[Math.floor(Math.random() * posts.length)].id,
     }))
   );
 
@@ -68,14 +68,14 @@ const TAGS_COUNT = 10;
   }
 
   // Criar votos
-  await Vote.bulkCreate(
+  await Vote.model.bulkCreate(
     [...Array(POSTS_COUNT + COMMENTS_COUNT)].map(() => ({
       type: randomBoolean() ? 1 : -1,
-      user_id: users[Math.floor(Math.random() * users.length)].id,
-      post_id: randomBoolean()
+      userId: users[Math.floor(Math.random() * users.length)].id,
+      postId: randomBoolean()
         ? posts[Math.floor(Math.random() * posts.length)].id
         : null,
-      comment_id: randomBoolean()
+      commentId: randomBoolean()
         ? comments[Math.floor(Math.random() * comments.length)].id
         : null,
     }))

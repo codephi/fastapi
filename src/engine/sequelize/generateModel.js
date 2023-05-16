@@ -16,10 +16,11 @@ function generateSequelizeModelFromJSON(jsonSchema) {
     const tableColumns = {};
     const tableName = getTableName(table.name);
     const modelName = getModelName(table.name);
+    const maxLength = {};
 
     for (const column of table.columns) {
       const columnName = column.name;
-      const columnType = getSequelizeDataType(column.type);
+      const [columnType, columnParams] = getSequelizeDataType(column.type);
       const columnConstraints = getSequelizeConstraints(column.constraints);
 
       tableColumns[columnName] = {
@@ -29,18 +30,26 @@ function generateSequelizeModelFromJSON(jsonSchema) {
         references: parseReferences(columnConstraints),
         autoIncrement: column.autoIncrement || false,
       };
+
+      if ('maxLength' in columnParams) {
+        maxLength[columnName] = columnParams.maxLength;
+      }
     }
 
     models[modelName] = {
       model: sequelize.define(modelName, tableColumns, {
         tableName,
       }),
-      meta: table.meta,
+      metadata: {
+        ...table.metadata,
+        maxLength,
+      },
     };
   }
 
   // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
+    const relationships = {};
     const modelName = getModelName(table.name);
     const model = models[modelName].model;
 
@@ -52,8 +61,22 @@ function generateSequelizeModelFromJSON(jsonSchema) {
           );
           const referencedModel = models[referencedTable].model;
 
-          model.belongsTo(referencedModel);
-          referencedModel.hasMany(model);
+          model.belongsTo(referencedModel, { foreignKey: column.name });
+          referencedModel.hasMany(model, { foreignKey: column.name });
+
+          if (models[modelName].metadata.relationships === undefined) {
+            models[modelName].metadata.relationships = [
+              {
+                model: referencedModel,
+                as: column.name,
+              },
+            ];
+          } else {
+            models[modelName].metadata.relationships.push({
+              model: referencedModel,
+              as: column.name,
+            });
+          }
         }
       }
     }
@@ -63,41 +86,48 @@ function generateSequelizeModelFromJSON(jsonSchema) {
 }
 
 function getSequelizeDataType(columnType) {
+  const params = {};
   // Mapear os tipos de colunas SQL para os tipos de dados do Sequelize
   if (columnType.includes('VARCHAR')) {
-    return DataTypes.STRING;
+    const length = columnType
+      .replace('VARCHAR', '')
+      .replace('(', '')
+      .replace(')', '');
+
+    params.maxLength = parseInt(length);
+    return [DataTypes.STRING, params];
   } else if (columnType === 'INTEGER') {
-    return DataTypes.INTEGER;
+    return [DataTypes.INTEGER, params];
   } else if (columnType === 'TEXT') {
-    return DataTypes.TEXT;
+    return [DataTypes.TEXT, params];
   } else if (columnType === 'DATE') {
-    return DataTypes.DATEONLY;
+    return [DataTypes.DATEONLY, params];
   } else if (columnType === 'BOOLEAN') {
-    return DataTypes.BOOLEAN;
+    return [DataTypes.BOOLEAN, params];
   } else if (columnType === 'FLOAT') {
-    return DataTypes.FLOAT;
+    return [DataTypes.FLOAT, params];
   } else if (columnType === 'DOUBLE') {
-    return DataTypes.DOUBLE;
+    return [DataTypes.DOUBLE, params];
   } else if (columnType === 'DECIMAL') {
-    return DataTypes.DECIMAL;
+    return [DataTypes.DECIMAL, params];
   } else if (columnType === 'UUID') {
-    return DataTypes.UUID;
+    return [DataTypes.UUID, params];
   } else if (columnType === 'ENUM') {
-    return DataTypes.ENUM;
+    return [DataTypes.ENUM, params];
   } else if (columnType === 'JSON') {
-    return DataTypes.JSON;
+    return [DataTypes.JSON, params];
   } else if (columnType === 'JSONB') {
-    return DataTypes.JSONB;
+    return [DataTypes.JSONB, params];
   } else if (columnType === 'BLOB') {
-    return DataTypes.BLOB;
+    return [DataTypes.BLOB, params];
   } else if (columnType === 'ARRAY') {
-    return DataTypes.ARRAY;
+    return [DataTypes.ARRAY, params];
   } else if (columnType === 'SERIAL') {
-    return DataTypes.INTEGER;
+    return [DataTypes.INTEGER, params];
   }
 
   // Se nenhum tipo corresponder, retornar STRING como padrão
-  return DataTypes.STRING;
+  return [DataTypes.STRING, params];
 }
 
 function getSequelizeConstraints(columnConstraints) {

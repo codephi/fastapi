@@ -2,7 +2,7 @@
   "tables": [
     {
       "name": "clients",
-      "meta": {
+      "metadata": {
         "search": ["name"]
       },
       "columns": [
@@ -21,7 +21,7 @@
     },
     {
       "name": "tags",
-      "meta": {
+      "metadata": {
         "search": ["name"]
       },
       "columns": [
@@ -45,7 +45,7 @@
     },
     {
       "name": "users",
-      "meta": {
+      "metadata": {
         "search": ["name", "email"]
       },
       "columns": [
@@ -73,13 +73,13 @@
         {
           "name": "clientId",
           "type": "INTEGER",
-          "constraints": ["REFERENCES Clients (id)"]
+          "constraints": ["REFERENCES Clients (id)", "NOT NULL"]
         }
       ]
     },
     {
       "name": "posts",
-      "meta": {
+      "metadata": {
         "search": ["title", "content"]
       },
       "columns": [
@@ -107,13 +107,13 @@
         {
           "name": "userId",
           "type": "INTEGER",
-          "constraints": ["REFERENCES Users (id)"]
+          "constraints": ["REFERENCES Users (id)", "NOT NULL"]
         }
       ]
     },
     {
       "name": "comments",
-      "meta": {
+      "metadata": {
         "search": ["text"]
       },
       "columns": [
@@ -136,12 +136,12 @@
         {
           "name": "userId",
           "type": "INTEGER",
-          "constraints": ["REFERENCES Users (id)"]
+          "constraints": ["REFERENCES Users (id)", "NOT NULL"]
         },
         {
           "name": "postId",
           "type": "INTEGER",
-          "constraints": ["REFERENCES Posts (id)"]
+          "constraints": ["REFERENCES Posts (id)", "NOT NULL"]
         }
       ]
     },
@@ -167,7 +167,7 @@
         {
           "name": "userId",
           "type": "INTEGER",
-          "constraints": ["REFERENCES Users (id)"]
+          "constraints": ["REFERENCES Users (id)", "NOT NULL"]
         },
         {
           "name": "postId",

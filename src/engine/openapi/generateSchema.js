@@ -13,7 +13,8 @@ const resolveTags = (model, tags = []) => {
   });
 };
 
-const generateSchemas = ({ model }, tags) => {
+const generateSchemas = (resource, tags) => {
+  const { model, metadata } = resource;
   const resourceName = model.name.toLowerCase();
   const resourcePlural = resourceName.endsWith('s')
     ? resourceName
@@ -30,8 +31,12 @@ const generateSchemas = ({ model }, tags) => {
       description: `${model.name} ${key}`,
     };
 
-    if (property.type === 'string') {
-      property.maxLength = 255;
+    if (
+      property.type === 'string' &&
+      'maxLength' in metadata &&
+      metadata.maxLength[key] !== undefined
+    ) {
+      property.maxLength = metadata.maxLength[key];
     }
 
     if (attribute.type.constructor.name === 'ENUM') {
@@ -51,7 +56,7 @@ const generateSchemas = ({ model }, tags) => {
           properties: { ...properties },
         },
       },
-      meta: {
+      metadata: {
         type: 'object',
         properties: {
           page: { type: 'integer' },
@@ -76,6 +81,7 @@ const generateSchemas = ({ model }, tags) => {
 
   const getPutRequestProperties = () => {
     const putProperties = { ...properties };
+    delete putProperties.id;
     delete putProperties.createdAt;
     delete putProperties.updatedAt;
     return putProperties;
@@ -96,30 +102,51 @@ const generateSchemas = ({ model }, tags) => {
           description: `List and search ${model.name}`,
           tags: resolveTags(model, tags.list),
           'x-admin': {
-            types: ['list', 'search'],
+            types: (() => {
+              if (metadata && metadata.search && metadata.search.length > 0) {
+                return ['list', 'search'];
+              } else {
+                return ['list'];
+              }
+            })(),
             groupName: model.name,
             resourceName: 'List',
-            references: {
-              list: {
-                query: {
-                  pageSize: 'page_size',
-                  page: 'page',
-                  orderBy: 'order_by',
-                  order: 'order',
-                  searchTerm: 'search',
+            metadata: (() => {
+              if (metadata && metadata.search && metadata.search.length > 0) {
+                return {
+                  search: metadata.search,
+                };
+              }
+
+              return {};
+            })(),
+            references: (() => {
+              const references = {
+                list: {
+                  query: {
+                    pageSize: 'page_size',
+                    page: 'page',
+                    orderBy: 'order_by',
+                    order: 'order',
+                    searchTerm: 'search',
+                  },
                 },
-              },
-              search: {
-                query: {
-                  searchTerm: 'search',
-                  pageSize: 'page_size',
-                  orderBy: 'order_by',
-                  order: 'order',
-                  searchTerm: 'search',
-                  page: 'page',
-                },
-              },
-            },
+              };
+
+              if (metadata && metadata.search && metadata.search.length > 0) {
+                references.search = {
+                  query: {
+                    pageSize: 'page_size',
+                    page: 'page',
+                    orderBy: 'order_by',
+                    order: 'order',
+                    searchTerm: 'search',
+                  },
+                };
+              }
+
+              return references;
+            })(),
           },
           parameters: [
             {

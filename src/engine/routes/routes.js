@@ -2,37 +2,61 @@ const { Op } = require('sequelize');
 const fastify = require('../../middle/serve');
 
 const getAll =
-  ({ model, meta }) =>
+  ({ model, metadata }) =>
   async (request, reply) => {
     try {
       const page = parseInt(request.query.page, 10) || 1;
-      const pageSize = parseInt(request.query.pageSize, 10) || 10;
+      const pageSize = parseInt(request.query.page_size, 10) || 10;
       const searchTerm = request.query.search;
       const order = request.query.order || 'desc';
       const orderBy = request.query.orderBy || 'updatedAt';
       const offset = (page - 1) * pageSize;
 
       const searchFilter =
-        meta && meta.search && searchTerm
+        metadata && metadata.search && searchTerm
           ? {
-              [Op.or]: meta.search.map((field) => ({
+              [Op.or]: metadata.search.map((field) => ({
                 [field]: { [Op.like]: `%${searchTerm}%` },
               })),
             }
           : {};
 
-      const data = await model.findAndCountAll({
+      const findOptions = {
         where: searchFilter,
         offset,
         limit: pageSize,
         order: [[orderBy, order]],
-      });
+      };
+
+      if (metadata && metadata.relationships) {
+        for (const relationship of metadata.relationships) {
+          findOptions.include = [
+            {
+              model: relationship.model,
+            },
+          ];
+        }
+      }
+
+      const data = await model.findAndCountAll(findOptions);
+
+      if (findOptions.include !== undefined && data.rows.length > 0) {
+        data.rows = data.rows.map((row) => {
+          for (const relationship of metadata.relationships) {
+            const relationshipName = relationship.model.name.toLowerCase();
+            row[relationshipName] = row[relationship.model.name];
+            delete row[relationship.model.name];
+
+            return row;
+          }
+        });
+      }
 
       const totalPages = Math.ceil(data.count / pageSize);
-
+      console.log();
       reply.send({
         data: data.rows,
-        meta: {
+        metadata: {
           page,
           pageSize,
           totalPages,
