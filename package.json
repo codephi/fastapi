@@ -10,13 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "@fastify/cors": "^8.2.1",
-    "chai": "^4.3.7",
-    "fastify": "^4.17.0",
-    "mocha": "^10.2.0",
+    "fastify": "4.17.0",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.31.1",
-    "supertest": "^6.3.3"
+    "sequelize": "^6.31.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.0",

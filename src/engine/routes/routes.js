@@ -1,5 +1,5 @@
-const { Op } = require('sequelize');
 const fastify = require('../../middle/serve');
+const { superFiler } = require('../superFiler');
 
 const getAll =
   ({ model, metadata }) =>
@@ -14,11 +14,7 @@ const getAll =
 
       const searchFilter =
         metadata && metadata.search && searchTerm
-          ? {
-              [Op.or]: metadata.search.map((field) => ({
-                [field]: { [Op.like]: `%${searchTerm}%` },
-              })),
-            }
+          ? superFiler(metadata.search, searchTerm)
           : {};
 
       const findOptions = {
@@ -27,16 +23,6 @@ const getAll =
         limit: pageSize,
         order: [[orderBy, order]],
       };
-
-      if (metadata && metadata.relationships) {
-        for (const relationship of metadata.relationships) {
-          findOptions.include = [
-            {
-              model: relationship.model,
-            },
-          ];
-        }
-      }
 
       const data = await model.findAndCountAll(findOptions);
 
@@ -53,7 +39,7 @@ const getAll =
       }
 
       const totalPages = Math.ceil(data.count / pageSize);
-      console.log();
+
       reply.send({
         data: data.rows,
         metadata: {
@@ -76,7 +62,7 @@ const getOne =
       const data = await model.findByPk(request.params.id);
 
       if (!data) {
-        reply.status(404).send({ error: `${resourceName} not found.` });
+        reply.status(404).send({ error: `${model.name} not found.` });
         return;
       }
 
@@ -96,7 +82,7 @@ const create =
       reply.send(data);
     } catch (err) {
       fastify.log.error(err);
-      reply.status(500).send({ error: `Failed to create ${resourceName}.` });
+      reply.status(500).send({ error: `Failed to create ${model.name}.` });
     }
   };
 
@@ -107,7 +93,7 @@ const update =
       const data = await model.findByPk(request.params.id);
 
       if (!data) {
-        reply.status(404).send({ error: `${resourceName} not found.` });
+        reply.status(404).send({ error: `${model.name} not found.` });
         return;
       }
 
@@ -116,7 +102,7 @@ const update =
       reply.send(data);
     } catch (err) {
       fastify.log.error(err);
-      reply.status(500).send({ error: `Failed to update ${resourceName}.` });
+      reply.status(500).send({ error: `Failed to update ${model.name}.` });
     }
   };
 
@@ -127,16 +113,16 @@ const remove =
       const data = await model.findByPk(request.params.id);
 
       if (!data) {
-        reply.status(404).send({ error: `${resourceName} not found.` });
+        reply.status(404).send({ error: `${model.name} not found.` });
         return;
       }
 
       await data.destroy();
 
-      reply.send({ message: `${resourceName} deleted successfully.` });
+      reply.send({ message: `${model.name} deleted successfully.` });
     } catch (err) {
       fastify.log.error(err);
-      reply.status(500).send({ error: `Failed to delete ${resourceName}.` });
+      reply.status(500).send({ error: `Failed to delete ${model.name}.` });
     }
   };
 

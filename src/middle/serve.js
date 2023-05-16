@@ -7,9 +7,9 @@ fastify.register(require('@fastify/cors'), {
 const start = (callback) => {
   fastify.listen(
     {
-      port: process.env.PORT || 3000,
+      port: 3000,
     },
-    callback
+    callback,
   );
 };
 
