@@ -40,7 +40,7 @@ function convertOpenAPItoSchemas(openAPI) {
               } else {
                 const schemaName = `${method.toUpperCase()}_${path.replace(
                   /\//g,
-                  '_'
+                  '_',
                 )}_${statusCode}`;
 
                 // Adiciona o esquema ao objeto schemas
@@ -59,14 +59,14 @@ function convertOpenAPItoSchemas(openAPI) {
         // Verifica se há parâmetros de caminho não declarados
         const parameters = operation.parameters || [];
         const pathParams = parameters.filter(
-          (parameter) => parameter.in === 'path'
+          (parameter) => parameter.in === 'path',
         );
         const declaredPathParams = path.match(/{\w+}/g) || [];
 
         pathParams.forEach((parameter) => {
           if (!declaredPathParams.includes(`{${parameter.name}}`)) {
             console.warn(
-              `Declared path parameter "${parameter.name}" needs to be defined as a path parameter at either the path or operation level`
+              `Declared path parameter "${parameter.name}" needs to be defined as a path parameter at either the path or operation level`,
             );
           }
         });

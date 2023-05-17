@@ -3,9 +3,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const { faker } = require('@faker-js/faker');
-const { sequelize } = require('./src/middle/database');
+const { global } = require('./src/middle/database');
 
-const { importModel } = require('./src/engine/sequelize/generateModel');
+const { importModel } = require('./src/engine/global.sequelize/generateModel');
 
 const models = importModel();
 const { Client, User, Tag, Post, Comment, Vote } = models;
@@ -17,13 +17,13 @@ const COMMENTS_COUNT = 100;
 const TAGS_COUNT = 10;
 
 (async () => {
-  await sequelize.sync({ force: true });
+  await global.sequelize.sync({ force: true });
 
   // Criar clientes
   const clients = await Client.model.bulkCreate(
     [...Array(CLIENTS_COUNT)].map(() => ({
       name: faker.company.name(),
-    }))
+    })),
   );
 
   // Criar usuários
@@ -33,7 +33,7 @@ const TAGS_COUNT = 10;
       email: faker.internet.email(),
       password: faker.internet.password(),
       clientId: clients[Math.floor(Math.random() * clients.length)].id,
-    }))
+    })),
   );
 
   // Criar tags
@@ -41,7 +41,7 @@ const TAGS_COUNT = 10;
     [...Array(TAGS_COUNT)].map(() => ({
       name: faker.lorem.word(),
       clientId: clients[Math.floor(Math.random() * clients.length)].id,
-    }))
+    })),
   );
 
   // Criar posts
@@ -51,7 +51,7 @@ const TAGS_COUNT = 10;
       content: faker.lorem.paragraphs(),
       userId: users[Math.floor(Math.random() * users.length)].id,
       tagId: tags[Math.floor(Math.random() * tags.length)].id,
-    }))
+    })),
   );
 
   // Criar comentários
@@ -60,7 +60,7 @@ const TAGS_COUNT = 10;
       text: faker.lorem.paragraph(),
       userId: users[Math.floor(Math.random() * users.length)].id,
       postId: posts[Math.floor(Math.random() * posts.length)].id,
-    }))
+    })),
   );
 
   function randomBoolean() {
@@ -78,7 +78,7 @@ const TAGS_COUNT = 10;
       commentId: randomBoolean()
         ? comments[Math.floor(Math.random() * comments.length)].id
         : null,
-    }))
+    })),
   );
 
   console.log('Dados falsos inseridos com sucesso.');

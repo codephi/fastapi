@@ -2,19 +2,19 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const { sequelize } = require('./src/middle/database');
-const { importModel } = require('./src/engine/sequelize/generateModel');
+const { global } = require('./src/middle/database');
+const { importModel } = require('./src/engine/global.sequelize/generateModel');
 
-const _models = importModel();
+importModel();
 
 const createTables = async () => {
   try {
-    await sequelize.sync({ force: true });
+    await global.sequelize.sync({ force: true });
     console.log('All tables created.');
   } catch (error) {
     console.error('Error creating tables:', error);
   } finally {
-    await sequelize.close();
+    await global.sequelize.close();
   }
 };
 

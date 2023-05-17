@@ -1,5 +1,5 @@
 const os = require('os');
-const { sequelize } = require('../middle/database');
+const { global } = require('../middle/database');
 const { resolveResponses } = require('../engine/openapi/responses');
 
 module.exports = {
@@ -193,11 +193,11 @@ const getOsInfo = () => {
 };
 
 const getDatabaseInfo = () => {
-  const dialect = sequelize.getDialect();
-  const host = sequelize.config.host;
-  const port = sequelize.config.port;
-  const database = sequelize.config.database;
-  const username = sequelize.config.username;
+  const dialect = global.sequelize.getDialect();
+  const host = global.sequelize.config.host;
+  const port = global.sequelize.config.port;
+  const database = global.sequelize.config.database;
+  const username = global.sequelize.config.username;
 
   return {
     dialect,

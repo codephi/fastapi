@@ -35,7 +35,7 @@ const resolveResponses = (responses) => {
       description,
       type: 'object',
       properties: responseToProperties(
-        content['application/json'].schema.properties
+        content['application/json'].schema.properties,
       ),
     };
   });
@@ -77,7 +77,7 @@ const createRoute = ({ path, method, handler }) => {
 
   if (operation.requestBody) {
     route.schema.body = responseToProperties(
-      operation.requestBody.content['application/json'].schema
+      operation.requestBody.content['application/json'].schema,
     );
   }
 
@@ -95,10 +95,14 @@ const createRoute = ({ path, method, handler }) => {
   fastify.route(route);
 };
 
-const createRouteModel = ({ paths, model }) => {
+const createRouteModel = ({ paths, model, handlers }) => {
   Object.entries(paths).forEach(([path, operations]) => {
     Object.entries(operations).forEach(([method, operation]) => {
-      const handler = getRouteHandler(method, model, operation);
+      const handler =
+        handlers && handlers[method]
+          ? handlers[method]
+          : getRouteHandler(method, model, operation);
+
       createRoute({ fastify, path, method: { [method]: operation }, handler });
     });
   });

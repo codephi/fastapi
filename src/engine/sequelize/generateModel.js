@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../../middle/database');
+const { global } = require('../../middle/database');
 
 function getModelName(name) {
   return name.charAt(0).toUpperCase() + name.slice(1, -1);
@@ -37,7 +37,7 @@ function generateSequelizeModelFromJSON(jsonSchema) {
     }
 
     models[modelName] = {
-      model: sequelize.define(modelName, tableColumns, {
+      model: global.sequelize.define(modelName, tableColumns, {
         tableName,
       }),
       metadata: {
@@ -49,7 +49,6 @@ function generateSequelizeModelFromJSON(jsonSchema) {
 
   // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
-    const relationships = {};
     const modelName = getModelName(table.name);
     const model = models[modelName].model;
 
@@ -57,7 +56,7 @@ function generateSequelizeModelFromJSON(jsonSchema) {
       for (const constraints of column.constraints) {
         if (constraints.indexOf('REFERENCES') > -1) {
           const referencedTable = getModelName(
-            getReferencedTableName(column.constraints)
+            getReferencedTableName(column.constraints),
           );
           const referencedModel = models[referencedTable].model;
 
@@ -133,14 +132,14 @@ function getSequelizeDataType(columnType) {
 function getSequelizeConstraints(columnConstraints) {
   // Remover a referência ao modelo pai da restrição de chave estrangeira
   return columnConstraints.filter(
-    (constraint) => !constraint.includes('REFERENCES')
+    (constraint) => !constraint.includes('REFERENCES'),
   );
 }
 
 function parseReferences(columnConstraints) {
   // Analisar a referência da restrição de chave estrangeira, se existir
   const referencesConstraint = columnConstraints.find((constraint) =>
-    constraint.includes('REFERENCES')
+    constraint.includes('REFERENCES'),
   );
 
   if (referencesConstraint) {
@@ -170,10 +169,13 @@ module.exports.generateModel = generateSequelizeModelFromJSON;
 
 const fs = require('fs');
 
-module.exports.importModel = () => {
-  const modelJson = fs.readFileSync('./model.json', 'utf8');
+module.exports.importModel = (target) => {
+  const modelJson =
+    typeof target === 'string'
+      ? JSON.parse(fs.readFileSync(target, 'utf8'))
+      : target;
 
-  const models = generateSequelizeModelFromJSON(JSON.parse(modelJson));
+  const models = generateSequelizeModelFromJSON(modelJson);
 
   return models;
 };

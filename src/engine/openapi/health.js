@@ -1,5 +1,5 @@
 const os = require('os');
-const { sequelize } = require('../middle/database');
+const { global } = require('../middle/database');
 const { resolveResponses } = require('../engine/openapi/responses');
 
 module.exports = {
@@ -120,11 +120,11 @@ module.exports = {
         cpus: os.cpus().length,
       };
       const databaseInfo = {
-        dialect: sequelize.getDialect(),
-        host: sequelize.config.host,
-        port: sequelize.config.port,
-        database: sequelize.config.database,
-        username: sequelize.config.username,
+        dialect: global.sequelize.getDialect(),
+        host: global.sequelize.config.host,
+        port: global.sequelize.config.port,
+        database: global.sequelize.config.database,
+        username: global.sequelize.config.username,
       };
       const container = {
         image: process.env.IMAGE,

@@ -4,7 +4,7 @@ fastify.register(require('@fastify/cors'), {
   origin: '*',
 });
 
-const start = (callback) => {
+const listen = (callback) => {
   fastify.listen(
     {
       port: 3000,
@@ -14,6 +14,6 @@ const start = (callback) => {
 };
 
 module.exports = {
-  start,
+  listen,
   fastify,
 };
