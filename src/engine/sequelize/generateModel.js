@@ -17,19 +17,27 @@ function generateSequelizeModelFromJSON(jsonSchema) {
     const tableName = getTableName(table.name);
     const modelName = getModelName(table.name);
     const maxLength = {};
+    const metadata = {
+      primaryKey: null
+    };
 
     for (const column of table.columns) {
       const columnName = column.name;
       const [columnType, columnParams] = getSequelizeDataType(column.type);
       const columnConstraints = getSequelizeConstraints(column.constraints);
+      const primaryKey = columnConstraints.includes('PRIMARY KEY');
 
       tableColumns[columnName] = {
         type: columnType,
         allowNull: !columnConstraints.includes('NOT NULL'),
-        primaryKey: columnConstraints.includes('PRIMARY KEY'),
+        primaryKey,
         references: parseReferences(columnConstraints),
         autoIncrement: column.autoIncrement || false
       };
+
+      if (primaryKey) {
+        metadata.primaryKey = columnName;
+      }
 
       if ('maxLength' in columnParams) {
         maxLength[columnName] = columnParams.maxLength;
@@ -41,6 +49,8 @@ function generateSequelizeModelFromJSON(jsonSchema) {
         tableName
       }),
       metadata: {
+        ...jsonSchema.metadata,
+        ...metadata,
         ...table.metadata,
         maxLength
       }

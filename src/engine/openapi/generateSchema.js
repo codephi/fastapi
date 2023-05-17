@@ -56,7 +56,7 @@ const generateSchemas = (resource, tags) => {
           properties: { ...properties }
         }
       },
-      metadata: {
+      meta: {
         type: 'object',
         properties: {
           page: { type: 'integer' },
@@ -111,15 +111,7 @@ const generateSchemas = (resource, tags) => {
             })(),
             groupName: model.name,
             resourceName: 'List',
-            metadata: (() => {
-              if (metadata && metadata.search && metadata.search.length > 0) {
-                return {
-                  search: metadata.search
-                };
-              }
-
-              return {};
-            })(),
+            ...metadata,
             references: (() => {
               const references = {
                 list: {

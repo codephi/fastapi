@@ -1,88 +1,80 @@
-# Gerador de API Dinâmico
+# FastAPI
 
-Este projeto é uma ferramenta para gerar uma API REST completa com documentação OpenAPI a partir de um arquivo `model.json`.
+FastAPI is a powerful library that simplifies the creation of RESTful APIs using Fastify and Sequelize. It allows you to define your database tables and API routes in a JSON file, making the development process faster and more efficient.
 
-## Como usar
+## Features
 
-1. Clone este repositório para a sua máquina local.
-2. Adicione o seu arquivo `model.json` na raiz do projeto.
+- **Database Generation**: Define your database structure in a JSON file and let FastAPI handle the rest. It supports various data types and constraints.
 
-### Exemplo de um arquivo `model.json`:
+- **API Generation**: Create API endpoints quickly and easily, with support for all CRUD operations.
 
-```json
-{
-  "tables": [
-    {
-      "name": "users",
-      "columns": [
-        {
-          "name": "id",
-          "type": "INTEGER",
-          "constraints": ["PRIMARY KEY", "NOT NULL"]
-        },
-        {
-          "name": "name",
-          "type": "VARCHAR(255)",
-          "constraints": ["NOT NULL"]
-        },
-        {
-          "name": "email",
-          "type": "VARCHAR(255)",
-          "constraints": ["NOT NULL"]
-        }
-      ]
-    },
-    {
-      "name": "posts",
-      "columns": [
-        {
-          "name": "id",
-          "type": "INTEGER",
-          "constraints": ["PRIMARY KEY", "NOT NULL"]
-        },
-        {
-          "name": "title",
-          "type": "VARCHAR(255)",
-          "constraints": ["NOT NULL"]
-        },
-        {
-          "name": "content",
-          "type": "TEXT",
-          "constraints": ["NOT NULL"]
-        },
-        {
-          "name": "userId",
-          "type": "INTEGER",
-          "constraints": ["NOT NULL", "REFERENCES users (id)"]
-        }
-      ]
-    }
-  ]
-}
+- **Custom Route Customization**: In addition to the automatically generated routes, you can define your own custom routes as needed.
+
+- **Error Handling**: Integrated error handling, making it easier to deal with unexpected situations.
+
+- **CORS Support**: Easily configure the CORS policies for your API.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js
+- A SQL database compatible with Sequelize
+
+### Installation
+
+```
+   npm i codephi/fastapi
 ```
 
-Neste exemplo, duas tabelas serão criadas: `users` e `posts`. A tabela `posts` tem uma chave estrangeira que referencia a tabela `users`.
+### Basic Usage
 
-A partir desse arquivo `model.json`, o projeto irá gerar uma API com endpoints para realizar operações CRUD (Criar, Ler, Atualizar, Deletar) para as tabelas `users` e `posts`.
+```javascript
+const { FastAPI } = require('fastapi');
 
-## Endpoints gerados
+const fastapi = new FastAPI();
 
-Os seguintes endpoints serão gerados para cada tabela:
+fastapi
+  .setDataBase({
+    database: process.env.DB_NAME,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
+  })
 
-- `GET /api/{tableName}`: Obtém uma lista de todos os registros na tabela.
-- `GET /api/{tableName}/{id}`: Obtém um registro específico na tabela pelo seu ID.
-- `POST /api/{tableName}`: Cria um novo registro na tabela.
-- `PUT /api/{tableName}/{id}`: Atualiza um registro específico na tabela pelo seu ID.
-- `DELETE /api/{tableName}/{id}`: Deleta um registro específico na tabela pelo seu ID.
+fastapi.get(
+  '/hello',
+  {
+    tags: ['hello'],
+    summary: 'Hello world',
+    description: 'Hello world',
+    responses: {
+      200: {
+        description: 'Successful operation',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  async () => {
+    return { message: 'Hello world' };
+  }
+);
 
-## Documentação OpenAPI
+fastapi.start();
+```
 
-A documentação OpenAPI para a API gerada pode ser encontrada em `GET /documentation/json`. Esta documentação fornece detalhes sobre todos os endpoints, parâmetros de requisição e respostas da API.
+## Contributing
+Contributions are always welcome! Whether through pull requests, reporting bugs, or suggesting new features.
 
-## Saúde da API
-
-Um endpoint de saúde da API está disponível em `GET /api/health`. Este endpoint retorna informações sobre a saúde da API, incluindo informações sobre o processo, o sistema operacional, a memória e o banco de dados.
-
-## Contato
-
-Se tiver alguma dúvida ou sugestão, sinta-se à vontade para entrar em contato.
+## License
+MIT

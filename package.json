@@ -1,15 +1,15 @@
 {
   "name": "fastapi",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "FastAPI is a powerful library that simplifies the creation of RESTful APIs using Fastify and Sequelize. It allows you to define your database tables and API routes in a JSON file, making the development process faster and more efficient.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.js*' --write",
     "prettier-watch": "onchange 'src/**/*.js*' -- prettier --write {{changed}}"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Philippe Assis <codephilippe@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "@fastify/cors": "^8.2.1",
     "fastify": "4.17.0",
@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.0",
-    "dotenv": "^16.0.3",
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-config-standard": "^17.0.0",

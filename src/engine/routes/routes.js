@@ -42,7 +42,7 @@ const getAll =
 
       reply.send({
         data: data.rows,
-        metadata: {
+        meta: {
           page,
           pageSize,
           totalPages,
