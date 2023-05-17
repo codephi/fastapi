@@ -9,11 +9,11 @@ function errorSchema(description) {
             type: { type: 'string' },
             title: { type: 'string' },
             status: { type: 'integer' },
-            detail: { type: 'string' },
-          },
-        },
-      },
-    },
+            detail: { type: 'string' }
+          }
+        }
+      }
+    }
   };
 }
 
@@ -30,11 +30,11 @@ const resolveResponses = (
         'application/json': {
           schema: {
             type: 'object',
-            properties: successProperties,
-          },
-        },
-      },
-    },
+            properties: successProperties
+          }
+        }
+      }
+    }
   };
 
   const errors = {
@@ -42,7 +42,7 @@ const resolveResponses = (
     401: 'Unauthorized',
     403: 'Forbidden',
     404: 'Not Found',
-    500: 'Internal Server Error',
+    500: 'Internal Server Error'
   };
 
   if (conflict) {

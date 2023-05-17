@@ -28,7 +28,7 @@ const generateSchemas = (resource, tags) => {
 
     const property = {
       ...propertyType,
-      description: `${model.name} ${key}`,
+      description: `${model.name} ${key}`
     };
 
     if (
@@ -53,8 +53,8 @@ const generateSchemas = (resource, tags) => {
         type: 'array',
         properties: {
           type: 'object',
-          properties: { ...properties },
-        },
+          properties: { ...properties }
+        }
       },
       metadata: {
         type: 'object',
@@ -62,9 +62,9 @@ const generateSchemas = (resource, tags) => {
           page: { type: 'integer' },
           pageSize: { type: 'integer' },
           totalPages: { type: 'integer' },
-          totalItems: { type: 'integer' },
-        },
-      },
+          totalItems: { type: 'integer' }
+        }
+      }
     };
   };
 
@@ -114,7 +114,7 @@ const generateSchemas = (resource, tags) => {
             metadata: (() => {
               if (metadata && metadata.search && metadata.search.length > 0) {
                 return {
-                  search: metadata.search,
+                  search: metadata.search
                 };
               }
 
@@ -128,9 +128,9 @@ const generateSchemas = (resource, tags) => {
                     page: 'page',
                     orderBy: 'order_by',
                     order: 'order',
-                    searchTerm: 'search',
-                  },
-                },
+                    searchTerm: 'search'
+                  }
+                }
               };
 
               if (metadata && metadata.search && metadata.search.length > 0) {
@@ -140,13 +140,13 @@ const generateSchemas = (resource, tags) => {
                     page: 'page',
                     orderBy: 'order_by',
                     order: 'order',
-                    searchTerm: 'search',
-                  },
+                    searchTerm: 'search'
+                  }
                 };
               }
 
               return references;
-            })(),
+            })()
           },
           parameters: [
             {
@@ -155,8 +155,8 @@ const generateSchemas = (resource, tags) => {
               description: 'Page number',
               schema: {
                 type: 'integer',
-                minimum: 1,
-              },
+                minimum: 1
+              }
             },
             {
               name: 'page_size',
@@ -165,16 +165,16 @@ const generateSchemas = (resource, tags) => {
               schema: {
                 type: 'integer',
                 minimum: 1,
-                maximum: 100,
-              },
+                maximum: 100
+              }
             },
             {
               name: 'search',
               in: 'query',
               description: 'Search query string',
               schema: {
-                type: 'string',
-              },
+                type: 'string'
+              }
             },
             {
               name: 'order_by',
@@ -182,9 +182,9 @@ const generateSchemas = (resource, tags) => {
               description: 'Order field',
               schema: {
                 type: 'string',
-                enum: getOrderByEnumValues(),
+                enum: getOrderByEnumValues()
               },
-              'x-parameter-name': 'orderBy',
+              'x-parameter-name': 'orderBy'
             },
             {
               name: 'order',
@@ -192,22 +192,22 @@ const generateSchemas = (resource, tags) => {
               description: 'Order direction',
               schema: {
                 type: 'string',
-                enum: ['desc', 'asc'],
-              },
-            },
+                enum: ['desc', 'asc']
+              }
+            }
           ],
           responses: resolveResponses(
             model.name,
             200,
             getAllResponseProperties()
-          ),
+          )
         },
         post: {
           summary: `Create ${model.name}`,
           'x-admin': {
             types: ['create'],
             groupName: model.name,
-            resourceName: 'Create',
+            resourceName: 'Create'
           },
           description: `Create ${model.name}`,
           tags: resolveTags(model, tags.create),
@@ -216,18 +216,18 @@ const generateSchemas = (resource, tags) => {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: getPostRequestProperties(),
-                },
-              },
-            },
+                  properties: getPostRequestProperties()
+                }
+              }
+            }
           },
           responses: resolveResponses(
             model.name,
             201,
             getRequestProperties(),
             true
-          ),
-        },
+          )
+        }
       },
       [`/api/${resourcePlural}/{id}`]: {
         get: {
@@ -235,7 +235,7 @@ const generateSchemas = (resource, tags) => {
           'x-admin': {
             types: ['read'],
             groupName: model.name,
-            resourceName: 'Read',
+            resourceName: 'Read'
           },
           description: `Get ${model.name} by ID`,
           tags: resolveTags(model, tags.get),
@@ -245,19 +245,19 @@ const generateSchemas = (resource, tags) => {
               in: 'path',
               description: `${model.name} ID`,
               schema: {
-                type: 'integer',
+                type: 'integer'
               },
-              required: true,
-            },
+              required: true
+            }
           ],
-          responses: resolveResponses(model.name, 200, getRequestProperties()),
+          responses: resolveResponses(model.name, 200, getRequestProperties())
         },
         put: {
           summary: `Update ${model.name}`,
           'x-admin': {
             types: ['update'],
             groupName: model.name,
-            resourceName: 'Update',
+            resourceName: 'Update'
           },
           description: `Update ${model.name}`,
           tags: resolveTags(model, tags.update),
@@ -267,29 +267,29 @@ const generateSchemas = (resource, tags) => {
               in: 'path',
               description: `${model.name} ID`,
               schema: {
-                type: 'integer',
+                type: 'integer'
               },
-              required: true,
-            },
+              required: true
+            }
           ],
           requestBody: {
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: getPutRequestProperties(),
-                },
-              },
-            },
+                  properties: getPutRequestProperties()
+                }
+              }
+            }
           },
-          responses: resolveResponses(model.name, 200, getRequestProperties()),
+          responses: resolveResponses(model.name, 200, getRequestProperties())
         },
         delete: {
           summary: `Delete ${model.name}`,
           'x-admin': {
             types: ['delete'],
             groupName: model.name,
-            resourceName: 'Delete',
+            resourceName: 'Delete'
           },
           description: `Delete ${model.name}`,
           tags: resolveTags(model, tags.delete),
@@ -299,15 +299,15 @@ const generateSchemas = (resource, tags) => {
               in: 'path',
               description: `${model.name} ID`,
               schema: {
-                type: 'integer',
+                type: 'integer'
               },
-              required: true,
-            },
+              required: true
+            }
           ],
-          responses: resolveResponses(model.name, 200, getRequestProperties()),
-        },
-      },
-    },
+          responses: resolveResponses(model.name, 200, getRequestProperties())
+        }
+      }
+    }
   };
 };
 

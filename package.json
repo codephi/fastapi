@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.js*' --write",
+    "prettier-watch": "onchange 'src/**/*.js*' -- prettier --write {{changed}}"
   },
   "author": "",
   "license": "ISC",

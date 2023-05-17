@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 
 const global = {
-  sequelize: null,
+  sequelize: null
 };
 
 const testDatabaseConnection = () => {
@@ -16,7 +16,7 @@ const databaseConnect = ({ database, username, password, options }) => {
       dialect: 'postgres',
       logging: (sql) => {
         console.log(sql);
-      },
+      }
     };
   }
 
@@ -31,7 +31,7 @@ const comp = {
   getSequelize,
   testDatabaseConnection,
   databaseConnect,
-  global,
+  global
 };
 
 module.exports = comp;

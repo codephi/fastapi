@@ -21,7 +21,7 @@ const getAll =
         where: searchFilter,
         offset,
         limit: pageSize,
-        order: [[orderBy, order]],
+        order: [[orderBy, order]]
       };
 
       const data = await model.findAndCountAll(findOptions);
@@ -46,8 +46,8 @@ const getAll =
           page,
           pageSize,
           totalPages,
-          totalItems: data.count,
-        },
+          totalItems: data.count
+        }
       });
     } catch (err) {
       fastify.log.error(err);
@@ -131,5 +131,5 @@ module.exports = {
   getOne,
   create,
   update,
-  remove,
+  remove
 };

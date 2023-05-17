@@ -18,10 +18,10 @@ module.exports = {
             schema: {
               type: 'array',
               items: {
-                type: 'string',
-              },
-            },
-          },
+                type: 'string'
+              }
+            }
+          }
         ],
         responses: resolveResponses('health', 200, {
           server: {
@@ -31,8 +31,8 @@ module.exports = {
               release: { type: 'string' },
               arch: { type: 'string' },
               uptime: { type: 'number' },
-              cpus: { type: 'number' },
-            },
+              cpus: { type: 'number' }
+            }
           },
           memory: {
             type: 'object',
@@ -41,8 +41,8 @@ module.exports = {
               free: { type: 'number' },
               used: { type: 'number' },
               active: { type: 'number' },
-              available: { type: 'number' },
-            },
+              available: { type: 'number' }
+            }
           },
           process: {
             type: 'object',
@@ -50,8 +50,8 @@ module.exports = {
               pid: { type: 'number' },
               uptime: { type: 'number' },
               versions: { type: 'object' },
-              memoryUsage: { type: 'object' },
-            },
+              memoryUsage: { type: 'object' }
+            }
           },
           os: {
             type: 'object',
@@ -62,16 +62,16 @@ module.exports = {
               release: { type: 'string' },
               arch: { type: 'string' },
               uptime: { type: 'number' },
-              cpus: { type: 'number' },
-            },
+              cpus: { type: 'number' }
+            }
           },
           container: {
             type: 'object',
             properties: {
               image: { type: 'string' },
               version: { type: 'string' },
-              containerId: { type: 'string' },
-            },
+              containerId: { type: 'string' }
+            }
           },
           database: {
             type: 'object',
@@ -80,13 +80,13 @@ module.exports = {
               host: { type: 'string' },
               port: { type: 'number' },
               database: { type: 'string' },
-              username: { type: 'string' },
-            },
+              username: { type: 'string' }
+            }
           },
-          status: { type: 'string' },
-        }),
-      },
-    },
+          status: { type: 'string' }
+        })
+      }
+    }
   },
   handler: (request, reply) => {
     const { info } = request.query;
@@ -101,7 +101,7 @@ module.exports = {
         database: getDatabaseInfo(),
         container: getContainerInfo(),
         app: getAppInfo(),
-        status: 'ok',
+        status: 'ok'
       });
     } else {
       const response = { status: 'ok' };
@@ -139,7 +139,7 @@ module.exports = {
 
       reply.send(response);
     }
-  },
+  }
 };
 
 const getMemoryInfo = () => {
@@ -154,7 +154,7 @@ const getMemoryInfo = () => {
     free,
     used,
     active,
-    available,
+    available
   };
 };
 
@@ -168,7 +168,7 @@ const getProcessInfo = () => {
     pid,
     uptime,
     versions,
-    memoryUsage,
+    memoryUsage
   };
 };
 
@@ -188,7 +188,7 @@ const getOsInfo = () => {
     release,
     arch,
     uptime,
-    cpus,
+    cpus
   };
 };
 
@@ -204,7 +204,7 @@ const getDatabaseInfo = () => {
     host,
     port,
     database,
-    username,
+    username
   };
 };
 
@@ -216,7 +216,7 @@ const getContainerInfo = () => {
   return {
     image,
     version,
-    containerId,
+    containerId
   };
 };
 
@@ -226,6 +226,6 @@ const getAppInfo = () => {
 
   return {
     image,
-    version,
+    version
   };
 };

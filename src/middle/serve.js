@@ -1,19 +1,22 @@
 const fastify = require('fastify')({ logger: true });
 
-fastify.register(require('@fastify/cors'), {
-  origin: '*',
-});
-
 const listen = (callback) => {
   fastify.listen(
     {
-      port: 3000,
+      port: 3000
     },
-    callback,
+    callback
   );
 };
 
+const preBuilder = () => {
+  fastify.register(require('@fastify/cors'), {
+    origin: '*'
+  });
+};
+
 module.exports = {
+  preBuilder,
   listen,
-  fastify,
+  fastify
 };

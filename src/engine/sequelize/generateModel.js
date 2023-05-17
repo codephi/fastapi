@@ -28,7 +28,7 @@ function generateSequelizeModelFromJSON(jsonSchema) {
         allowNull: !columnConstraints.includes('NOT NULL'),
         primaryKey: columnConstraints.includes('PRIMARY KEY'),
         references: parseReferences(columnConstraints),
-        autoIncrement: column.autoIncrement || false,
+        autoIncrement: column.autoIncrement || false
       };
 
       if ('maxLength' in columnParams) {
@@ -38,12 +38,12 @@ function generateSequelizeModelFromJSON(jsonSchema) {
 
     models[modelName] = {
       model: global.sequelize.define(modelName, tableColumns, {
-        tableName,
+        tableName
       }),
       metadata: {
         ...table.metadata,
-        maxLength,
-      },
+        maxLength
+      }
     };
   }
 
@@ -56,7 +56,7 @@ function generateSequelizeModelFromJSON(jsonSchema) {
       for (const constraints of column.constraints) {
         if (constraints.indexOf('REFERENCES') > -1) {
           const referencedTable = getModelName(
-            getReferencedTableName(column.constraints),
+            getReferencedTableName(column.constraints)
           );
           const referencedModel = models[referencedTable].model;
 
@@ -67,13 +67,13 @@ function generateSequelizeModelFromJSON(jsonSchema) {
             models[modelName].metadata.relationships = [
               {
                 model: referencedModel,
-                as: column.name,
-              },
+                as: column.name
+              }
             ];
           } else {
             models[modelName].metadata.relationships.push({
               model: referencedModel,
-              as: column.name,
+              as: column.name
             });
           }
         }
@@ -132,21 +132,21 @@ function getSequelizeDataType(columnType) {
 function getSequelizeConstraints(columnConstraints) {
   // Remover a referência ao modelo pai da restrição de chave estrangeira
   return columnConstraints.filter(
-    (constraint) => !constraint.includes('REFERENCES'),
+    (constraint) => !constraint.includes('REFERENCES')
   );
 }
 
 function parseReferences(columnConstraints) {
   // Analisar a referência da restrição de chave estrangeira, se existir
   const referencesConstraint = columnConstraints.find((constraint) =>
-    constraint.includes('REFERENCES'),
+    constraint.includes('REFERENCES')
   );
 
   if (referencesConstraint) {
     const referencedTable = getReferencedTableName([referencesConstraint]);
     return {
       model: referencedTable,
-      key: 'id', // Assumindo que a coluna referenciada é sempre 'id'
+      key: 'id' // Assumindo que a coluna referenciada é sempre 'id'
     };
   }
 

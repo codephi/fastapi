@@ -17,9 +17,9 @@ module.exports = {
             required: false,
             schema: {
               type: 'string',
-              enum: ['all', 'off'],
-            },
-          },
+              enum: ['all', 'off']
+            }
+          }
         ],
         responses: resolveResponses('health', 200, {
           server: {
@@ -29,8 +29,8 @@ module.exports = {
               release: { type: 'string' },
               arch: { type: 'string' },
               uptime: { type: 'number' },
-              cpus: { type: 'number' },
-            },
+              cpus: { type: 'number' }
+            }
           },
           memory: {
             type: 'object',
@@ -39,8 +39,8 @@ module.exports = {
               free: { type: 'number' },
               used: { type: 'number' },
               active: { type: 'number' },
-              available: { type: 'number' },
-            },
+              available: { type: 'number' }
+            }
           },
           process: {
             type: 'object',
@@ -48,8 +48,8 @@ module.exports = {
               pid: { type: 'number' },
               uptime: { type: 'number' },
               versions: { type: 'object' },
-              memoryUsage: { type: 'object' },
-            },
+              memoryUsage: { type: 'object' }
+            }
           },
           os: {
             type: 'object',
@@ -60,16 +60,16 @@ module.exports = {
               release: { type: 'string' },
               arch: { type: 'string' },
               uptime: { type: 'number' },
-              cpus: { type: 'number' },
-            },
+              cpus: { type: 'number' }
+            }
           },
           container: {
             type: 'object',
             properties: {
               image: { type: 'string' },
               version: { type: 'string' },
-              containerId: { type: 'string' },
-            },
+              containerId: { type: 'string' }
+            }
           },
           database: {
             type: 'object',
@@ -78,13 +78,13 @@ module.exports = {
               host: { type: 'string' },
               port: { type: 'number' },
               database: { type: 'string' },
-              username: { type: 'string' },
-            },
+              username: { type: 'string' }
+            }
           },
-          status: { type: 'string' },
-        }),
-      },
-    },
+          status: { type: 'string' }
+        })
+      }
+    }
   },
   handler: (request, reply) => {
     const { info } = request.query;
@@ -95,20 +95,20 @@ module.exports = {
         release: os.release(),
         arch: os.arch(),
         uptime: os.uptime(),
-        cpus: os.cpus().length,
+        cpus: os.cpus().length
       };
       const memoryInfo = {
         total: os.totalmem(),
         free: os.freemem(),
         used: os.totalmem() - os.freemem(),
         active: os.totalmem() - os.freemem(),
-        available: os.totalmem() - os.freemem(),
+        available: os.totalmem() - os.freemem()
       };
       const processInfo = {
         pid: process.pid,
         uptime: process.uptime(),
         versions: process.versions,
-        memoryUsage: process.memoryUsage(),
+        memoryUsage: process.memoryUsage()
       };
       const osInfo = {
         hostname: os.hostname(),
@@ -117,19 +117,19 @@ module.exports = {
         release: os.release(),
         arch: os.arch(),
         uptime: os.uptime(),
-        cpus: os.cpus().length,
+        cpus: os.cpus().length
       };
       const databaseInfo = {
         dialect: global.sequelize.getDialect(),
         host: global.sequelize.config.host,
         port: global.sequelize.config.port,
         database: global.sequelize.config.database,
-        username: global.sequelize.config.username,
+        username: global.sequelize.config.username
       };
       const container = {
         image: process.env.IMAGE,
         version: process.env.VERSION,
-        containerId: process.env.HOSTNAME,
+        containerId: process.env.HOSTNAME
       };
 
       reply.send({
@@ -139,10 +139,10 @@ module.exports = {
         os: osInfo,
         database: databaseInfo,
         container,
-        status: 'ok',
+        status: 'ok'
       });
     } else {
       reply.send({ status: 'ok' });
     }
-  },
+  }
 };

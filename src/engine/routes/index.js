@@ -35,8 +35,8 @@ const resolveResponses = (responses) => {
       description,
       type: 'object',
       properties: responseToProperties(
-        content['application/json'].schema.properties,
-      ),
+        content['application/json'].schema.properties
+      )
     };
   });
   return response;
@@ -70,14 +70,14 @@ const createRoute = ({ path, method, handler }) => {
     method: methodName.toUpperCase(),
     url: resolvePath(path),
     schema: {
-      response: resolveResponses(operation.responses),
+      response: resolveResponses(operation.responses)
     },
-    handler,
+    handler
   };
 
   if (operation.requestBody) {
     route.schema.body = responseToProperties(
-      operation.requestBody.content['application/json'].schema,
+      operation.requestBody.content['application/json'].schema
     );
   }
 
@@ -86,7 +86,7 @@ const createRoute = ({ path, method, handler }) => {
     if (query.length > 0) {
       const querySchema = {
         type: 'object',
-        properties: queryToProperties(query),
+        properties: queryToProperties(query)
       };
       route.schema.querystring = querySchema;
     }
@@ -108,7 +108,7 @@ const createRouteModel = ({ paths, model, handlers }) => {
   });
 };
 
-const createRouteHandler = ({ fastify, paths, handler }) => {
+const createRouteHandler = ({ paths, handler }) => {
   Object.entries(paths).forEach(([path, operations]) => {
     Object.entries(operations).forEach(([method, operation]) => {
       if (!['get', 'post', 'put', 'delete'].includes(method)) return;

@@ -17,7 +17,7 @@ function fixText(text) {
 
 const formaCondition = (searchTerm) => {
   return {
-    [Op.iLike]: `%${searchTerm}%`,
+    [Op.iLike]: `%${searchTerm}%`
   };
 };
 
@@ -61,13 +61,13 @@ const superFiler = (fields, searchTerm) => {
   fields.forEach((field) => {
     term.forEach((item) => {
       termFields.push({
-        [field]: item,
+        [field]: item
       });
     });
   });
 
   return {
-    [Op.or]: termFields,
+    [Op.or]: termFields
   };
 };
 
@@ -82,7 +82,7 @@ function removeAccents(text) {
     o: '[oòóôõö]',
     oe: 'œ',
     u: '[uùúûűü]',
-    y: '[yÿ]',
+    y: '[yÿ]'
   };
 
   for (let letter in accentMap) {

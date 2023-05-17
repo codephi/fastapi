@@ -2,20 +2,50 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const fastapi = require('./fastapi');
+const { FastAPI } = require('./fastapi');
 
-const tags = {
-  create: ['create'],
-  read: ['read'],
-  update: ['update'],
-  delete: ['Delete'],
-  list: ['list'],
-};
+const fastapi = new FastAPI();
 
-fastapi.databaseConnect({
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+fastapi
+  .setDataBase({
+    database: process.env.DB_NAME,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
+  })
+  .setModel('model.json')
+  .setTags('create', ['create'])
+  .setTags('read', ['read'])
+  .setTags('update', ['update'])
+  .setTags('delete', ['delete'])
+  .setTags('list', ['list']);
 
-fastapi.setup({ model: 'model.json', tags });
+fastapi.get(
+  '/hello',
+  {
+    tags: ['hello'],
+    summary: 'Hello world',
+    description: 'Hello world',
+    responses: {
+      200: {
+        description: 'Successful operation',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  async () => {
+    return { message: 'Hello world' };
+  }
+);
+
+fastapi.start();

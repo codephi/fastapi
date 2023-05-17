@@ -6,14 +6,14 @@ const createFullDoc = (paths) => {
     info: {
       title: process.env.APP_NAME || 'Fastapi',
       description: process.env.APP_DESCRIPTION || 'Fastapi',
-      version: process.env.APP_VERSION || '1.0.0',
+      version: process.env.APP_VERSION || '1.0.0'
     },
     servers: [
       {
-        url: process.env.APP_URL || 'http://localhost:3000',
-      },
+        url: process.env.APP_URL || 'http://localhost:3000'
+      }
     ],
-    paths: resolvePaths(paths),
+    paths: resolvePaths(paths)
   };
 
   return convertOpenAPItoSchemas(openapi);
@@ -23,8 +23,8 @@ const resolvePaths = (schemas) => {
   Object.keys(schemas).forEach((path) => {
     schemas[path].servers = [
       {
-        url: process.env.APP_URL || 'http://localhost:3000',
-      },
+        url: process.env.APP_URL || 'http://localhost:3000'
+      }
     ];
   });
 
@@ -32,5 +32,5 @@ const resolvePaths = (schemas) => {
 };
 
 module.exports = {
-  createFullDoc,
+  createFullDoc
 };

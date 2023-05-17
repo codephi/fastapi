@@ -1,96 +1,96 @@
 const dataTypes = {
   STRING: {
-    type: 'string',
+    type: 'string'
   },
   CHAR: {
-    type: 'string',
+    type: 'string'
   },
   TEXT: {
-    type: 'string',
+    type: 'string'
   },
   INTEGER: {
-    type: 'integer',
+    type: 'integer'
   },
   BIGINT: {
-    type: 'integer',
+    type: 'integer'
   },
   FLOAT: {
-    type: 'number',
+    type: 'number'
   },
   REAL: {
-    type: 'number',
+    type: 'number'
   },
   DOUBLE: {
-    type: 'number',
+    type: 'number'
   },
   DECIMAL: {
-    type: 'number',
+    type: 'number'
   },
   BOOLEAN: {
-    type: 'boolean',
+    type: 'boolean'
   },
   ENUM: {
-    type: 'string',
+    type: 'string'
   },
   DATE: {
     type: 'string',
-    format: 'date-time',
+    format: 'date-time'
   },
   DATEONLY: {
     type: 'string',
-    format: 'date',
+    format: 'date'
   },
   TIME: {
     type: 'string',
-    format: 'time',
+    format: 'time'
   },
   NOW: {
     type: 'string',
-    format: 'date-time',
+    format: 'date-time'
   },
   UUID: {
     type: 'string',
-    format: 'uuid',
+    format: 'uuid'
   },
   UUIDV1: {
     type: 'string',
-    format: 'uuid',
+    format: 'uuid'
   },
   UUIDV4: {
     type: 'string',
-    format: 'uuid',
+    format: 'uuid'
   },
   ARRAY: {
-    type: 'array',
+    type: 'array'
   },
   JSON: {
-    type: 'object',
+    type: 'object'
   },
   JSONB: {
-    type: 'object',
+    type: 'object'
   },
   VARCHAR: {
-    type: 'string',
+    type: 'string'
   },
   'DOUBLE PRECISION': {
-    type: 'number',
+    type: 'number'
   },
   'TIMESTAMP WITH TIME ZONE': {
     type: 'string',
-    format: 'date-time',
+    format: 'date-time'
   },
   'TIMESTAMP WITHOUT TIME ZONE': {
     type: 'string',
-    format: 'date-time',
+    format: 'date-time'
   },
   'TIME WITH TIME ZONE': {
     type: 'string',
-    format: 'time',
+    format: 'time'
   },
   'TIME WITHOUT TIME ZONE': {
     type: 'string',
-    format: 'time',
-  },
+    format: 'time'
+  }
 };
 
 const convertType = (sequelizeType) => {
@@ -111,7 +111,7 @@ const convertType = (sequelizeType) => {
         if (type !== 'DECIMAL' && maxLength !== undefined) {
           return {
             ...typeDefinition,
-            maxLength,
+            maxLength
           };
         }
 

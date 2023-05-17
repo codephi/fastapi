@@ -9,12 +9,12 @@ module.exports = (paths) => {
         get: {
           tags: ['Documentation'],
           summary: 'Get OpenAPI JSON',
-          description: 'Get OpenAPI JSON',
-        },
-      },
+          description: 'Get OpenAPI JSON'
+        }
+      }
     },
     handler: (_request, reply) => {
       reply.send(doc);
-    },
+    }
   };
 };
