@@ -210,6 +210,7 @@ module.exports = {
   loadSpec,
   listen,
   createRouteModel,
+  importModel,
   builderOpeapi,
   resolveResponses,
   FastAPI
