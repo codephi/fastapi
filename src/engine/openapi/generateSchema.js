@@ -74,6 +74,7 @@ const generateSchemas = (resource, tags) => {
 
   const getPostRequestProperties = () => {
     const postProperties = { ...properties };
+    delete postProperties.id;
     delete postProperties.createdAt;
     delete postProperties.updatedAt;
     return postProperties;
