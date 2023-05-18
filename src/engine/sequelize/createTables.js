@@ -1,9 +1,9 @@
 const { getSequelize } = require('./getSequelize');
 
-const createTables = async () => {
+const createTables = async (config = {}) => {
   const sequelize = getSequelize();
   try {
-    await sequelize.sync({ force: true });
+    await sequelize.sync(config);
     console.log('All tables created.');
   } catch (error) {
     console.error('Error creating tables:', error);

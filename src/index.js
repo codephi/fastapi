@@ -65,12 +65,12 @@ class FastAPI {
     database: process.env.DB_NAME | process.env.DATABASE_NAME | null,
     username: process.env.DB_USER | process.env.DATABASE_USER | null,
     password: process.env.DB_PASSWORD | process.env.DATABASE_PASSWORD | null,
-    options: {}
+    options: {},
+    sync: null
   };
   cors = {
     origin: '*'
   };
-  forceCreateTables = false;
 
   constructor(props) {
     if (props === undefined) return;
@@ -118,13 +118,22 @@ class FastAPI {
   load() {
     databaseConnect(this.database);
 
-    const { model, routes, tags, handlers } = this;
+    const { model, routes, tags, handlers, database } = this;
 
     const models = importModel(model);
 
-    if (this.forceCreateTables) {
+    if (this.database.sync !== false) {
       const innerLoad = this.innerLoad;
-      createTables().then(() => {
+
+      const createTablesConfig = {};
+
+      if (database.sync === 'alter') {
+        createTablesConfig.alter = true;
+      } else if (database.sync === 'force') {
+        createTablesConfig.force = true;
+      }
+
+      createTables(createTablesConfig).then(() => {
         innerLoad(models, routes, tags, handlers);
       });
     } else {
