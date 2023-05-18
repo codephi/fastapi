@@ -65,7 +65,14 @@ class FastAPI {
     database: process.env.DB_NAME | process.env.DATABASE_NAME | null,
     username: process.env.DB_USER | process.env.DATABASE_USER | null,
     password: process.env.DB_PASSWORD | process.env.DATABASE_PASSWORD | null,
-    options: {},
+    options: {
+      host: 'localhost',
+      port: 5432,
+      dialect: 'postgres',
+      logging: (sql) => {
+        console.log(sql);
+      }
+    },
     sync: null
   };
   cors = {

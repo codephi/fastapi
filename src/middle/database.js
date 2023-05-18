@@ -9,17 +9,6 @@ const testDatabaseConnection = () => {
 };
 
 const databaseConnect = ({ database, username, password, options }) => {
-  if (!options) {
-    options = {
-      host: 'localhost',
-      port: 5432,
-      dialect: 'postgres',
-      logging: (sql) => {
-        console.log(sql);
-      }
-    };
-  }
-
   global.sequelize = new Sequelize(database, username, password, options);
 };
 
