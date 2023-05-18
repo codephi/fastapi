@@ -62,6 +62,7 @@ class FastAPI {
   };
   handlers = {};
   model = null;
+  models = {};
   database = {
     database: process.env.DB_NAME | process.env.DATABASE_NAME | null,
     username: process.env.DB_USER | process.env.DATABASE_USER | null,
@@ -129,7 +130,7 @@ class FastAPI {
 
     const { model, routes, tags, handlers, database } = this;
 
-    const models = importModel(model);
+    this.models = importModel(model);
 
     if (this.database.sync !== false) {
       const createTablesConfig = {};
@@ -143,7 +144,7 @@ class FastAPI {
       testDatabaseConnection()
         .then(() => {
           createTables(createTablesConfig).then(() => {
-            this.builder(models, routes, tags, handlers);
+            this.builder(routes, tags, handlers);
             if (callback) {
               callback();
             }
@@ -157,21 +158,21 @@ class FastAPI {
           }
         });
     } else {
-      this.builder(models, routes, tags, handlers);
+      this.builder(routes, tags, handlers);
       if (callback) {
         callback();
       }
     }
   }
 
-  builder(models, routes, tags, handlers) {
+  builder(routes, tags, handlers) {
     preBuilder();
 
     loadSpec({
       routes,
       tags,
       handlers,
-      models
+      models: this.models
     });
   }
 
@@ -246,6 +247,10 @@ class FastAPI {
     this.tags[name] = tags;
     return this;
   }
+
+  getModels() {
+    return this.models;
+  }
 }
 
 module.exports = {
@@ -261,5 +266,6 @@ module.exports = {
   builderOpeapi,
   createTables,
   resolveResponses,
-  FastAPI
+  FastAPI,
+  log: fastify.log
 };
