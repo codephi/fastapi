@@ -2,6 +2,7 @@ const { fastify, listen, preBuilder } = require('./middle/serve');
 const { generateSchemas } = require('./engine/openapi');
 const { createRouteModel, createRouteHandler } = require('./engine/routes');
 const { resolveResponses } = require('./engine/openapi/generateSchema');
+const { createTables } = require('./engine/sequelize/createTables');
 const {
   databaseConnect,
   testDatabaseConnection,
@@ -11,8 +12,14 @@ const { importModel } = require('./engine/sequelize/generateModel');
 const health = require('./routes/health');
 const builderOpeapi = require('./routes/openapi');
 
-const loadSpec = ({ model, tags, routes = [], handlers = {} }) => {
-  const models = importModel(model);
+const loadSpec = ({ model, models, tags, routes = [], handlers = {} }) => {
+  if (models === undefined) {
+    if (model !== undefined) {
+      models = importModel(model);
+    } else {
+      throw new Error('No model provided');
+    }
+  }
 
   let openApiSchemaPaths = {};
 
@@ -63,6 +70,7 @@ class FastAPI {
   cors = {
     origin: '*'
   };
+  forceCreateTables = false;
 
   constructor(props) {
     if (props === undefined) return;
@@ -72,7 +80,8 @@ class FastAPI {
       handlers = undefined,
       model = undefined,
       database = undefined,
-      cors = undefined
+      cors = undefined,
+      forceCreateTables = undefined
     } = props;
 
     if (model !== undefined) {
@@ -99,22 +108,39 @@ class FastAPI {
       this.cors = cors;
     }
 
+    if (forceCreateTables) {
+      this.forceCreateTables = forceCreateTables;
+    }
+
     return this;
   }
 
   load() {
     databaseConnect(this.database);
 
+    const { model, routes, tags, handlers } = this;
+
+    const models = importModel(model);
+
+    if (this.forceCreateTables) {
+      const innerLoad = this.innerLoad;
+      createTables().then(() => {
+        innerLoad(models, routes, tags, handlers);
+      });
+    } else {
+      this.innerLoad(models, routes, tags, handlers);
+    }
+  }
+
+  innerLoad(models, routes, tags, handlers) {
     preBuilder();
 
-    if (this.model !== null) {
-      loadSpec({
-        routes: this.routes,
-        tags: this.tags,
-        handlers: this.handlers,
-        model: this.model
-      });
-    }
+    loadSpec({
+      routes,
+      tags,
+      handlers,
+      models
+    });
   }
 
   async defaultListen(err, address) {
@@ -212,6 +238,7 @@ module.exports = {
   createRouteModel,
   importModel,
   builderOpeapi,
+  createTables,
   resolveResponses,
   FastAPI
 };
