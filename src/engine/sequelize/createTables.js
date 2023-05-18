@@ -1,4 +1,4 @@
-const { getSequelize } = require('./getSequelize');
+const { getSequelize } = require('../../middle/database');
 
 const createTables = async (config = {}) => {
   const sequelize = getSequelize();
