@@ -101,7 +101,7 @@ class FastAPI {
     }
 
     if (database !== undefined) {
-      this.database = database;
+      this.database = { ...this.database, ...database };
     }
 
     if (cors !== undefined) {
