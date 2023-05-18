@@ -122,7 +122,7 @@ class FastAPI {
     return this;
   }
 
-  load() {
+  load(cb) {
     databaseConnect(this.database);
 
     const { model, routes, tags, handlers, database } = this;
@@ -142,9 +142,15 @@ class FastAPI {
 
       createTables(createTablesConfig).then(() => {
         innerLoad(models, routes, tags, handlers);
+        if (cb) {
+          cb();
+        }
       });
     } else {
       this.innerLoad(models, routes, tags, handlers);
+      if (cb) {
+        cb();
+      }
     }
   }
 
@@ -183,8 +189,7 @@ class FastAPI {
   }
 
   start(callback) {
-    this.load();
-    this.listen(callback);
+    this.load(() => this.listen(callback));
   }
 
   setDataBase(database) {
