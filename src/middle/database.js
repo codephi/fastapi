@@ -5,7 +5,7 @@ const global = {
 };
 
 const testDatabaseConnection = () => {
-  global.sequelize.authenticate();
+  return global.sequelize.authenticate();
 };
 
 const databaseConnect = ({ database, username, password, options }) => {

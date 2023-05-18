@@ -103,7 +103,7 @@ const createRouteModel = ({ paths, model, handlers }) => {
           ? handlers[method]
           : getRouteHandler(method, model, operation);
 
-      createRoute({ fastify, path, method: { [method]: operation }, handler });
+      createRoute({ path, method: { [method]: operation }, handler });
     });
   });
 };
@@ -112,7 +112,7 @@ const createRouteHandler = ({ paths, handler }) => {
   Object.entries(paths).forEach(([path, operations]) => {
     Object.entries(operations).forEach(([method, operation]) => {
       if (!['get', 'post', 'put', 'delete'].includes(method)) return;
-      createRoute({ fastify, path, method: { [method]: operation }, handler });
+      createRoute({ path, method: { [method]: operation }, handler });
     });
   });
 };

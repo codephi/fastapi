@@ -4,7 +4,7 @@ const { resolveResponses } = require('../engine/openapi/responses');
 
 module.exports = {
   paths: {
-    '/api/health': {
+    '/health': {
       get: {
         tags: ['Health'],
         summary: 'Get health information',

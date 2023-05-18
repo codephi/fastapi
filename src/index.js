@@ -36,13 +36,14 @@ const loadSpec = ({ model, models, tags, routes = [], handlers = {} }) => {
     return route.paths;
   });
 
+  createRouteHandler({ ...health });
+
   const openapi = builderOpeapi({
     ...openApiSchemaPaths,
     ...health.paths,
     ...paths
   });
 
-  createRouteHandler({ ...health });
   createRouteHandler({ ...openapi });
 
   fastify.setErrorHandler(function (error, request, reply) {
@@ -73,7 +74,8 @@ class FastAPI {
         console.log(sql);
       }
     },
-    sync: null
+    sync: null,
+    testConnection: true
   };
   cors = {
     origin: '*'
@@ -122,7 +124,7 @@ class FastAPI {
     return this;
   }
 
-  load(cb) {
+  load(callback) {
     databaseConnect(this.database);
 
     const { model, routes, tags, handlers, database } = this;
@@ -130,8 +132,6 @@ class FastAPI {
     const models = importModel(model);
 
     if (this.database.sync !== false) {
-      const innerLoad = this.innerLoad;
-
       const createTablesConfig = {};
 
       if (database.sync === 'alter') {
@@ -140,21 +140,31 @@ class FastAPI {
         createTablesConfig.force = true;
       }
 
-      createTables(createTablesConfig).then(() => {
-        innerLoad(models, routes, tags, handlers);
-        if (cb) {
-          cb();
-        }
-      });
+      testDatabaseConnection()
+        .then(() => {
+          createTables(createTablesConfig).then(() => {
+            this.builder(models, routes, tags, handlers);
+            if (callback) {
+              callback();
+            }
+          });
+        })
+        .catch((err) => {
+          if (callback) {
+            callback(err);
+          } else {
+            throw Error(err);
+          }
+        });
     } else {
-      this.innerLoad(models, routes, tags, handlers);
-      if (cb) {
-        cb();
+      this.builder(models, routes, tags, handlers);
+      if (callback) {
+        callback();
       }
     }
   }
 
-  innerLoad(models, routes, tags, handlers) {
+  builder(models, routes, tags, handlers) {
     preBuilder();
 
     loadSpec({
@@ -165,27 +175,17 @@ class FastAPI {
     });
   }
 
-  async defaultListen(err, address) {
+  defaultListen(err, address) {
     if (err) {
       fastify.log.error(err);
       process.exit(1);
     }
 
     fastify.log.info(`Server listening on ${address}`);
-
-    if (process.env.DB_TEST_CONNECTION !== 'off') {
-      try {
-        await testDatabaseConnection();
-        fastify.log.info('Database connection established');
-      } catch (error) {
-        fastify.log.error('Unable to connect to the database:', error);
-        process.exit(1);
-      }
-    }
   }
 
   listen(callback) {
-    listen(callback !== undefined ? callback : this.defaultListen);
+    listen(callback || this.defaultListen);
   }
 
   start(callback) {
