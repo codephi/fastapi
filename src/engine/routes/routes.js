@@ -1,5 +1,6 @@
 const fastify = require('../../middle/serve');
 const { superFiler } = require('../superFiler');
+const { emit } = require('../events');
 
 const getAll =
   ({ model, metadata }) =>
@@ -49,6 +50,8 @@ const getAll =
           totalItems: data.count
         }
       });
+
+      emit(model.name, 'getAll', data.rows);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
@@ -67,6 +70,7 @@ const getOne =
       }
 
       reply.send(data);
+      emit(model.name, 'getOne', data.rows);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
@@ -80,6 +84,7 @@ const create =
       const data = await model.create(request.body);
 
       reply.send(data);
+      emit(model.name, 'create', data.rows);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to create ${model.name}.` });
@@ -100,6 +105,7 @@ const update =
       await data.update(request.body);
 
       reply.send(data);
+      emit(model.name, 'update', data.rows);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to update ${model.name}.` });
@@ -120,6 +126,7 @@ const remove =
       await data.destroy();
 
       reply.send({ message: `${model.name} deleted successfully.` });
+      emit(model.name, 'remove', data.rows);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to delete ${model.name}.` });
