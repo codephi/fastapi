@@ -11,6 +11,7 @@ const {
 const { importModel } = require('./engine/sequelize/generateModel');
 const health = require('./routes/health');
 const builderOpeapi = require('./routes/openapi');
+const { on, emit, remove } = require('./engine/events');
 
 const loadSpec = ({ model, models, tags, routes = [], handlers = {} }) => {
   if (models === undefined) {
@@ -250,6 +251,21 @@ class FastAPI {
 
   getModels() {
     return this.models;
+  }
+
+  on(modelName, action, callback) {
+    on(modelName, action, callback);
+    return this;
+  }
+
+  emit(modelName, action, data) {
+    emit(modelName, action, data);
+    return this;
+  }
+
+  removeListener(modelName, action, callback) {
+    remove(modelName, action, callback);
+    return this;
   }
 }
 
