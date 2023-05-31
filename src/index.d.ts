@@ -3,6 +3,7 @@ declare module 'fastapi' {
 
   interface FastAPIOptions {
     model?: string;
+    config?: any;
     forceCreateTables?: boolean;
     database?: {
       database?: string;
@@ -87,7 +88,7 @@ declare module 'fastapi' {
         [name: string]: RequestHandler;
       }
     ): void;
-    defaultListen(err: Error, address: string): void;
+    private defaultListen(err: Error): void;
     listen(callback?: (err?: Error) => void): void;
     start(callback?: (err?: Error) => void): void;
     setDataBase(database: {
@@ -115,6 +116,13 @@ declare module 'fastapi' {
     setHandler(name: string, handler: RequestHandler): FastAPI;
     setTags(name: string, tags: string[]): FastAPI;
     getModels(): { [name: string]: any };
+    on(
+      moduleName: string,
+      action: string,
+      callback: (err?: Error, data?: any) => void
+    ): FastAPI;
+    emit(moduleName: string, action: string, data: any): FastAPI;
+    removeListener(moduleName: string, action: string): FastAPI;
   }
 
   const fastapi: FastAPI;

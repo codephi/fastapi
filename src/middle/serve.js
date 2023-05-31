@@ -1,12 +1,7 @@
 const fastify = require('fastify')({ logger: true });
 
-const listen = (callback) => {
-  fastify.listen(
-    {
-      port: 3000
-    },
-    callback
-  );
+const listen = (config, callback) => {
+  fastify.listen(config, callback);
 };
 
 const preBuilder = () => {

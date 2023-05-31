@@ -1,4 +1,4 @@
-const { fastify, listen, preBuilder } = require('./middle/serve');
+const { fastify, listen: serveListen, preBuilder } = require('./middle/serve');
 const { generateSchemas } = require('./engine/openapi');
 const { createRouteModel, createRouteHandler } = require('./engine/routes');
 const { resolveResponses } = require('./engine/openapi/generateSchema');
@@ -53,6 +53,10 @@ const loadSpec = ({ model, models, tags, routes = [], handlers = {} }) => {
 };
 
 class FastAPI {
+  config = {
+    port: 3000,
+    address: '0.0.0.0'
+  };
   routes = [];
   tags = {
     create: ['create'],
@@ -73,7 +77,7 @@ class FastAPI {
       port: 5432,
       dialect: 'postgres',
       logging: (sql) => {
-        console.log(sql);
+        fastify.log.info(sql);
       }
     },
     sync: null,
@@ -92,7 +96,8 @@ class FastAPI {
       model = undefined,
       database = undefined,
       cors = undefined,
-      forceCreateTables = undefined
+      forceCreateTables = undefined,
+      config = undefined
     } = props;
 
     if (model !== undefined) {
@@ -121,6 +126,10 @@ class FastAPI {
 
     if (forceCreateTables) {
       this.forceCreateTables = forceCreateTables;
+    }
+
+    if (config !== undefined) {
+      this.config = config;
     }
 
     return this;
@@ -177,17 +186,15 @@ class FastAPI {
     });
   }
 
-  defaultListen(err, address) {
+  defaultListen(err) {
     if (err) {
       fastify.log.error(err);
       process.exit(1);
     }
-
-    fastify.log.info(`Server listening on ${address}`);
   }
 
   listen(callback) {
-    listen(callback || this.defaultListen);
+    serveListen(this.config, callback || this.defaultListen);
   }
 
   start(callback) {
@@ -263,8 +270,8 @@ class FastAPI {
     return this;
   }
 
-  removeListener(modelName, action, callback) {
-    remove(modelName, action, callback);
+  removeListener(modelName, action) {
+    remove(modelName, action);
     return this;
   }
 }
@@ -276,7 +283,7 @@ module.exports = {
   databaseConnect,
   getSequelize,
   loadSpec,
-  listen,
+  listen: serveListen,
   createRouteModel,
   importModel,
   builderOpeapi,
