@@ -198,7 +198,14 @@ class FastAPI {
   }
 
   start(callback) {
-    this.load(() => this.listen(callback));
+    this.load((err) => {
+      if (err) {
+        fastify.log.error(err);
+        process.exit(1);
+      }
+
+      this.listen(callback);
+    });
   }
 
   setDataBase(database) {
