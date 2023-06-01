@@ -13,6 +13,24 @@ const resolveTags = (model, tags = []) => {
   });
 };
 
+const removeImutable = (properties, removeOnlyAllProp = false) => {
+  const newProperties = {};
+
+  Object.entries(properties).forEach(([key, value]) => {
+    const imutable = value.imutable;
+
+    delete value.imutable;
+
+    if (removeOnlyAllProp && imutable) {
+      return;
+    }
+
+    newProperties[key] = value;
+  });
+
+  return newProperties;
+};
+
 const generateSchemas = (resource, tags) => {
   const { model, metadata } = resource;
   const resourceName = model.name.toLowerCase();
@@ -58,6 +76,10 @@ const generateSchemas = (resource, tags) => {
       property.default = data.defaultValue;
     }
 
+    if ('imutable' in data) {
+      property.imutable = data.imutable;
+    }
+
     properties[key] = property;
 
     if (!attribute.allowNull || data.required) {
@@ -65,7 +87,7 @@ const generateSchemas = (resource, tags) => {
     }
   });
 
-  const getAllResponseProperties = () => {
+  const makeAllResponseProperties = () => {
     return {
       data: {
         type: 'array',
@@ -86,24 +108,16 @@ const generateSchemas = (resource, tags) => {
     };
   };
 
-  const getRequestProperties = () => {
-    return { ...properties };
+  const makeRequestProperties = () => {
+    return removeImutable(properties, false);
   };
 
-  const getPostRequestProperties = () => {
+  const makeCreateUpdateProperties = () => {
     const postProperties = { ...properties };
     delete postProperties.id;
     delete postProperties.createdAt;
     delete postProperties.updatedAt;
-    return postProperties;
-  };
-
-  const getPutRequestProperties = () => {
-    const putProperties = { ...properties };
-    delete putProperties.id;
-    delete putProperties.createdAt;
-    delete putProperties.updatedAt;
-    return putProperties;
+    return removeImutable(postProperties, true);
   };
 
   const getOrderByEnumValues = () => {
@@ -210,7 +224,7 @@ const generateSchemas = (resource, tags) => {
           responses: resolveResponses(
             model.name,
             200,
-            getAllResponseProperties()
+            makeAllResponseProperties()
           )
         },
         post: {
@@ -227,7 +241,7 @@ const generateSchemas = (resource, tags) => {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: getPostRequestProperties()
+                  properties: makeCreateUpdateProperties()
                 }
               }
             }
@@ -235,7 +249,7 @@ const generateSchemas = (resource, tags) => {
           responses: resolveResponses(
             model.name,
             201,
-            getRequestProperties(),
+            makeRequestProperties(),
             true
           )
         }
@@ -261,7 +275,7 @@ const generateSchemas = (resource, tags) => {
               required: true
             }
           ],
-          responses: resolveResponses(model.name, 200, getRequestProperties())
+          responses: resolveResponses(model.name, 200, makeRequestProperties())
         },
         put: {
           summary: `Update ${model.name}`,
@@ -288,12 +302,12 @@ const generateSchemas = (resource, tags) => {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: getPutRequestProperties()
+                  properties: makeCreateUpdateProperties()
                 }
               }
             }
           },
-          responses: resolveResponses(model.name, 200, getRequestProperties())
+          responses: resolveResponses(model.name, 200, makeRequestProperties())
         },
         delete: {
           summary: `Delete ${model.name}`,
@@ -315,7 +329,7 @@ const generateSchemas = (resource, tags) => {
               required: true
             }
           ],
-          responses: resolveResponses(model.name, 200, getRequestProperties())
+          responses: resolveResponses(model.name, 200, makeRequestProperties())
         }
       }
     }

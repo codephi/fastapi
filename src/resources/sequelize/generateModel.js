@@ -1,48 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { global } = require('../../middle/database');
 
-function getModelName(name) {
-  return name.charAt(0).toUpperCase() + name.slice(1, -1);
-}
-
-function getTableName(name) {
-  return name.toLowerCase();
-}
-
-function getDefaultValue(columnConstraints, columnType) {
-  const columnTypeString = columnType.toString();
-  const defaultValue = columnConstraints.find((constraint) =>
-    constraint.startsWith('DEFAULT')
-  );
-
-  if (defaultValue) {
-    const value = defaultValue.split('DEFAULT ')[1];
-    if (value === 'NULL') {
-      return null;
-    }
-    if (columnTypeString === DataTypes.INTEGER.name) {
-      return parseInt(value);
-    }
-    if (columnTypeString === DataTypes.FLOAT.name) {
-      return parseFloat(value);
-    }
-    if (columnTypeString === DataTypes.BOOLEAN.name) {
-      return value === 'true';
-    }
-    if (
-      columnTypeString === DataTypes.STRING.name ||
-      columnTypeString === DataTypes.ENUM.name ||
-      columnTypeString === DataTypes.CHAR.name ||
-      columnTypeString === DataTypes.TEXT.name
-    ) {
-      return value.slice(1, -1);
-    }
-
-    return value;
-  }
-  return undefined;
-}
-
 function generateSequelizeModelFromJSON(jsonSchema) {
   const models = {};
 
@@ -132,6 +90,49 @@ function generateSequelizeModelFromJSON(jsonSchema) {
   }
 
   return models;
+}
+
+function getModelName(name) {
+  return name.charAt(0).toUpperCase() + name.slice(1, -1);
+}
+
+function getTableName(name) {
+  return name.toLowerCase();
+}
+
+function getDefaultValue(columnConstraints, columnType) {
+  const columnTypeString = columnType.toString();
+  const defaultValue = columnConstraints.find((constraint) =>
+    constraint.startsWith('DEFAULT')
+  );
+
+  if (defaultValue) {
+    const value = defaultValue.split('DEFAULT ')[1];
+    if (value === 'NULL') {
+      return null;
+    }
+    if (columnTypeString === DataTypes.INTEGER.name) {
+      return parseInt(value);
+    }
+    if (columnTypeString === DataTypes.FLOAT.name) {
+      return parseFloat(value);
+    }
+    if (columnTypeString === DataTypes.BOOLEAN.name) {
+      return value === 'true';
+    }
+    if (
+      columnTypeString === DataTypes.STRING.name ||
+      columnTypeString === DataTypes.ENUM.name ||
+      columnTypeString === DataTypes.CHAR.name ||
+      columnTypeString === DataTypes.TEXT.name
+    ) {
+      return value.slice(1, -1);
+    }
+
+    return value;
+  }
+
+  return undefined;
 }
 
 function getNumberProps(attributes) {
