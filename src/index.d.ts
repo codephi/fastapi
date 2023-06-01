@@ -128,22 +128,22 @@ declare module 'fastapi' {
   const fastapi: FastAPI;
   const listen: FastifyInstance['listen'];
 
-  interface ModelProps {
-    tables: Table[];
+  export interface ModelProps {
+    tables: TableProps[];
   }
 
-  interface Table {
+  interface TableProps {
     name: string;
     metadata: Metadata;
     columns: Column[];
   }
 
-  interface Metadata {
+  interface MetadataProps {
     search: string[];
     label: string;
   }
 
-  interface Column {
+  interface ColumnProps {
     name: string;
     type: string;
     constraints: string[];
@@ -158,5 +158,18 @@ declare module 'fastapi' {
     reference?: string;
   }
 
-  export { fastapi, listen, FastAPI, ModelProps };
+  export class TableBuilder {
+    constructor(name: string);
+    addMetadata(metadata: MetadataProps): TableBuilder;
+    addColumn(column: ColumnProps): TableBuilder;
+    build(): TableProps;
+  }
+
+  export class ModelBuilder {
+    constructor();
+    addTable(table: TableBuilder): ModelBuilder;
+    build(): ModelProps;
+  }
+
+  export { fastapi, listen };
 }
