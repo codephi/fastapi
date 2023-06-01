@@ -9,6 +9,27 @@ function getTableName(name) {
   return name.toLowerCase();
 }
 
+function getDefaultValue(columnConstraints, columnType) {
+  const defaultValue = columnConstraints.find((constraint) =>
+    constraint.startsWith('DEFAULT')
+  );
+
+  if (defaultValue) {
+    const value = defaultValue.split('DEFAULT ')[1];
+    if (value === 'NULL') {
+      return null;
+    }
+    if (columnType === DataTypes.INTEGER) {
+      return parseInt(value);
+    }
+    if (columnType === DataTypes.FLOAT) {
+      return parseFloat(value);
+    }
+    return value;
+  }
+  return undefined;
+}
+
 function generateSequelizeModelFromJSON(jsonSchema) {
   const models = {};
 
@@ -28,14 +49,21 @@ function generateSequelizeModelFromJSON(jsonSchema) {
       const columnConstraints = getSequelizeConstraints(column.constraints);
       const primaryKey = columnConstraints.includes('PRIMARY KEY');
       const allowNull = !columnConstraints.includes('NOT NULL');
+      const defaultValue =
+        getDefaultValue(columnConstraints, columnType) ||
+        columnParams.defaultValue ||
+        undefined;
+
       columnParams.required = !allowNull || columnParams.required;
+      columnParams.defaultValue = defaultValue;
 
       tableColumns[columnName] = {
         type: columnType,
         allowNull,
         primaryKey,
         references: parseReferences(columnConstraints),
-        autoIncrement: column.autoIncrement || false
+        autoIncrement: column.autoIncrement || false,
+        defaultValue
       };
 
       if (primaryKey) {
@@ -131,7 +159,7 @@ function getSequelizeDataType({ type: columnType, ...attributes }) {
         attributes.length ||
         columnType.replace('VARCHAR', '').replace('(', '').replace(')', '');
 
-      attributes.maxLength = length;
+      attributes.maxLength = parseInt(length, 10);
 
       return DataTypes.STRING(length, attributes.binary);
     } else if (columnType === 'STRING') {

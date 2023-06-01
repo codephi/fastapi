@@ -35,7 +35,7 @@ const generateSchemas = (resource, tags) => {
 
     if (
       property.type === 'string' &&
-      'maxLength' in metadata &&
+      'maxLength' in data &&
       data.maxLength !== undefined
     ) {
       property.maxLength = data.maxLength;
@@ -44,6 +44,18 @@ const generateSchemas = (resource, tags) => {
     if (attribute.type.constructor.name === 'ENUM') {
       property.type = 'string';
       property.enum = attribute.type.values;
+    }
+
+    if ('min' in data) {
+      property.minimum = data.min;
+    }
+
+    if ('max' in data) {
+      property.maximum = data.max;
+    }
+
+    if ('defaultValue' in data) {
+      property.default = data.defaultValue;
     }
 
     properties[key] = property;
