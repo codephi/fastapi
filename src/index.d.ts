@@ -152,6 +152,10 @@ declare module 'fastapi' {
     min?: number;
     max?: number;
     imutable?: boolean;
+    required?: boolean;
+    unique?: boolean;
+    defaultValue?: any;
+    reference?: string;
   }
 
   export { fastapi, listen, FastAPI, ModelProps };

@@ -17,16 +17,21 @@ function generateSequelizeModelFromJSON(jsonSchema) {
     for (const column of table.columns) {
       const columnName = column.name;
       const [columnType, columnParams] = getSequelizeDataType(column);
-      const columnConstraints = getSequelizeConstraints(column.constraints);
-      const primaryKey = columnConstraints.includes('PRIMARY KEY');
-      const allowNull = !columnConstraints.includes('NOT NULL');
-      const defaultValue = getDefaultValue(columnConstraints, columnType);
+      const columnConstraints = column.constraints
+        ? getSequelizeConstraints(column.constraints)
+        : [];
+
+      const primaryKey =
+        columnParams.primaryKey || columnConstraints.includes('PRIMARY KEY');
+      const allowNull =
+        columnParams.allowNull || !columnConstraints.includes('NOT NULL');
+      const defaultValue =
+        columnParams.defaultValue ||
+        getDefaultValue(columnConstraints, columnType);
+      const unique =
+        columnParams.unique || columnConstraints.includes('UNIQUE');
 
       columnParams.required = !allowNull || columnParams.required;
-
-      if (!columnParams.defaultValue && defaultValue) {
-        columnParams.defaultValue = defaultValue;
-      }
 
       tableColumns[columnName] = {
         type: columnType,
@@ -34,7 +39,8 @@ function generateSequelizeModelFromJSON(jsonSchema) {
         primaryKey,
         references: parseReferences(columnConstraints),
         autoIncrement: column.autoIncrement || false,
-        defaultValue
+        defaultValue,
+        unique
       };
 
       if (primaryKey) {
@@ -61,30 +67,41 @@ function generateSequelizeModelFromJSON(jsonSchema) {
     const model = models[modelName].model;
 
     for (const column of table.columns) {
-      for (const constraints of column.constraints) {
-        if (constraints.indexOf('REFERENCES') > -1) {
-          const referencedTable = getModelName(
-            getReferencedTableName(column.constraints)
-          );
-          const referencedModel = models[referencedTable].model;
+      let tableName = null;
 
-          model.belongsTo(referencedModel, { foreignKey: column.name });
-          referencedModel.hasMany(model, { foreignKey: column.name });
-
-          if (models[modelName].metadata.relationships === undefined) {
-            models[modelName].metadata.relationships = [
-              {
-                model: referencedModel,
-                as: column.name
-              }
-            ];
-          } else {
-            models[modelName].metadata.relationships.push({
-              model: referencedModel,
-              as: column.name
-            });
+      if (column.reference) {
+        tableName = getTableName(column.reference);
+      } else if (column.constraint) {
+        for (const constraints of column.constraints) {
+          if (constraints.indexOf('REFERENCES') > -1) {
+            tableName = getTableName(constraints.split(' ')[1]);
+            break;
           }
         }
+      }
+
+      if (tableName === null) {
+        continue;
+      }
+
+      const referencedTable = getModelName(tableName);
+      const referencedModel = models[referencedTable].model;
+
+      model.belongsTo(referencedModel, { foreignKey: column.name });
+      referencedModel.hasMany(model, { foreignKey: column.name });
+
+      if (models[modelName].metadata.relationships === undefined) {
+        models[modelName].metadata.relationships = [
+          {
+            model: referencedModel,
+            as: column.name
+          }
+        ];
+      } else {
+        models[modelName].metadata.relationships.push({
+          model: referencedModel,
+          as: column.name
+        });
       }
     }
   }
