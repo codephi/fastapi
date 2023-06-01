@@ -43,7 +43,7 @@ const generateSchemas = (resource, tags) => {
 
     if (attribute.type.constructor.name === 'ENUM') {
       property.type = 'string';
-      property.enum = attribute.type.values;
+      property.enum = data.values;
     }
 
     if ('min' in data) {

@@ -10,6 +10,7 @@ function getTableName(name) {
 }
 
 function getDefaultValue(columnConstraints, columnType) {
+  const columnTypeString = columnType.toString();
   const defaultValue = columnConstraints.find((constraint) =>
     constraint.startsWith('DEFAULT')
   );
@@ -19,12 +20,24 @@ function getDefaultValue(columnConstraints, columnType) {
     if (value === 'NULL') {
       return null;
     }
-    if (columnType === DataTypes.INTEGER) {
+    if (columnTypeString === DataTypes.INTEGER.name) {
       return parseInt(value);
     }
-    if (columnType === DataTypes.FLOAT) {
+    if (columnTypeString === DataTypes.FLOAT.name) {
       return parseFloat(value);
     }
+    if (columnTypeString === DataTypes.BOOLEAN.name) {
+      return value === 'true';
+    }
+    if (
+      columnTypeString === DataTypes.STRING.name ||
+      columnTypeString === DataTypes.ENUM.name ||
+      columnTypeString === DataTypes.CHAR.name ||
+      columnTypeString === DataTypes.TEXT.name
+    ) {
+      return value.slice(1, -1);
+    }
+
     return value;
   }
   return undefined;
@@ -49,13 +62,13 @@ function generateSequelizeModelFromJSON(jsonSchema) {
       const columnConstraints = getSequelizeConstraints(column.constraints);
       const primaryKey = columnConstraints.includes('PRIMARY KEY');
       const allowNull = !columnConstraints.includes('NOT NULL');
-      const defaultValue =
-        getDefaultValue(columnConstraints, columnType) ||
-        columnParams.defaultValue ||
-        undefined;
+      const defaultValue = getDefaultValue(columnConstraints, columnType);
 
       columnParams.required = !allowNull || columnParams.required;
-      columnParams.defaultValue = defaultValue;
+
+      if (!columnParams.defaultValue && defaultValue) {
+        columnParams.defaultValue = defaultValue;
+      }
 
       tableColumns[columnName] = {
         type: columnType,
