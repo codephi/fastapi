@@ -2,7 +2,7 @@ declare module 'fastapi' {
   import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
   interface FastAPIOptions {
-    model?: string;
+    model?: string | ModelProps;
     config?: any;
     forceCreateTables?: boolean;
     database?: {
@@ -57,7 +57,7 @@ declare module 'fastapi' {
     handlers: {
       [name: string]: RequestHandler;
     };
-    model: string | null;
+    model: string | ModelProps | null;
     models: {
       [name: string]: any;
     };
@@ -121,12 +121,37 @@ declare module 'fastapi' {
       action: string,
       callback: (err?: Error, data?: any) => void
     ): FastAPI;
-    emit(moduleName: string, action: string, data: any): FastAPI;
+    emit(moduleName: string, action: string, err: any, data: any): FastAPI;
     removeListener(moduleName: string, action: string): FastAPI;
   }
 
   const fastapi: FastAPI;
   const listen: FastifyInstance['listen'];
 
-  export { fastapi, listen, FastAPI };
+  interface ModelProps {
+    tables: Table[];
+  }
+
+  interface Table {
+    name: string;
+    metadata: Metadata;
+    columns: Column[];
+  }
+
+  interface Metadata {
+    search: string[];
+    label: string;
+  }
+
+  interface Column {
+    name: string;
+    type: string;
+    constraints: string[];
+    autoIncrement?: boolean;
+    values?: string[];
+    min?: number;
+    max?: number;
+  }
+
+  export { fastapi, listen, FastAPI, ModelProps };
 }

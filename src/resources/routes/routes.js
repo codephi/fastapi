@@ -51,8 +51,9 @@ const getAll =
         }
       });
 
-      emit(model.name, 'getAll', data.rows);
+      emit(model.name, 'getAll', null, data.rows);
     } catch (err) {
+      emit(model.name, 'getAll', err);
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
     }
@@ -70,8 +71,9 @@ const getOne =
       }
 
       reply.send(data);
-      emit(model.name, 'getOne', data.rows);
+      emit(model.name, 'getOne', null, data.rows);
     } catch (err) {
+      emit(model.name, 'getOne', err);
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
     }
@@ -84,8 +86,9 @@ const create =
       const data = await model.create(request.body);
 
       reply.send(data);
-      emit(model.name, 'create', data.rows);
+      emit(model.name, 'create', null, data.rows);
     } catch (err) {
+      emit(model.name, 'create', err);
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to create ${model.name}.` });
     }
@@ -105,8 +108,9 @@ const update =
       await data.update(request.body);
 
       reply.send(data);
-      emit(model.name, 'update', data.rows);
+      emit(model.name, 'update', null, data.rows);
     } catch (err) {
+      emit(model.name, 'update', err);
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to update ${model.name}.` });
     }
@@ -126,8 +130,9 @@ const remove =
       await data.destroy();
 
       reply.send({ message: `${model.name} deleted successfully.` });
-      emit(model.name, 'remove', data.rows);
+      emit(model.name, 'remove', null, data.rows);
     } catch (err) {
+      emit(model.name, 'remove', err);
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to delete ${model.name}.` });
     }

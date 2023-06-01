@@ -10,12 +10,12 @@ const on = (modelName, action, callback) => {
   eventsStorage[event].push(callback);
 };
 
-const emit = (modelName, action, data) => {
+const emit = (modelName, action, err, data) => {
   const event = `${modelName}.${action}`;
 
   if (eventsStorage[event]) {
     eventsStorage[event].forEach((callback) => {
-      callback(data);
+      callback(err, data);
     });
   }
 };

@@ -209,7 +209,7 @@ class FastAPI {
   }
 
   setDataBase(database) {
-    this.database = database;
+    this.database = { ...this.database, ...database };
     return this;
   }
 
@@ -272,8 +272,8 @@ class FastAPI {
     return this;
   }
 
-  emit(modelName, action, data) {
-    emit(modelName, action, data);
+  emit(modelName, action, err, data) {
+    emit(modelName, action, err, data);
     return this;
   }
 
