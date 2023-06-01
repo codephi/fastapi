@@ -21,8 +21,10 @@ const generateSchemas = (resource, tags) => {
     : `${resourceName}s`;
   const attributeKeys = Object.keys(model.rawAttributes);
   const properties = {};
+  const required = [];
 
   attributeKeys.forEach((key) => {
+    const data = metadata.columns[key];
     const attribute = model.rawAttributes[key];
     const propertyType = convertType(attribute.type.toString());
 
@@ -34,9 +36,9 @@ const generateSchemas = (resource, tags) => {
     if (
       property.type === 'string' &&
       'maxLength' in metadata &&
-      metadata.maxLength[key] !== undefined
+      data.maxLength !== undefined
     ) {
-      property.maxLength = metadata.maxLength[key];
+      property.maxLength = data.maxLength;
     }
 
     if (attribute.type.constructor.name === 'ENUM') {
@@ -45,6 +47,10 @@ const generateSchemas = (resource, tags) => {
     }
 
     properties[key] = property;
+
+    if (!attribute.allowNull || data.required) {
+      required.push(key);
+    }
   });
 
   const getAllResponseProperties = () => {

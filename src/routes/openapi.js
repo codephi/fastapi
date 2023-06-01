@@ -1,4 +1,4 @@
-const { createFullDoc } = require('../engine/openapi/doc');
+const { createFullDoc } = require('../resources/openapi/doc');
 
 module.exports = (paths) => {
   const doc = createFullDoc(paths);

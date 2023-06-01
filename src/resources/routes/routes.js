@@ -1,5 +1,5 @@
 const fastify = require('../../middle/serve');
-const { superFiler } = require('../superFiler');
+const { superFiler } = require('../superFilter');
 const { emit } = require('../events');
 
 const getAll =

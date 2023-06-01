@@ -1,17 +1,17 @@
 const { fastify, listen: serveListen, preBuilder } = require('./middle/serve');
-const { generateSchemas } = require('./engine/openapi');
-const { createRouteModel, createRouteHandler } = require('./engine/routes');
-const { resolveResponses } = require('./engine/openapi/generateSchema');
-const { createTables } = require('./engine/sequelize/createTables');
+const { generateSchemas } = require('./resources/openapi');
+const { createRouteModel, createRouteHandler } = require('./resources/routes');
+const { resolveResponses } = require('./resources/openapi/generateSchema');
+const { createTables } = require('./resources/sequelize/createTables');
 const {
   databaseConnect,
   testDatabaseConnection,
   getSequelize
 } = require('./middle/database');
-const { importModel } = require('./engine/sequelize/generateModel');
+const { importModel } = require('./resources/sequelize/generateModel');
 const health = require('./routes/health');
 const builderOpeapi = require('./routes/openapi');
-const { on, emit, remove } = require('./engine/events');
+const { on, emit, remove } = require('./resources/events');
 
 const loadSpec = ({ model, models, tags, routes = [], handlers = {} }) => {
   if (models === undefined) {

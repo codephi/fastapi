@@ -1,6 +1,6 @@
 const os = require('os');
 const { global } = require('../middle/database');
-const { resolveResponses } = require('../engine/openapi/responses');
+const { resolveResponses } = require('../resources/openapi/responses');
 
 module.exports = {
   paths: {
