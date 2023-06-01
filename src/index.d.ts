@@ -132,18 +132,18 @@ declare module 'fastapi' {
     tables: TableProps[];
   }
 
-  interface TableProps {
+  export interface TableProps {
     name: string;
-    metadata: Metadata;
-    columns: Column[];
+    metadata: MetadataProps;
+    columns: ColumnProps[];
   }
 
-  interface MetadataProps {
+  export interface MetadataProps {
     search: string[];
     label: string;
   }
 
-  interface ColumnProps {
+  export interface ColumnProps {
     name: string;
     type: string;
     constraints: string[];
@@ -156,9 +156,13 @@ declare module 'fastapi' {
     unique?: boolean;
     defaultValue?: any;
     reference?: string;
+    primaryKey?: boolean;
   }
 
   export class TableBuilder {
+    name: string;
+    metadata: MetadataProps;
+    columns: ColumnProps[];
     constructor(name: string);
     addMetadata(metadata: MetadataProps): TableBuilder;
     addColumn(column: ColumnProps): TableBuilder;
@@ -166,6 +170,7 @@ declare module 'fastapi' {
   }
 
   export class ModelBuilder {
+    tables: TableBuilder[];
     constructor();
     addTable(table: TableBuilder): ModelBuilder;
     build(): ModelProps;
