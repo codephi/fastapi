@@ -200,8 +200,7 @@ class FastAPI {
   start(callback) {
     this.load((err) => {
       if (err) {
-        fastify.log.error(err);
-        process.exit(1);
+        return callback(err);
       }
 
       this.listen(callback);

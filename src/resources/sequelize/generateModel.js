@@ -24,7 +24,11 @@ function generateSequelizeModelFromJSON(jsonSchema) {
       const primaryKey =
         columnParams.primaryKey || columnConstraints.includes('PRIMARY KEY');
       const allowNull =
-        columnParams.allowNull || !columnConstraints.includes('NOT NULL');
+        columnParams.allowNull !== undefined
+          ? columnParams.allowNull
+          : column.constraints
+          ? !columnConstraints.includes('NOT NULL')
+          : false;
       const defaultValue =
         columnParams.defaultValue ||
         getDefaultValue(columnConstraints, columnType);

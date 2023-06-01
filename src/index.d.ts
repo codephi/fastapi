@@ -1,7 +1,7 @@
 declare module 'fastapi' {
   import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
-  interface FastAPIOptions {
+  export interface FastAPIOptions {
     model?: string | ModelProps;
     config?: any;
     forceCreateTables?: boolean;
@@ -13,7 +13,7 @@ declare module 'fastapi' {
     };
   }
 
-  interface RouteOptions {
+  export interface RouteOptions {
     tags?: string[];
     summary?: string;
     description?: string;
@@ -36,12 +36,12 @@ declare module 'fastapi' {
     };
   }
 
-  type RequestHandler = (
+  export type RequestHandler = (
     request: FastifyRequest,
     reply: FastifyReply
   ) => Promise<any>;
 
-  class FastAPI {
+  export class FastAPI {
     constructor(options?: FastAPIOptions);
     routes: {
       paths: {
@@ -88,9 +88,9 @@ declare module 'fastapi' {
         [name: string]: RequestHandler;
       }
     ): void;
-    private defaultListen(err: Error): void;
-    listen(callback?: (err?: Error) => void): void;
-    start(callback?: (err?: Error) => void): void;
+    private defaultListen(err: Error, address?: string): void;
+    listen(callback?: (err?: Error, address?: string) => void): void;
+    start(callback?: (err?: Error, address?: string) => void): void;
     setDataBase(database: {
       database?: string;
       username?: string;
@@ -125,8 +125,7 @@ declare module 'fastapi' {
     removeListener(moduleName: string, action: string): FastAPI;
   }
 
-  const fastapi: FastAPI;
-  const listen: FastifyInstance['listen'];
+  export const listen: FastifyInstance['listen'];
 
   export interface ModelProps {
     tables: TableProps[];
@@ -157,6 +156,7 @@ declare module 'fastapi' {
     defaultValue?: any;
     reference?: string;
     primaryKey?: boolean;
+    allowNull?: boolean;
   }
 
   export class TableBuilder {
@@ -175,6 +175,4 @@ declare module 'fastapi' {
     addTable(table: TableBuilder): ModelBuilder;
     build(): ModelProps;
   }
-
-  export { fastapi, listen };
 }
