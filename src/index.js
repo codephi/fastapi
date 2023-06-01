@@ -283,6 +283,47 @@ class FastAPI {
   }
 }
 
+class TableBuilder {
+  constructor(name) {
+    this.name = name;
+    this.metadata = {};
+    this.columns = [];
+  }
+
+  addMetadata(metadata) {
+    this.metadata = metadata;
+    return this;
+  }
+
+  addColumn(column) {
+    this.columns.push(column);
+    return this;
+  }
+
+  build() {
+    return {
+      name: this.name,
+      metadata: this.metadata,
+      columns: this.columns
+    };
+  }
+}
+
+class ModelBuilder {
+  constructor() {
+    this.model = { tables: [] };
+  }
+
+  addTable(table) {
+    this.model.tables.push(table.build());
+    return this;
+  }
+
+  build() {
+    return this.model;
+  }
+}
+
 module.exports = {
   fastify,
   preBuilder,
@@ -297,5 +338,7 @@ module.exports = {
   createTables,
   resolveResponses,
   FastAPI,
-  log: fastify.log
+  log: fastify.log,
+  ModelBuilder,
+  TableBuilder
 };
