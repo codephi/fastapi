@@ -127,6 +127,23 @@ const generateSchemas = (resource, tags) => {
     );
   };
 
+  const createUpdateProperties = makeCreateUpdateProperties();
+
+  const requestProperties = makeRequestProperties();
+
+  const responseResolved = resolveResponses(model.name, 200, requestProperties);
+  const responseResolvedList = resolveResponses(
+    model.name,
+    200,
+    makeAllResponseProperties()
+  );
+  const responseResolvedConflict = resolveResponses(
+    model.name,
+    200,
+    requestProperties,
+    true
+  );
+
   return {
     paths: {
       [`/api/${resourcePlural}`]: {
@@ -221,11 +238,7 @@ const generateSchemas = (resource, tags) => {
               }
             }
           ],
-          responses: resolveResponses(
-            model.name,
-            200,
-            makeAllResponseProperties()
-          )
+          responses: responseResolvedList
         },
         post: {
           summary: `Create ${model.name}`,
@@ -241,17 +254,12 @@ const generateSchemas = (resource, tags) => {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: makeCreateUpdateProperties()
+                  properties: createUpdateProperties
                 }
               }
             }
           },
-          responses: resolveResponses(
-            model.name,
-            201,
-            makeRequestProperties(),
-            true
-          )
+          responses: responseResolvedConflict
         }
       },
       [`/api/${resourcePlural}/{id}`]: {
@@ -275,7 +283,7 @@ const generateSchemas = (resource, tags) => {
               required: true
             }
           ],
-          responses: resolveResponses(model.name, 200, makeRequestProperties())
+          responses: responseResolved
         },
         put: {
           summary: `Update ${model.name}`,
@@ -302,12 +310,12 @@ const generateSchemas = (resource, tags) => {
               'application/json': {
                 schema: {
                   type: 'object',
-                  properties: makeCreateUpdateProperties()
+                  properties: createUpdateProperties
                 }
               }
             }
           },
-          responses: resolveResponses(model.name, 200, makeRequestProperties())
+          responses: responseResolved
         },
         delete: {
           summary: `Delete ${model.name}`,
@@ -329,7 +337,7 @@ const generateSchemas = (resource, tags) => {
               required: true
             }
           ],
-          responses: resolveResponses(model.name, 200, makeRequestProperties())
+          responses: responseResolved
         }
       }
     }
