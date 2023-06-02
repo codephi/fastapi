@@ -83,7 +83,7 @@ const create =
   ({ model }) =>
   async (request, reply) => {
     try {
-      const data = await model.create({ ...request.body, status: 'active' });
+      const data = await model.create(request.body);
       reply.send(data);
       emit(model.name, 'create', null, data.rows);
     } catch (err) {
