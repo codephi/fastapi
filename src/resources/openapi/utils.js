@@ -77,6 +77,10 @@ function convertOpenAPItoSchemas(openAPI) {
   return openAPI;
 }
 
+const resolvePlural = (resourceName) =>
+  resourceName.endsWith('s') ? resourceName : `${resourceName}s`;
+
 module.exports = {
-  convertOpenAPItoSchemas
+  convertOpenAPItoSchemas,
+  resolvePlural
 };

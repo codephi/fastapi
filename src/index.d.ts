@@ -118,11 +118,11 @@ declare module 'fastapi' {
     getModels(): { [name: string]: any };
     on(
       moduleName: string,
-      action: string,
+      action: EventType,
       callback: (err?: Error, data?: any) => void
     ): FastAPI;
-    emit(moduleName: string, action: string, err: any, data: any): FastAPI;
-    removeListener(moduleName: string, action: string): FastAPI;
+    emit(moduleName: string, action: EventType, err: any, data: any): FastAPI;
+    removeListener(moduleName: string, action: EventType): FastAPI;
   }
 
   export const listen: FastifyInstance['listen'];
@@ -175,4 +175,6 @@ declare module 'fastapi' {
     addTable(table: TableBuilder): ModelBuilder;
     build(): ModelProps;
   }
+
+  export type EventType = 'create' | 'update' | 'delete' | 'read' | 'list';
 }

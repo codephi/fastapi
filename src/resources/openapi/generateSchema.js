@@ -1,5 +1,6 @@
 const { convertType } = require('./dataTypes');
 const { resolveResponses } = require('./responses');
+const { resolvePlural } = require('./utils');
 
 const resolveTags = (model, tags = []) => {
   const resourceName = model.name.toLowerCase();
@@ -34,9 +35,7 @@ const removeImutable = (properties, removeOnlyAllProp = false) => {
 const generateSchemas = (resource, tags) => {
   const { model, metadata } = resource;
   const resourceName = model.name.toLowerCase();
-  const resourcePlural = resourceName.endsWith('s')
-    ? resourceName
-    : `${resourceName}s`;
+  const resourcePlural = resolvePlural(resourceName);
   const attributeKeys = Object.keys(model.rawAttributes);
   const properties = {};
   const required = [];

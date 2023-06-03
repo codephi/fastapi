@@ -51,11 +51,11 @@ const getAll =
         }
       });
 
-      emit(model.name, 'getAll', null, data.rows);
+      emit(model.name, 'list', null, data.rows);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
-      emit(model.name, 'getAll', err);
+      emit(model.name, 'list', err);
     }
   };
 
@@ -71,11 +71,11 @@ const getOne =
       }
 
       reply.send(data);
-      emit(model.name, 'getOne', null, data.rows);
+      emit(model.name, 'read', null, data.rows);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${model.name}.` });
-      emit(model.name, 'getOne', err);
+      emit(model.name, 'read', err);
     }
   };
 

@@ -1,7 +1,8 @@
+const { resolvePlural } = require('./openapi/utils');
 const eventsStorage = {};
 
 const on = (modelName, action, callback) => {
-  const event = `${modelName}.${action}`;
+  const event = `${resolvePlural(modelName.toLowerCase())}.${action}`;
 
   if (!eventsStorage[event]) {
     eventsStorage[event] = [];
@@ -11,7 +12,7 @@ const on = (modelName, action, callback) => {
 };
 
 const emit = (modelName, action, err, data) => {
-  const event = `${modelName}.${action}`;
+  const event = `${resolvePlural(modelName.toLowerCase())}.${action}`;
 
   if (eventsStorage[event]) {
     eventsStorage[event].forEach((callback) => {
