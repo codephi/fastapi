@@ -85,7 +85,7 @@ const create =
     try {
       const data = await model.create(request.body);
       reply.send(data);
-      emit(model.name, 'create', null, data.rows);
+      emit(model.name, 'create', null, data);
     } catch (err) {
       fastify.log.error(err);
       reply.status(500).send({ error: `Failed to create ${model.name}.` });

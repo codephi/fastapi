@@ -1,5 +1,6 @@
 declare module 'fastapi' {
   import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+  export { Model } from 'sequelize';
 
   export interface FastAPIOptions {
     model?: string | ModelProps;
@@ -41,6 +42,10 @@ declare module 'fastapi' {
     reply: FastifyReply
   ) => Promise<any>;
 
+  export type Models = {
+    [name: string]: Model;
+  };
+
   export class FastAPI {
     constructor(options?: FastAPIOptions);
     routes: {
@@ -58,9 +63,7 @@ declare module 'fastapi' {
       [name: string]: RequestHandler;
     };
     model: string | ModelProps | null;
-    models: {
-      [name: string]: any;
-    };
+    models: Models;
     database: {
       database: string | null;
       username: string | null;
@@ -95,6 +98,7 @@ declare module 'fastapi' {
       database?: string;
       username?: string;
       password?: string;
+      sync?: 'alter' | 'force';
     }): FastAPI;
     setModel(model: string): FastAPI;
     addRoutes(
