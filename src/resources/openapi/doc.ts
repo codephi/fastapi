@@ -1,5 +1,5 @@
 import { convertOpenAPItoSchemas } from './utils';
-import { OpenAPI, Paths } from './openapi';
+import { OpenAPI, Paths } from './openapiTypes';
 
 interface PathObject {
   [path: string]: PathItemObject;

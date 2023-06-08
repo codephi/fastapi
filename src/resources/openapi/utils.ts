@@ -1,4 +1,10 @@
-import { OpenAPI, Operation, Schema, Response, Parameter } from './openapi';
+import {
+  OpenAPI,
+  Operation,
+  Schema,
+  Response,
+  Parameter
+} from './openapiTypes';
 
 function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
   const schemas: Schema = {};

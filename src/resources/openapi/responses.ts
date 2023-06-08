@@ -1,4 +1,4 @@
-import { Responses, Response, Properties } from './openapi';
+import { Responses, Response, Properties } from './openapiTypes';
 
 const errorResponse = (description: string): Response => {
   return {

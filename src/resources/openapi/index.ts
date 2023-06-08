@@ -1,5 +1,5 @@
 import { convertType } from './dataTypes';
-import { AdminReferences, OpenAPI, Operation } from './openapi';
+import { AdminReferences, OpenAPI, Operation } from './openapiTypes';
 import { resolveResponses } from './responses';
 import { resolvePlural } from './utils';
 
@@ -51,7 +51,10 @@ const removeImutable = (
   return newProperties;
 };
 
-const generateSchemas = (resource: any, tags: any): OpenAPI => {
+export default function generateOpenapiSchemas(
+  resource: any,
+  tags: any
+): OpenAPI {
   const { model, metadata } = resource;
   const resourceName = model.name.toLowerCase();
   const resourcePlural = resolvePlural(resourceName);
@@ -452,6 +455,4 @@ const generateSchemas = (resource: any, tags: any): OpenAPI => {
       }
     }
   };
-};
-
-export { generateSchemas };
+}
