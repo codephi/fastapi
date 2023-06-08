@@ -1,4 +1,4 @@
-const dataTypes = {
+export const dataTypes = {
   STRING: {
     type: 'string'
   },
@@ -93,7 +93,7 @@ const dataTypes = {
   }
 };
 
-const convertType = (sequelizeType) => {
+export const convertType = (sequelizeType) => {
   const propertyType = dataTypes[sequelizeType];
   if (propertyType === undefined) {
     const occurrence = sequelizeType.search(/[([]/);
@@ -124,5 +124,3 @@ const convertType = (sequelizeType) => {
 
   return propertyType;
 };
-
-module.exports.convertType = convertType;

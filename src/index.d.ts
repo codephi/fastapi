@@ -1,6 +1,8 @@
 declare module 'fastapi' {
+  import { Model } from 'sequelize';
   import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
   export { Model } from 'sequelize';
+  export { FastifyInstance, FastifyRequest, FastifyReply };
 
   export interface FastAPIOptions {
     model?: string | ModelProps;
@@ -24,8 +26,9 @@ declare module 'fastapi' {
         content: {
           [contentType: string]: {
             schema: {
-              type: string;
-              properties: {
+              $ref?: string;
+              type?: string;
+              properties?: {
                 [propertyName: string]: {
                   type: string;
                 };
@@ -130,55 +133,6 @@ declare module 'fastapi' {
   }
 
   export const listen: FastifyInstance['listen'];
-
-  export interface ModelProps {
-    tables: TableProps[];
-  }
-
-  export interface TableProps {
-    name: string;
-    metadata: MetadataProps;
-    columns: ColumnProps[];
-  }
-
-  export interface MetadataProps {
-    search: string[];
-    label: string;
-  }
-
-  export interface ColumnProps {
-    name: string;
-    type: string;
-    constraints: string[];
-    autoIncrement?: boolean;
-    values?: string[];
-    min?: number;
-    max?: number;
-    imutable?: boolean;
-    required?: boolean;
-    unique?: boolean;
-    defaultValue?: any;
-    reference?: string;
-    primaryKey?: boolean;
-    allowNull?: boolean;
-  }
-
-  export class TableBuilder {
-    name: string;
-    metadata: MetadataProps;
-    columns: ColumnProps[];
-    constructor(name: string);
-    addMetadata(metadata: MetadataProps): TableBuilder;
-    addColumn(column: ColumnProps): TableBuilder;
-    build(): TableProps;
-  }
-
-  export class ModelBuilder {
-    tables: TableBuilder[];
-    constructor();
-    addTable(table: TableBuilder): ModelBuilder;
-    build(): ModelProps;
-  }
 
   export type EventType = 'create' | 'update' | 'delete' | 'read' | 'list';
 }

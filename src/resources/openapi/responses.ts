@@ -1,4 +1,6 @@
-function errorSchema(description) {
+import { Responses, Response, Properties } from './openapi';
+
+const errorResponse = (description: string): Response => {
   return {
     description,
     content: {
@@ -15,15 +17,15 @@ function errorSchema(description) {
       }
     }
   };
-}
+};
 
 const resolveResponses = (
-  resourceName,
-  defaultSuccessStatusCode,
-  successProperties,
+  resourceName: string,
+  defaultSuccessStatusCode: number,
+  successProperties: Properties,
   conflict = false
-) => {
-  const responses = {
+): Responses => {
+  const responses: Responses = {
     [defaultSuccessStatusCode]: {
       description: `Response for get ${resourceName}`,
       content: {
@@ -37,7 +39,7 @@ const resolveResponses = (
     }
   };
 
-  const errors = {
+  const errors: Record<number, string> = {
     400: 'Bad Request',
     401: 'Unauthorized',
     403: 'Forbidden',
@@ -51,10 +53,10 @@ const resolveResponses = (
 
   Object.keys(errors).forEach((statusCode) => {
     const description = errors[statusCode];
-    responses[statusCode] = errorSchema(description);
+    responses[parseInt(statusCode)] = errorResponse(description);
   });
 
   return responses;
 };
 
-module.exports.resolveResponses = resolveResponses;
+export { resolveResponses };

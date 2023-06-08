@@ -1,28 +1,30 @@
-function convertOpenAPItoSchemas(openAPI) {
-  const schemas = {};
+import { OpenAPI, Operation, Schema, Response, Parameter } from './openapi';
 
-  // Cria o objeto components se não existir
+function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
+  const schemas: Schema = {};
+
+  // Create the components object if it doesn't exist
   if (!openAPI.components) {
     openAPI.components = {};
   }
 
-  // Cria o objeto schemas dentro de components se não existir
+  // Create the schemas object inside components if it doesn't exist
   if (!openAPI.components.schemas) {
     openAPI.components.schemas = {};
   }
 
-  // Percorre os caminhos definidos no OpenAPI
+  // Iterate over the paths defined in OpenAPI
   for (const path in openAPI.paths) {
     const pathItem = openAPI.paths[path];
 
     for (const method in pathItem) {
       if (method !== 'parameters') {
-        const operation = pathItem[method];
+        const operation = pathItem[method] as Operation;
         const { responses } = operation;
 
         for (const statusCode in responses) {
           const response = responses[statusCode];
-          const { content } = response;
+          const { content } = response as Response;
 
           for (const contentType in content) {
             const mediaType = content[contentType];
@@ -31,9 +33,9 @@ function convertOpenAPItoSchemas(openAPI) {
             if (schema) {
               const schemaKey = JSON.stringify(schema);
 
-              // Verifica se o esquema já foi registrado
+              // Check if the schema has already been registered
               if (schemas[schemaKey]) {
-                // Reutiliza o esquema existente
+                // Reuse the existing schema
                 mediaType.schema = {
                   $ref: `#/components/schemas/${schemas[schemaKey]}`
                 };
@@ -43,11 +45,11 @@ function convertOpenAPItoSchemas(openAPI) {
                   '_'
                 )}_${statusCode}`;
 
-                // Adiciona o esquema ao objeto schemas
+                // Add the schema to the schemas object
                 schemas[schemaKey] = schemaName;
                 openAPI.components.schemas[schemaName] = schema;
 
-                // Atualiza a referência ao esquema
+                // Update the reference to the schema
                 mediaType.schema = {
                   $ref: `#/components/schemas/${schemaName}`
                 };
@@ -56,15 +58,15 @@ function convertOpenAPItoSchemas(openAPI) {
           }
         }
 
-        // Verifica se há parâmetros de caminho não declarados
-        const parameters = operation.parameters || [];
-        const pathParams = parameters.filter(
-          (parameter) => parameter.in === 'path'
-        );
-        const declaredPathParams = path.match(/{\w+}/g) || [];
+        // Check for undeclared path parameters
+        const parameters = operation.parameters as Parameter[];
+        const declaredPathParams = (path.match(/{\w+}/g) as string[]) || [];
 
-        pathParams.forEach((parameter) => {
-          if (!declaredPathParams.includes(`{${parameter.name}}`)) {
+        parameters.forEach((parameter) => {
+          if (
+            parameter.in === 'path' &&
+            !declaredPathParams.includes(`{${parameter.name}}`)
+          ) {
             console.warn(
               `Declared path parameter "${parameter.name}" needs to be defined as a path parameter at either the path or operation level`
             );
@@ -77,10 +79,8 @@ function convertOpenAPItoSchemas(openAPI) {
   return openAPI;
 }
 
-const resolvePlural = (resourceName) =>
-  resourceName.endsWith('s') ? resourceName : `${resourceName}s`;
+function resolvePlural(resourceName: string): string {
+  return resourceName.endsWith('s') ? resourceName : `${resourceName}s`;
+}
 
-module.exports = {
-  convertOpenAPItoSchemas,
-  resolvePlural
-};
+export { convertOpenAPItoSchemas, resolvePlural };

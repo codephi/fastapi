@@ -1,4 +1,11 @@
-const internalServerError = () => {
+export interface ErrorResponse {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+}
+
+export const internalServerError = (): ErrorResponse => {
   return {
     type: 'https://example.com/probs/internal-server-error',
     title: 'Internal Server Error',
@@ -7,7 +14,7 @@ const internalServerError = () => {
   };
 };
 
-const notFound = () => {
+export const notFound = (): ErrorResponse => {
   return {
     type: 'https://example.com/probs/not-found',
     title: 'Not Found',
@@ -16,7 +23,7 @@ const notFound = () => {
   };
 };
 
-const badRequest = (message) => {
+export const badRequest = (message: string): ErrorResponse => {
   return {
     type: 'https://example.com/probs/bad-request',
     title: 'Bad Request',
@@ -25,7 +32,7 @@ const badRequest = (message) => {
   };
 };
 
-const unauthorized = () => {
+export const unauthorized = (): ErrorResponse => {
   return {
     type: 'https://example.com/probs/unauthorized',
     title: 'Unauthorized',
@@ -34,7 +41,7 @@ const unauthorized = () => {
   };
 };
 
-const forbidden = () => {
+export const forbidden = (): ErrorResponse => {
   return {
     type: 'https://example.com/probs/forbidden',
     title: 'Forbidden',
@@ -43,20 +50,11 @@ const forbidden = () => {
   };
 };
 
-const conflict = () => {
+export const conflict = (): ErrorResponse => {
   return {
     type: 'https://example.com/probs/conflict',
     title: 'Conflict',
     status: 409,
     detail: 'There was a conflict while processing the request.'
   };
-};
-
-module.exports = {
-  internalServerError,
-  notFound,
-  badRequest,
-  unauthorized,
-  forbidden,
-  conflict
 };
