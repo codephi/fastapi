@@ -51,10 +51,7 @@ const removeImutable = (
   return newProperties;
 };
 
-export default function generateOpenapiSchemas(
-  resource: any,
-  tags: any
-): OpenAPI {
+export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
   const { model, metadata } = resource;
   const resourceName = model.name.toLowerCase();
   const resourcePlural = resolvePlural(resourceName);

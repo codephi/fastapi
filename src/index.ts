@@ -1,33 +1,56 @@
-const { fastify, listen: serveListen, preBuilder } = require('./middle/serve');
-const { generateSchemas } = require('./resources/openapi');
-const { createRouteModel, createRouteHandler } = require('./resources/routes');
-const { resolveResponses } = require('./resources/openapi/generateSchema');
-const { createTables } = require('./resources/sequelize/createTables');
-const {
+import { preBuilder } from './middle/serve';
+import { FastifyRequest, FastifyReply, RouteHandlerMethod } from 'fastify';
+import { generateOpenapiSchemas } from './resources/openapi';
+import { createRouteResource, createRouteHandler } from './resources/routes';
+import { resolveResponses } from './resources/openapi/responses';
+import { createTables } from './resources/sequelize/createTables';
+import {
   databaseConnect,
   testDatabaseConnection,
   getSequelize
-} = require('./middle/database');
-const { importModel } = require('./resources/sequelize/generateModel');
-const health = require('./routes/health');
-const builderOpeapi = require('./routes/openapi');
-const { on, emit, remove } = require('./resources/events');
+} from './middle/database';
+import { Resources, importResources } from './resources/sequelize';
+import health from './routes/health';
+import builderOpeapi from './routes/openapi';
+import { on, emit, remove } from './resources/events';
+import { Paths } from './resources/openapi/openapiTypes';
 
-const loadSpec = ({ model, models, tags, routes = [], handlers = {} }) => {
-  if (models === undefined) {
-    if (model !== undefined) {
-      models = importModel(model);
+interface LoadSpecOptions {
+  schemaPath?: string;
+  resources?: Resources;
+  tags?: string[];
+  routes?: any[];
+  handlers?: any;
+}
+
+const loadSpec = ({
+  schemaPath,
+  resources,
+  tags,
+  routes = [],
+  handlers = {}
+}: LoadSpecOptions): void => {
+  if (resources === undefined) {
+    if (schemaPath !== undefined) {
+      resources = importResources(schemaPath);
     } else {
-      throw new Error('No model provided');
+      throw new Error('No schema provided');
     }
   }
 
-  let openApiSchemaPaths = {};
+  const resourcesImported = resources as Resources;
 
-  Object.keys(models).forEach((key) => {
-    const paths = generateSchemas(models[key], tags).paths;
+  let openApiSchemaPaths: any = {};
 
-    createRouteModel({ paths, model: models[key], handlers: handlers[key] });
+  Object.keys(resourcesImported).forEach((key) => {
+    const paths = generateOpenapiSchemas(resourcesImported[key], tags)
+      .paths as Paths;
+
+    createRouteResource({
+      paths,
+      resource: resourcesImported[key],
+      handlers: handlers[key]
+    });
 
     openApiSchemaPaths = { ...openApiSchemaPaths, ...paths };
   });
@@ -47,17 +70,37 @@ const loadSpec = ({ model, models, tags, routes = [], handlers = {} }) => {
 
   createRouteHandler({ ...openapi });
 
-  fastify.setErrorHandler(function (error, request, reply) {
+  fastify.setErrorHandler(function (
+    error: any,
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
     reply.send(error);
   });
 };
 
+interface FastAPIConfig {
+  port: number;
+  address: string;
+}
+
+interface FastAPIOptions {
+  routes?: any[];
+  tags?: any;
+  handlers?: any;
+  model?: any;
+  database?: any;
+  cors?: any;
+  forceCreateTables?: any;
+  config?: FastAPIConfig;
+}
+
 class FastAPI {
-  config = {
+  config: FastAPIConfig = {
     port: 3000,
     address: '0.0.0.0'
   };
-  routes = [];
+  routes: any[] = [];
   tags = {
     create: ['create'],
     read: ['read'],
@@ -65,18 +108,18 @@ class FastAPI {
     delete: ['delete'],
     list: ['list']
   };
-  handlers = {};
-  model = null;
-  models = {};
+  handlers: any = {};
+  model: any = null;
+  models: any = {};
   database = {
-    database: process.env.DB_NAME | process.env.DATABASE_NAME | null,
-    username: process.env.DB_USER | process.env.DATABASE_USER | null,
-    password: process.env.DB_PASSWORD | process.env.DATABASE_PASSWORD | null,
+    database: process.env.DB_NAME || process.env.DATABASE_NAME || null,
+    username: process.env.DB_USER || process.env.DATABASE_USER || null,
+    password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || null,
     options: {
       host: 'localhost',
       port: 5432,
       dialect: 'postgres',
-      logging: (sql) => {
+      logging: (sql: string) => {
         fastify.log.info(sql);
       }
     },
@@ -87,7 +130,7 @@ class FastAPI {
     origin: '*'
   };
 
-  constructor(props) {
+  constructor(props?: FastAPIOptions) {
     if (props === undefined) return;
     const {
       routes = undefined,
@@ -135,7 +178,7 @@ class FastAPI {
     return this;
   }
 
-  load(callback) {
+  load(callback?: (err?: any) => void): void {
     databaseConnect(this.database);
 
     const { model, routes, tags, handlers, database } = this;
@@ -143,7 +186,7 @@ class FastAPI {
     this.models = importModel(model);
 
     if (this.database.sync !== false) {
-      const createTablesConfig = {};
+      const createTablesConfig: any = {};
 
       if (database.sync === 'alter') {
         createTablesConfig.alter = true;
@@ -175,7 +218,7 @@ class FastAPI {
     }
   }
 
-  builder(routes, tags, handlers) {
+  builder(routes: any[], tags: any, handlers: any): void {
     preBuilder();
 
     loadSpec({
@@ -186,18 +229,18 @@ class FastAPI {
     });
   }
 
-  defaultListen(err) {
+  defaultListen(err?: any): void {
     if (err) {
       fastify.log.error(err);
       process.exit(1);
     }
   }
 
-  listen(callback) {
+  listen(callback?: (err?: any) => void): void {
     serveListen(this.config, callback || this.defaultListen);
   }
 
-  start(callback) {
+  start(callback?: (err?: any) => void): void {
     this.load((err) => {
       if (err) {
         return callback(err);
@@ -207,99 +250,110 @@ class FastAPI {
     });
   }
 
-  setDataBase(database) {
+  setDataBase(database: any): FastAPI {
     this.database = { ...this.database, ...database };
     return this;
   }
 
-  setModel(model) {
+  setModel(model: any): FastAPI {
     this.model = model;
     return this;
   }
 
-  addRoutes(name, specMethods, handler) {
+  addRoutes(
+    name: string,
+    specMethods: any,
+    handler: RouteHandlerMethod
+  ): FastAPI {
     this.routes.push({ paths: { [name]: specMethods }, handler });
     return this;
   }
 
-  addRoute(path, method, specMethod, handler) {
+  addRoute(
+    path: string,
+    method: string,
+    specMethod: any,
+    handler: RouteHandlerMethod
+  ): FastAPI {
     this.routes.push({ paths: { [path]: { [method]: specMethod } }, handler });
     return this;
   }
 
-  get(path, spec, handler) {
+  get(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
     this.addRoute(path, 'get', spec, handler);
     return this;
   }
 
-  post(path, spec, handler) {
+  post(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
     this.addRoute(path, 'post', spec, handler);
     return this;
   }
 
-  put(path, spec, handler) {
+  put(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
     this.addRoute(path, 'put', spec, handler);
     return this;
   }
 
-  delete(path, spec, handler) {
+  delete(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
     this.addRoute(path, 'delete', spec, handler);
     return this;
   }
 
-  patch(path, spec, handler) {
+  patch(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
     this.addRoute(path, 'patch', spec, handler);
     return this;
   }
 
-  setHandler(name, handler) {
+  setHandler(name: string, handler: RouteHandlerMethod): FastAPI {
     this.handlers[name] = handler;
     return this;
   }
 
-  setTags(name, tags) {
+  setTags(name: string, tags: any): FastAPI {
     this.tags[name] = tags;
     return this;
   }
 
-  getModels() {
+  getModels(): any {
     return this.models;
   }
 
-  on(modelName, action, callback) {
+  on(modelName: string, action: string, callback: Function): FastAPI {
     on(modelName, action, callback);
     return this;
   }
 
-  emit(modelName, action, err, data) {
+  emit(modelName: string, action: string, err: any, data: any): FastAPI {
     emit(modelName, action, err, data);
     return this;
   }
 
-  removeListener(modelName, action) {
+  removeListener(modelName: string, action: string): FastAPI {
     remove(modelName, action);
     return this;
   }
 }
 
 class TableBuilder {
-  constructor(name) {
+  name: string;
+  metadata: any = {};
+  columns: any[] = [];
+
+  constructor(name: string) {
     this.name = name;
-    this.metadata = {};
-    this.columns = [];
   }
 
-  addMetadata(metadata) {
+  addMetadata(metadata: any): TableBuilder {
     this.metadata = metadata;
     return this;
   }
 
-  addColumn(column) {
+  addColumn(column: any): TableBuilder {
     this.columns.push(column);
     return this;
   }
 
-  build() {
+  build(): any {
     return {
       name: this.name,
       metadata: this.metadata,
@@ -309,35 +363,14 @@ class TableBuilder {
 }
 
 class ModelBuilder {
-  constructor() {
-    this.model = { tables: [] };
-  }
+  model: any = { tables: [] };
 
-  addTable(table) {
+  addTable(table: TableBuilder): ModelBuilder {
     this.model.tables.push(table.build());
     return this;
   }
 
-  build() {
+  build(): any {
     return this.model;
   }
 }
-
-module.exports = {
-  fastify,
-  preBuilder,
-  createRoute: createRouteHandler,
-  databaseConnect,
-  getSequelize,
-  loadSpec,
-  listen: serveListen,
-  createRouteModel,
-  importModel,
-  builderOpeapi,
-  createTables,
-  resolveResponses,
-  FastAPI,
-  log: fastify.log,
-  ModelBuilder,
-  TableBuilder
-};

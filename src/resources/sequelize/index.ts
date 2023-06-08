@@ -342,7 +342,7 @@ function getReferencedTableName(constraints: string[]): string | null {
   return null;
 }
 
-export function importSchema(target: string | object): Resources {
+export function importResources(target: string | object): Resources {
   const schemaJson =
     typeof target === 'string'
       ? JSON.parse(fs.readFileSync(target, 'utf8'))

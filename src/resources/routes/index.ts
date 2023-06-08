@@ -10,7 +10,6 @@ import {
   RequestBody,
   Responses,
   Schema,
-  Server,
   Response
 } from '../openapi/openapiTypes';
 import { RouteOptions } from 'fastify';
@@ -158,7 +157,7 @@ function propertiesToItems(value: any) {
   return value;
 }
 
-function resolveResponses(responses: Responses) {
+export function resolveResponses(responses: Responses) {
   if (!responses) return {};
 
   const newResponses: { [key: string]: any } = {};
