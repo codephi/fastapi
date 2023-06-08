@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { global } from '../../middle/database';
+import fs from 'fs';
 
 export type DataTypesResult =
   | DataTypes.StringDataType
@@ -33,6 +34,10 @@ export interface Column {
   allowNull?: boolean;
   search?: string[];
   label?: string;
+  maxLength?: number;
+  binary?: boolean;
+  length?: number;
+  decimals?: number;
 }
 
 export interface Relationship {
@@ -40,40 +45,36 @@ export interface Relationship {
   as: string;
 }
 
-export interface Metadata {
+export class SequelizeModel extends Model {}
+
+export interface Resource {
+  model: typeof SequelizeModel;
   primaryKey: string | null;
   columns: Record<string, any>;
   relationships?: Relationship[];
 }
 
-export class SequelizeModel extends Model {}
-
-export interface InnerSchema {
-  [modelName: string]: {
-    model: typeof SequelizeModel;
-    metadata: Metadata;
-  };
+export interface Resources {
+  [modelName: string]: Resource;
 }
 
 function generateSequelizeModelFromJSON(jsonSchema: {
   tables: Table[];
-}): InnerSchema {
-  const schemas: InnerSchema = {};
+}): Resources {
+  const resources: Resources = {};
 
   for (const table of jsonSchema.tables) {
     const tableColumns: Record<string, any> = {};
     const tableName = getTableName(table.name);
     const modelName = getModelName(table.name);
-    const metadata = {
+    const resource = {
       primaryKey: null,
       columns: {}
-    } as Metadata;
+    } as Resource;
 
     for (const column of table.columns) {
       const columnName = column.name;
-      const [columnType, columnParams] = getSequelizeDataType({
-        columnType: column.name
-      });
+      const [columnType, columnParams] = getSequelizeDataType(column);
       const columnConstraints = column.constraints
         ? getSequelizeConstraints(column.constraints)
         : [];
@@ -105,27 +106,24 @@ function generateSequelizeModelFromJSON(jsonSchema: {
       };
 
       if (primaryKey) {
-        metadata.primaryKey = columnName;
+        resource.primaryKey = columnName;
       }
 
-      metadata.columns[columnName] = columnParams;
+      resource.columns[columnName] = columnParams;
     }
 
-    const model = SequelizeModel.init(tableColumns, {
+    resource.model = SequelizeModel.init(tableColumns, {
       sequelize: global.getSequelize(),
       tableName
     });
 
-    schemas[modelName] = {
-      model,
-      metadata
-    };
+    resources[modelName] = resource;
   }
 
   // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
     const modelName = getModelName(table.name);
-    const model = schemas[modelName].model;
+    const model = resources[modelName].model;
 
     for (const column of table.columns) {
       let tableName: string | null = null;
@@ -146,20 +144,20 @@ function generateSequelizeModelFromJSON(jsonSchema: {
       }
 
       const referencedTable = getModelName(tableName);
-      const referencedModel = schemas[referencedTable].model;
+      const referencedModel = resources[referencedTable].model;
 
       model.belongsTo(referencedModel, { foreignKey: column.name });
       referencedModel.hasMany(model, { foreignKey: column.name });
 
-      if (schemas[modelName].metadata.relationships === undefined) {
-        schemas[modelName].metadata.relationships = [
+      if (resources[modelName].relationships === undefined) {
+        resources[modelName].relationships = [
           {
             model: referencedModel,
             as: column.name
           }
         ];
       } else {
-        schemas[modelName].metadata.relationships?.push({
+        resources[modelName].relationships?.push({
           model: referencedModel,
           as: column.name
         });
@@ -167,7 +165,7 @@ function generateSequelizeModelFromJSON(jsonSchema: {
     }
   }
 
-  return schemas;
+  return resources;
 }
 
 function getModelName(name: string): string {
@@ -246,93 +244,62 @@ function getNumberProps(attributes: Record<string, any>): Record<string, any> {
   return params;
 }
 
-export interface GetSequelizeDataType {
-  columnType: string;
-  attributes?: Record<string, any>;
-}
-
 function getSequelizeDataType(
-  props: GetSequelizeDataType
+  column: Column
 ): [DataTypesResult, Record<string, any>] {
-  const { attributes } = props;
+  const { type: columnType, ...attributes } = column;
 
-  if (attributes !== undefined) {
-    delete attributes.constraints;
-    attributes.label = attributes.name;
-    delete attributes.name;
-
-    return [getDataType(props), attributes];
-  }
-
-  return [getDataType(props), {}];
-}
-
-function getDataType(props: GetSequelizeDataType): DataTypesResult {
-  const { columnType, attributes } = props;
-
-  if (columnType.includes('VARCHAR')) {
-    const length =
-      attributes.maxLength ||
-      attributes.length ||
-      columnType.replace('VARCHAR', '').replace('(', '').replace(')', '');
-
-    attributes.maxLength = parseInt(length, 10);
-
-    return DataTypes.STRING(length, attributes.binary);
-  } else if (columnType === 'STRING') {
-    return DataTypes.STRING(attributes.length, attributes.binary);
-  } else if (columnType === 'CHAR') {
-    return DataTypes.CHAR(attributes.length, attributes.binary);
-  } else if (columnType === 'TEXT') {
-    return DataTypes.TEXT(attributes.length);
-  } else if (columnType === 'DATE') {
-    return DataTypes.DATE(attributes.length);
-  } else if (columnType === 'TIME') {
-    return DataTypes.TIME;
-  } else if (columnType === 'NOW') {
-    return DataTypes.NOW;
-  } else if (columnType === 'BOOLEAN') {
-    return DataTypes.BOOLEAN;
-  } else if (columnType === 'UUID') {
-    return DataTypes.UUID;
-  } else if (columnType === 'ENUM') {
-    return DataTypes.ENUM({
-      values: attributes.values
-    });
-  } else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
-    return DataTypes.JSON;
-  } else if (columnType === 'ARRAY') {
-    return DataTypes.ARRAY(attributes.arrayType);
-  } else if (columnType === 'BLOB') {
-    const params: Record<string, any> = {};
-
-    if (attributes.length) {
-      params.length = attributes.length;
+  function getDataType(): DataTypesResult {
+    if (
+      (columnType.includes('TEXT') || columnType.includes('VARCHAR')) &&
+      attributes.maxLength
+    ) {
+      return DataTypes.STRING(attributes.maxLength, attributes.binary);
+    } else if (columnType === 'STRING') {
+      return DataTypes.STRING(attributes.maxLength, attributes.binary);
+    } else if (columnType === 'CHAR') {
+      return DataTypes.CHAR(attributes.maxLength, attributes.binary);
+    } else if (columnType === 'TEXT') {
+      return DataTypes.TEXT;
+    } else if (columnType === 'DATE') {
+      return DataTypes.DATE(attributes.maxLength);
+    } else if (columnType === 'TIME') {
+      return DataTypes.TIME;
+    } else if (columnType === 'NOW') {
+      return DataTypes.NOW;
+    } else if (columnType === 'BOOLEAN') {
+      return DataTypes.BOOLEAN;
+    } else if (columnType === 'UUID') {
+      return DataTypes.UUID;
+    } else if (columnType === 'ENUM') {
+      return DataTypes.ENUM.apply(null, attributes.values);
+    } else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
+      return DataTypes.JSON;
+    } else if (
+      columnType === 'INT' ||
+      columnType === 'INTEGER' ||
+      columnType === 'SERIAL'
+    ) {
+      return DataTypes.INTEGER;
+    } else if (columnType === 'FLOAT') {
+      return DataTypes.FLOAT(attributes.length, attributes.decimals);
+    } else if (
+      columnType === 'BIGINT' ||
+      columnType === 'SMALLINT' ||
+      columnType === 'TINYINT' ||
+      columnType === 'MEDIUMINT' ||
+      columnType === 'DOUBLE' ||
+      columnType === 'DECIMAL' ||
+      columnType === 'REAL' ||
+      columnType === 'NUMERIC'
+    ) {
+      return DataTypes.NUMBER(getNumberProps(attributes));
     }
 
-    return DataTypes.BLOB(attributes.length);
-  } else if (
-    columnType === 'INT' ||
-    columnType === 'INTEGER' ||
-    columnType === 'SERIAL'
-  ) {
-    return DataTypes.INTEGER;
-  } else if (columnType === 'FLOAT') {
-    return DataTypes.FLOAT(attributes.length, attributes.decimals);
-  } else if (
-    columnType === 'BIGINT' ||
-    columnType === 'SMALLINT' ||
-    columnType === 'TINYINT' ||
-    columnType === 'MEDIUMINT' ||
-    columnType === 'DOUBLE' ||
-    columnType === 'DECIMAL' ||
-    columnType === 'REAL' ||
-    columnType === 'NUMERIC'
-  ) {
-    return DataTypes.NUMBER(getNumberProps(attributes));
+    throw new Error(`Unknown column type: ${columnType}`);
   }
 
-  throw new Error(`Unknown column type: ${columnType}`);
+  return [getDataType(), {}];
 }
 
 function getSequelizeConstraints(columnConstraints: string[]): string[] {
@@ -375,16 +342,13 @@ function getReferencedTableName(constraints: string[]): string | null {
 
 export { generateSequelizeModelFromJSON };
 
-import fs from 'fs';
-import { StringArraySupportOption } from 'prettier';
-
-export function importModel(target: string | object): Models {
+export function importSchema(target: string | object): Resources {
   const modelJson =
     typeof target === 'string'
       ? JSON.parse(fs.readFileSync(target, 'utf8'))
       : target;
 
-  const models = generateSequelizeModelFromJSON(modelJson);
+  const resource = generateSequelizeModelFromJSON(modelJson);
 
-  return models;
+  return resource;
 }
