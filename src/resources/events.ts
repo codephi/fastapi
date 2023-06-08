@@ -1,7 +1,20 @@
-const { resolvePlural } = require('./openapi/utils');
-const eventsStorage = {};
+import { resolvePlural } from './openapi/utils';
 
-const on = (modelName, action, callback) => {
+interface EventCallback {
+  (err: any, data: any): void;
+}
+
+interface EventsStorage {
+  [key: string]: EventCallback[];
+}
+
+const eventsStorage: EventsStorage = {};
+
+export function on(
+  modelName: string,
+  action: string,
+  callback: EventCallback
+): void {
   const event = `${resolvePlural(modelName.toLowerCase())}.${action}`;
 
   if (!eventsStorage[event]) {
@@ -9,9 +22,14 @@ const on = (modelName, action, callback) => {
   }
 
   eventsStorage[event].push(callback);
-};
+}
 
-const emit = (modelName, action, err, data) => {
+export function emit(
+  modelName: string,
+  action: string,
+  err: any,
+  data?: any
+): void {
   const event = `${resolvePlural(modelName.toLowerCase())}.${action}`;
 
   if (eventsStorage[event]) {
@@ -19,18 +37,12 @@ const emit = (modelName, action, err, data) => {
       callback(err, data);
     });
   }
-};
+}
 
-const remove = (modelName, action) => {
+export function remove(modelName: string, action: string): void {
   const event = `${modelName}.${action}`;
 
   if (eventsStorage[event]) {
     delete eventsStorage[event];
   }
-};
-
-module.exports = {
-  on,
-  emit,
-  remove
-};
+}

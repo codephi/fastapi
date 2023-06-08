@@ -39,7 +39,7 @@ export function getAll(resource: Resource): RouteHandler {
         }
       });
 
-      emit(resource, 'list', null, data.rows);
+      emit(resource.name, 'list', null, data.rows);
     } catch (err) {
       api.log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${resource.name}.` });
