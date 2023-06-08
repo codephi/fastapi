@@ -55,18 +55,16 @@ export interface Resource {
 }
 
 export interface Resources {
-  [modelName: string]: Resource;
+  [resurceName: string]: Resource;
 }
 
-function generateSequelizeModelFromJSON(jsonSchema: {
-  tables: Table[];
-}): Resources {
+function generateResourcesFromJSON(jsonSchema: { tables: Table[] }): Resources {
   const resources: Resources = {};
 
   for (const table of jsonSchema.tables) {
     const tableColumns: Record<string, any> = {};
     const tableName = getTableName(table.name);
-    const modelName = getModelName(table.name);
+    const resurceName = getResourceName(table.name);
     const resource = {
       primaryKey: null,
       columns: {}
@@ -117,13 +115,13 @@ function generateSequelizeModelFromJSON(jsonSchema: {
       tableName
     });
 
-    resources[modelName] = resource;
+    resources[resurceName] = resource;
   }
 
   // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
-    const modelName = getModelName(table.name);
-    const model = resources[modelName].model;
+    const resurceName = getResourceName(table.name);
+    const model = resources[resurceName].model;
 
     for (const column of table.columns) {
       let tableName: string | null = null;
@@ -143,21 +141,21 @@ function generateSequelizeModelFromJSON(jsonSchema: {
         continue;
       }
 
-      const referencedTable = getModelName(tableName);
+      const referencedTable = getResourceName(tableName);
       const referencedModel = resources[referencedTable].model;
 
       model.belongsTo(referencedModel, { foreignKey: column.name });
       referencedModel.hasMany(model, { foreignKey: column.name });
 
-      if (resources[modelName].relationships === undefined) {
-        resources[modelName].relationships = [
+      if (resources[resurceName].relationships === undefined) {
+        resources[resurceName].relationships = [
           {
             model: referencedModel,
             as: column.name
           }
         ];
       } else {
-        resources[modelName].relationships?.push({
+        resources[resurceName].relationships?.push({
           model: referencedModel,
           as: column.name
         });
@@ -168,7 +166,7 @@ function generateSequelizeModelFromJSON(jsonSchema: {
   return resources;
 }
 
-function getModelName(name: string): string {
+function getResourceName(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1, -1);
 }
 
@@ -340,15 +338,13 @@ function getReferencedTableName(constraints: string[]): string | null {
   return null;
 }
 
-export { generateSequelizeModelFromJSON };
-
 export function importSchema(target: string | object): Resources {
-  const modelJson =
+  const schemaJson =
     typeof target === 'string'
       ? JSON.parse(fs.readFileSync(target, 'utf8'))
       : target;
 
-  const resource = generateSequelizeModelFromJSON(modelJson);
+  const resource = generateResourcesFromJSON(schemaJson);
 
   return resource;
 }
