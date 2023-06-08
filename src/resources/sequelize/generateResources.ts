@@ -15,6 +15,7 @@ export interface Schema {
 export interface Table {
   name: string;
   columns: Column[];
+  search?: string[];
 }
 
 export interface Column {
@@ -49,9 +50,11 @@ export class SequelizeModel extends Model {}
 
 export interface Resource {
   model: typeof SequelizeModel;
+  name: string;
   primaryKey: string | null;
   columns: Record<string, any>;
   relationships?: Relationship[];
+  search?: string[];
 }
 
 export interface Resources {
@@ -67,7 +70,8 @@ function generateResourcesFromJSON(jsonSchema: { tables: Table[] }): Resources {
     const resurceName = getResourceName(table.name);
     const resource = {
       primaryKey: null,
-      columns: {}
+      columns: {},
+      search: table.search
     } as Resource;
 
     for (const column of table.columns) {
