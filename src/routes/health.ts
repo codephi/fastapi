@@ -1,9 +1,9 @@
 import os from 'os';
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { global } from '../../middle/database';
-import { resolveResponses } from './responses';
+import { global } from '../middle/database';
+import { resolveResponses } from '../resources/openapi/responses';
 
-interface Server {
+export interface Server {
   platform: string;
   release: string;
   arch: string;
@@ -11,7 +11,7 @@ interface Server {
   cpus: number;
 }
 
-interface Memory {
+export interface Memory {
   total: number;
   free: number;
   used: number;
@@ -19,14 +19,14 @@ interface Memory {
   available: number;
 }
 
-interface Process {
+export interface Process {
   pid: number;
   uptime: number;
   versions: NodeJS.ProcessVersions;
   memoryUsage: NodeJS.MemoryUsage;
 }
 
-interface Os {
+export interface Os {
   hostname: string;
   type: string;
   platform: string;
@@ -36,13 +36,13 @@ interface Os {
   cpus: number;
 }
 
-interface Container {
+export interface Container {
   image: string;
   version: string;
   containerId: string;
 }
 
-interface Database {
+export interface Database {
   dialect: string;
   host: string;
   port: number;
@@ -50,7 +50,7 @@ interface Database {
   username: string;
 }
 
-interface HealthResponse {
+export interface HealthResponse {
   server: Server;
   memory: Memory;
   process: Process;
@@ -60,7 +60,7 @@ interface HealthResponse {
   status: string;
 }
 
-interface HealthQuery {
+export interface HealthQuery {
   info?: string;
 }
 

@@ -29,8 +29,6 @@ export interface ResourceProps {
   resource?: Resource;
 }
 
-type PathValueTypes = Operation | string | (Parameter | Reference)[] | Server[];
-
 interface InnerOperation {
   get?: Operation;
   post?: Operation;
