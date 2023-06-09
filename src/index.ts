@@ -9,7 +9,8 @@ import {
   Routes,
   RoutesBuilder,
   createRouteResource,
-  createRoutes
+  createRoutes,
+  routesToPaths
 } from './resources/routes';
 import { createTables } from './resources/sequelize/createTables';
 import {
@@ -18,6 +19,7 @@ import {
   DatabaseConnect
 } from './middle/database';
 import {
+  Resource,
   Resources,
   Schema,
   Table,
@@ -56,12 +58,15 @@ export enum DatabaseSync {
 }
 
 export interface DatabaseOptions {
-  database: string | null;
-  username: string | null;
-  password: string | null;
-  options?: any;
-  sync: DatabaseSync;
-  testConnection: boolean;
+  database?: string | null;
+  username?: string | null;
+  password?: string | null;
+  sync?: DatabaseSync;
+  testConnection?: boolean;
+  host?: string;
+  port?: number;
+  dialect?: string;
+  logging?: (sql: string) => void;
 }
 
 export interface Cors {
@@ -90,19 +95,17 @@ export class FastAPI {
     list: ['list']
   };
   handlers: Handlers = {};
-  schema?: string | Schema;
+  private schema?: string | Schema;
   resources: Resources = {};
   database: DatabaseOptions = {
     database: process.env.DB_NAME || process.env.DATABASE_NAME || null,
     username: process.env.DB_USER || process.env.DATABASE_USER || null,
     password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || null,
-    options: {
-      host: 'localhost',
-      port: 5432,
-      dialect: 'postgres',
-      logging: (sql: string) => {
-        api.log.info(sql);
-      }
+    host: 'localhost',
+    port: 5432,
+    dialect: 'postgres',
+    logging: (sql: string) => {
+      api.log.info(sql);
     },
     sync: DatabaseSync.NONE,
     testConnection: true
@@ -151,47 +154,62 @@ export class FastAPI {
     return this;
   }
 
-  loadSpec({
-    resources,
-    tags,
-    routes = [],
-    handlers = {}
-  }: LoadSpecOptions): void {
-    const resourcesImported = resources as Resources;
+  private databaseInstance() {
+    const { database, password, username, ...options } = this.database;
 
-    let openApiSchemaPaths: Paths = {};
+    databaseConnect({
+      database,
+      password,
+      username,
+      options
+    } as DatabaseConnect);
+  }
 
-    Object.keys(resourcesImported).forEach((key) => {
-      const paths = generateOpenapiSchemas(resourcesImported[key], tags)
-        .paths as Paths;
+  builder(): void {
+    preBuilder();
+
+    this.databaseInstance();
+
+    const { schema } = this;
+
+    if (schema) {
+      this.resources = importResources(schema);
+    }
+
+    let shemasPaths: Paths = {};
+
+    const resources = this.resources;
+    const tags = this.tags;
+    const handlers = this.handlers;
+
+    Object.keys(resources).forEach((key) => {
+      const paths = generateOpenapiSchemas(resources[key], tags).paths as Paths;
 
       createRouteResource({
         paths,
-        resource: resourcesImported[key],
-        handlers: handlers
+        resource: resources[key],
+        handlers
       });
 
-      openApiSchemaPaths = { ...openApiSchemaPaths, ...paths } as Paths;
+      shemasPaths = { ...shemasPaths, ...paths } as Paths;
     });
 
     let paths = {} as Paths;
 
-    routes.forEach((route) => {
+    this.routes.forEach((route) => {
       createRoutes({ ...route });
-      paths = { ...paths, ...route } as Paths;
+      paths = { ...paths, ...routesToPaths(route) };
     });
 
     createRoutes(health);
 
-    const healthPaths = health.paths as Paths;
-
     const openapi = builderOpeapi({
-      ...openApiSchemaPaths,
-      ...healthPaths,
+      ...shemasPaths,
+      ...routesToPaths(health),
       ...paths
     });
 
-    createRoutes({ ...openapi });
+    createRoutes(openapi);
 
     this.api.setErrorHandler(function (
       error: any,
@@ -202,16 +220,13 @@ export class FastAPI {
     });
   }
 
-  load(callback?: (err?: any) => void): void {
-    databaseConnect({
-      ...this.database
-    } as DatabaseConnect);
+  setDatabse(database: DatabaseOptions): FastAPI {
+    this.database = { ...this.database, ...database };
+    return this;
+  }
 
-    const { schema, routes, tags, handlers, database } = this;
-
-    if (schema) {
-      this.resources = importResources(schema);
-    }
+  connect(callback?: (err?: any) => void): void {
+    const { database } = this;
 
     if (this.database.sync !== DatabaseSync.NONE) {
       const createTablesConfig: SyncOptions = {};
@@ -225,7 +240,6 @@ export class FastAPI {
       testDatabaseConnection()
         .then(() => {
           createTables(createTablesConfig).then(() => {
-            this.builder(routes, tags, handlers);
             if (callback) {
               callback();
             }
@@ -239,28 +253,9 @@ export class FastAPI {
           }
         });
     } else {
-      this.builder(routes, tags, handlers);
       if (callback) {
         callback();
       }
-    }
-  }
-
-  builder(routes: Routes[], tags: Tags, handlers: Handlers): void {
-    preBuilder();
-
-    this.loadSpec({
-      routes,
-      tags,
-      handlers,
-      resources: this.resources
-    });
-  }
-
-  defaultListen(err?: any): void {
-    if (err) {
-      this.api.log.error(err);
-      process.exit(1);
     }
   }
 
@@ -269,7 +264,7 @@ export class FastAPI {
   }
 
   start(callback?: (err?: any) => void): void {
-    this.load((err) => {
+    this.connect((err) => {
       if (err) {
         if (callback) return callback(err);
         return;
@@ -279,9 +274,9 @@ export class FastAPI {
     });
   }
 
-  setDataBase(database: any): FastAPI {
-    this.database = { ...this.database, ...database };
-    return this;
+  //Resources
+  getResource(resourceName: string): Resource {
+    return this.resources[resourceName];
   }
 
   // Routes
@@ -332,6 +327,8 @@ export class FastAPI {
     });
   }
 
+  responses() {}
+
   // Events
   on(modelName: string, action: string, callback: EventCallback): FastAPI {
     on(modelName, action, callback);
@@ -346,6 +343,13 @@ export class FastAPI {
   removeListener(modelName: string, action: string): FastAPI {
     remove(modelName, action);
     return this;
+  }
+
+  private defaultListen(err?: any): void {
+    if (err) {
+      this.api.log.error(err);
+      process.exit(1);
+    }
   }
 }
 

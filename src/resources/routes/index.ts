@@ -15,6 +15,7 @@ import {
 } from '../openapi/openapiTypes';
 import { RouteOptions } from 'fastify';
 import { makeResponses } from '../openapi/responses';
+import { extractByMethod } from '../openapi/utils';
 
 export enum MethodType {
   GET = 'get',
@@ -38,7 +39,7 @@ export interface ResourceProps {
   resource?: Resource;
 }
 
-interface InnerOperation {
+export interface InnerOperation {
   get?: Operation;
   post?: Operation;
   put?: Operation;
@@ -54,23 +55,6 @@ function getOperations(value: Path): InnerOperation {
     delete: value.delete,
     patch: value.patch
   };
-}
-
-function extractByMethod(
-  method: string,
-  target: InnerOperation | Handlers
-): Operation | RouteHandler | undefined {
-  if (method === 'get') {
-    return target.get;
-  } else if (method === 'post') {
-    return target.post;
-  } else if (method === 'put') {
-    return target.put;
-  } else if (method === 'delete') {
-    return target.delete;
-  } else if (method === 'patch') {
-    return target.patch;
-  }
 }
 
 export function createRouteResource({
@@ -117,6 +101,42 @@ export interface Methods {
 
 export interface Route extends Operation {
   handler: RouteHandler;
+}
+
+export function routesToPaths(routes: Routes): Paths {
+  const paths: Paths = {};
+
+  Object.keys(routes).forEach((path) => {
+    paths[path] = {};
+    const route = routes[path];
+
+    if (route.get) {
+      const { handler, ...get } = route.get;
+      paths[path].get = get;
+    }
+
+    if (route.post) {
+      const { handler, ...post } = route.post;
+      paths[path].post = post;
+    }
+
+    if (route.put) {
+      const { handler, ...put } = route.put;
+      paths[path].put = put;
+    }
+
+    if (route.delete) {
+      const { handler, ...del } = route.delete;
+      paths[path].delete = del;
+    }
+
+    if (route.patch) {
+      const { handler, ...patch } = route.patch;
+      paths[path].patch = patch;
+    }
+  });
+
+  return paths;
 }
 
 export class PathBuilder {
@@ -219,7 +239,8 @@ export class RoutesBuilder {
   }
 
   path(path: string): PathBuilder {
-    return new PathBuilder(this, path);
+    const pathBuilder = new PathBuilder(this, path);
+    return pathBuilder;
   }
 
   responses(

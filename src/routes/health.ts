@@ -1,6 +1,6 @@
 import os from 'os';
 import { global } from '../middle/database';
-import { RoutesBuilder } from '../resources/routes';
+import { Route, RoutesBuilder } from '../resources/routes';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 const healthRoute = new RoutesBuilder('health');
@@ -67,7 +67,7 @@ const responsesAll = healthRoute.responses(200, {
   status: { type: 'string' }
 });
 
-export default healthRoute
+const route = healthRoute
   .path('/health')
   .get({
     tags: ['Health'],
@@ -87,6 +87,8 @@ export default healthRoute
     handler: handlerAll
   })
   .build();
+
+export default route;
 
 function handlerStatus(_request: FastifyRequest, reply: FastifyReply) {
   reply.send({ status: 'ok' });

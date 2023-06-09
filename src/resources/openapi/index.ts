@@ -1,6 +1,6 @@
 import { convertType } from './dataTypes';
 import { AdminReferences, OpenAPI, Operation } from './openapiTypes';
-import { resolveResponses } from './responses';
+import { makeResponses } from './responses';
 import { resolvePlural } from './utils';
 
 interface Property {
@@ -149,13 +149,13 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
 
   const requestProperties = makeRequestProperties();
 
-  const responseResolved = resolveResponses(model.name, 200, requestProperties);
-  const responseResolvedList = resolveResponses(
+  const responseResolved = makeResponses(model.name, 200, requestProperties);
+  const responseResolvedList = makeResponses(
     model.name,
     200,
     makeAllResponseProperties()
   );
-  const responseResolvedConflict = resolveResponses(
+  const responseResolvedConflict = makeResponses(
     model.name,
     200,
     requestProperties,

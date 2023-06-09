@@ -1,13 +1,33 @@
+import { RouteHandler } from 'fastify';
+import { Handlers, InnerOperation } from '../routes';
 import {
   OpenAPI,
   Operation,
   Schema,
   Response,
-  Parameter
+  Parameter,
+  Path
 } from './openapiTypes';
 
+export function extractByMethod(
+  method: string,
+  target: InnerOperation | Handlers | Path
+): Operation | RouteHandler | undefined {
+  if (method === 'get') {
+    return target.get;
+  } else if (method === 'post') {
+    return target.post;
+  } else if (method === 'put') {
+    return target.put;
+  } else if (method === 'delete') {
+    return target.delete;
+  } else if (method === 'patch') {
+    return target.patch;
+  }
+}
+
 function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
-  const schemas: Schema = {};
+  const schemasCache: Record<string, string> = {};
 
   // Create the components object if it doesn't exist
   if (!openAPI.components) {
@@ -25,7 +45,9 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
 
     for (const method in pathItem) {
       if (method !== 'parameters') {
-        const operation = pathItem[method] as Operation;
+        const operation = extractByMethod(method, pathItem) as Operation;
+        if (!operation) continue;
+
         const { responses } = operation;
 
         for (const statusCode in responses) {
@@ -40,10 +62,10 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
               const schemaKey = JSON.stringify(schema);
 
               // Check if the schema has already been registered
-              if (schemas[schemaKey]) {
+              if (schemasCache[schemaKey]) {
                 // Reuse the existing schema
                 mediaType.schema = {
-                  $ref: `#/components/schemas/${schemas[schemaKey]}`
+                  $ref: `#/components/schemas/${schemasCache[schemaKey]}`
                 };
               } else {
                 const schemaName = `${method.toUpperCase()}_${path.replace(
@@ -52,7 +74,7 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
                 )}_${statusCode}`;
 
                 // Add the schema to the schemas object
-                schemas[schemaKey] = schemaName;
+                schemasCache[schemaKey] = schemaName;
                 openAPI.components.schemas[schemaName] = schema;
 
                 // Update the reference to the schema
@@ -65,8 +87,8 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
         }
 
         // Check for undeclared path parameters
-        const parameters = operation.parameters as Parameter[];
-        const declaredPathParams = (path.match(/{\w+}/g) as string[]) || [];
+        const parameters = (operation.parameters as Parameter[]) ?? [];
+        const declaredPathParams = (path.match(/{\w+}/g) as string[]) ?? [];
 
         parameters.forEach((parameter) => {
           if (
