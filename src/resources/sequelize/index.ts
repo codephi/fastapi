@@ -61,7 +61,7 @@ export interface Resources {
   [resurceName: string]: Resource;
 }
 
-function generateResourcesFromJSON(jsonSchema: { tables: Table[] }): Resources {
+function generateResourcesFromJSON(jsonSchema: Schema): Resources {
   const resources: Resources = {};
 
   for (const table of jsonSchema.tables) {
@@ -274,7 +274,7 @@ function getSequelizeDataType(
     } else if (columnType === 'UUID') {
       return DataTypes.UUID;
     } else if (columnType === 'ENUM') {
-      return DataTypes.ENUM.apply(null, attributes.values);
+      return DataTypes.ENUM.apply(attributes.values);
     } else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
       return DataTypes.JSON;
     } else if (
@@ -342,7 +342,7 @@ function getReferencedTableName(constraints: string[]): string | null {
   return null;
 }
 
-export function importResources(target: string | object): Resources {
+export function importResources(target: string | Schema): Resources {
   const schemaJson =
     typeof target === 'string'
       ? JSON.parse(fs.readFileSync(target, 'utf8'))

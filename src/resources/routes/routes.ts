@@ -3,7 +3,7 @@ import { superFiler } from './superFilter';
 import { emit } from '../events';
 import { Resource } from '../sequelize';
 
-export type RouteHandler = (request: any, reply: any) => Promise<void>;
+export type RouteHandler = (request: any, reply: any) => Promise<void> | void;
 
 export function getAll(resource: Resource): RouteHandler {
   return async (request: any, reply: any) => {

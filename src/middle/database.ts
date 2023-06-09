@@ -29,17 +29,19 @@ export async function testDatabaseConnection(): Promise<void> {
   }
 }
 
+export interface DatabaseConnect {
+  database: string;
+  username: string;
+  password: string;
+  options?: Options;
+}
+
 export function databaseConnect({
   database,
   username,
   password,
   options
-}: {
-  database: string;
-  username: string;
-  password: string;
-  options?: Options;
-}): void {
+}: DatabaseConnect): void {
   global.sequelize = new Sequelize(database, username, password, options);
 }
 

@@ -10,9 +10,19 @@ import {
   RequestBody,
   Responses,
   Schema,
-  Response
+  Response,
+  Properties
 } from '../openapi/openapiTypes';
 import { RouteOptions } from 'fastify';
+import { makeResponses } from '../openapi/responses';
+
+export enum MethodType {
+  GET = 'get',
+  POST = 'post',
+  PUT = 'put',
+  DELETE = 'delete',
+  PATCH = 'patch'
+}
 
 export interface Handlers {
   get?: RouteHandler;
@@ -46,41 +56,194 @@ function getOperations(value: Path): InnerOperation {
   };
 }
 
+function extractByMethod(
+  method: string,
+  target: InnerOperation | Handlers
+): Operation | RouteHandler | undefined {
+  if (method === 'get') {
+    return target.get;
+  } else if (method === 'post') {
+    return target.post;
+  } else if (method === 'put') {
+    return target.put;
+  } else if (method === 'delete') {
+    return target.delete;
+  } else if (method === 'patch') {
+    return target.patch;
+  }
+}
+
 export function createRouteResource({
   paths,
   resource,
   handlers
 }: ResourceProps) {
   Object.entries(paths).forEach(([path, value]: [string, Path]) => {
-    const InnerOperation = getOperations(value);
+    const innerOperation = getOperations(value);
 
-    Object.keys(InnerOperation).forEach((method) => {
-      const operation = InnerOperation[method];
-      if (!operation) return;
+    innerOperation['get'];
 
-      const handler =
-        handlers && handlers[method]
-          ? handlers[method]
-          : getRouteHandler(method, resource, operation);
+    Object.keys(innerOperation).forEach((method) => {
+      const operation = extractByMethod(method, innerOperation) as Operation;
+
+      if (!operation) {
+        return;
+      }
+
+      const handler = handlers
+        ? (extractByMethod(method, handlers) as RouteHandler)
+        : getRouteHandler(method, resource, operation);
+
+      if (handler === undefined) {
+        return;
+      }
 
       createRouteInner({ path, method, operation, handler });
     });
   });
 }
 
-export interface HandlerProps {
-  paths: Paths;
+export interface Routes {
+  [path: string]: Methods;
+}
+
+export interface Methods {
+  get?: Route;
+  post?: Route;
+  put?: Route;
+  delete?: Route;
+  patch?: Route;
+}
+
+export interface Route extends Operation {
   handler: RouteHandler;
 }
 
-export function createRouteHandler({ paths, handler }: HandlerProps) {
-  Object.entries(paths).forEach(([path, value]: [string, Path]) => {
-    const InnerOperation = getOperations(value);
+export class PathBuilder {
+  private methods: Methods = {};
+  private pathName: string;
+  private parent: RoutesBuilder;
 
-    Object.keys(InnerOperation).forEach((method) => {
-      const operation = InnerOperation[method];
-      if (!operation) return;
+  constructor(parent: RoutesBuilder, pathName: string) {
+    this.pathName = pathName;
+    this.parent = parent;
+  }
 
+  get(route: Route) {
+    this.methods.get = route;
+    return this;
+  }
+
+  post(route: Route) {
+    this.methods.post = route;
+    return this;
+  }
+
+  put(route: Route) {
+    this.methods.put = route;
+    return this;
+  }
+
+  delete(route: Route) {
+    this.methods.delete = route;
+    return this;
+  }
+
+  patch(route: Route) {
+    this.methods.patch = route;
+    return this;
+  }
+
+  buildPath() {
+    if (this.methods.get) {
+      this.parent.addRoute(this.pathName, MethodType.GET, this.methods.get);
+    }
+
+    if (this.methods.post) {
+      this.parent.addRoute(this.pathName, MethodType.POST, this.methods.post);
+    }
+
+    if (this.methods.put) {
+      this.parent.addRoute(this.pathName, MethodType.PUT, this.methods.put);
+    }
+
+    if (this.methods.delete) {
+      this.parent.addRoute(
+        this.pathName,
+        MethodType.DELETE,
+        this.methods.delete
+      );
+    }
+
+    if (this.methods.patch) {
+      this.parent.addRoute(this.pathName, MethodType.PATCH, this.methods.patch);
+    }
+  }
+
+  path(path: string): PathBuilder {
+    this.buildPath();
+    return new PathBuilder(this.parent, this.pathName + path);
+  }
+
+  responses(
+    defaultSuccessStatusCode: number,
+    successProperties: Properties,
+    conflict = false
+  ): Responses {
+    return this.parent.responses(
+      defaultSuccessStatusCode,
+      successProperties,
+      conflict
+    );
+  }
+
+  build(): Routes {
+    return this.parent.build();
+  }
+}
+
+export class RoutesBuilder {
+  private routes: Routes = {};
+  private resourceName: string;
+
+  constructor(resourceName?: string) {
+    this.resourceName = resourceName ?? 'default';
+  }
+
+  addRoute(path: string, method: MethodType, route: Route) {
+    if (!this.routes[path]) {
+      this.routes[path] = {};
+    }
+
+    this.routes[path][method] = route;
+  }
+
+  path(path: string): PathBuilder {
+    return new PathBuilder(this, path);
+  }
+
+  responses(
+    defaultSuccessStatusCode: number,
+    successProperties: Properties,
+    conflict = false
+  ): Responses {
+    return makeResponses(
+      this.resourceName,
+      defaultSuccessStatusCode,
+      successProperties,
+      conflict
+    );
+  }
+
+  build(): Routes {
+    return this.routes;
+  }
+}
+
+export function createRoutes(routes: Routes) {
+  Object.entries(routes).forEach(([path, methods]: [string, Methods]) => {
+    Object.entries(methods).forEach(([method, route]: [string, Route]) => {
+      const { handler, ...operation } = route;
       createRouteInner({ path, method, operation, handler });
     });
   });
@@ -163,7 +326,7 @@ export function resolveResponses(responses: Responses) {
   const newResponses: { [key: string]: any } = {};
 
   Object.keys(responses).forEach((statusCode) => {
-    const response = responses[statusCode] as Response;
+    const response = responses[parseInt(statusCode)] as Response;
 
     if (!response.content) return;
 

@@ -1,8 +1,9 @@
+import { SyncOptions } from 'sequelize';
 import { global } from '../../middle/database';
 import { api } from '../../middle/serve';
 
 export async function createTables(
-  config = {},
+  config: SyncOptions,
   closeConnection = false
 ): Promise<void> {
   const sequelize = global.getSequelize();

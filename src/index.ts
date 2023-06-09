@@ -1,83 +1,44 @@
 import { preBuilder } from './middle/serve';
-import { FastifyRequest, FastifyReply, RouteHandlerMethod } from 'fastify';
+import {
+  FastifyRequest,
+  FastifyReply,
+  RouteHandlerMethod,
+  FastifyInstance,
+  RawServerDefault,
+  FastifyBaseLogger,
+  FastifyTypeProviderDefault
+} from 'fastify';
 import { generateOpenapiSchemas } from './resources/openapi';
-import { createRouteResource, createRouteHandler } from './resources/routes';
-import { resolveResponses } from './resources/openapi/responses';
+import {
+  Handlers,
+  Routes,
+  createRouteResource,
+  createRoutes
+} from './resources/routes';
+import { makeResponses } from './resources/openapi/responses';
 import { createTables } from './resources/sequelize/createTables';
 import {
   databaseConnect,
   testDatabaseConnection,
-  getSequelize
+  global,
+  DatabaseConnect
 } from './middle/database';
-import { Resources, importResources } from './resources/sequelize';
+import { Resources, Schema, importResources } from './resources/sequelize';
 import health from './routes/health';
 import builderOpeapi from './routes/openapi';
-import { on, emit, remove } from './resources/events';
+import { on, emit, remove, EventCallback } from './resources/events';
 import { Paths } from './resources/openapi/openapiTypes';
+import { api } from './middle/serve';
+import { SyncOptions } from 'sequelize';
+import exp from 'constants';
+import { IncomingMessage, ServerResponse } from 'http';
 
 interface LoadSpecOptions {
-  schemaPath?: string;
-  resources?: Resources;
-  tags?: string[];
-  routes?: any[];
-  handlers?: any;
+  resources: Resources;
+  tags?: Tags;
+  routes?: Routes[];
+  handlers?: Handlers;
 }
-
-const loadSpec = ({
-  schemaPath,
-  resources,
-  tags,
-  routes = [],
-  handlers = {}
-}: LoadSpecOptions): void => {
-  if (resources === undefined) {
-    if (schemaPath !== undefined) {
-      resources = importResources(schemaPath);
-    } else {
-      throw new Error('No schema provided');
-    }
-  }
-
-  const resourcesImported = resources as Resources;
-
-  let openApiSchemaPaths: any = {};
-
-  Object.keys(resourcesImported).forEach((key) => {
-    const paths = generateOpenapiSchemas(resourcesImported[key], tags)
-      .paths as Paths;
-
-    createRouteResource({
-      paths,
-      resource: resourcesImported[key],
-      handlers: handlers[key]
-    });
-
-    openApiSchemaPaths = { ...openApiSchemaPaths, ...paths };
-  });
-
-  const paths = routes.map((route) => {
-    createRouteHandler({ ...route });
-    return route.paths;
-  });
-
-  createRouteHandler({ ...health });
-
-  const openapi = builderOpeapi({
-    ...openApiSchemaPaths,
-    ...health.paths,
-    ...paths
-  });
-
-  createRouteHandler({ ...openapi });
-
-  fastify.setErrorHandler(function (
-    error: any,
-    request: FastifyRequest,
-    reply: FastifyReply
-  ) {
-    reply.send(error);
-  });
-};
 
 interface FastAPIConfig {
   port: number;
@@ -85,14 +46,42 @@ interface FastAPIConfig {
 }
 
 interface FastAPIOptions {
-  routes?: any[];
-  tags?: any;
-  handlers?: any;
-  model?: any;
-  database?: any;
-  cors?: any;
-  forceCreateTables?: any;
+  routes?: Routes[];
+  tags?: Tags;
+  handlers?: Handlers;
+  schema?: string | Schema;
+  resources?: Resources;
+  database?: DatabaseOptions;
+  cors?: Cors;
+  forceCreateTables?: boolean;
   config?: FastAPIConfig;
+}
+
+export enum DatabaseSync {
+  FORCE = 'force',
+  ALTER = 'alter',
+  NONE = 'none'
+}
+
+export interface DatabaseOptions {
+  database: string | null;
+  username: string | null;
+  password: string | null;
+  options?: any;
+  sync: DatabaseSync;
+  testConnection: boolean;
+}
+
+export interface Cors {
+  origin: string;
+}
+
+export interface Tags {
+  create: string[];
+  read: string[];
+  update: string[];
+  delete: string[];
+  list: string[];
 }
 
 class FastAPI {
@@ -100,18 +89,18 @@ class FastAPI {
     port: 3000,
     address: '0.0.0.0'
   };
-  routes: any[] = [];
-  tags = {
+  routes: Routes[] = [];
+  tags: Tags = {
     create: ['create'],
     read: ['read'],
     update: ['update'],
     delete: ['delete'],
     list: ['list']
   };
-  handlers: any = {};
-  model: any = null;
-  models: any = {};
-  database = {
+  handlers: Handlers = {};
+  schema?: string | Schema;
+  resources: Resources = {};
+  database: DatabaseOptions = {
     database: process.env.DB_NAME || process.env.DATABASE_NAME || null,
     username: process.env.DB_USER || process.env.DATABASE_USER || null,
     password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || null,
@@ -120,77 +109,124 @@ class FastAPI {
       port: 5432,
       dialect: 'postgres',
       logging: (sql: string) => {
-        fastify.log.info(sql);
+        api.log.info(sql);
       }
     },
-    sync: null,
+    sync: DatabaseSync.NONE,
     testConnection: true
   };
-  cors = {
+  cors: Cors = {
     origin: '*'
   };
+  forceCreateTables = false;
+  api = api;
 
   constructor(props?: FastAPIOptions) {
     if (props === undefined) return;
-    const {
-      routes = undefined,
-      tags = undefined,
-      handlers = undefined,
-      model = undefined,
-      database = undefined,
-      cors = undefined,
-      forceCreateTables = undefined,
-      config = undefined
-    } = props;
 
-    if (model !== undefined) {
-      this.model = model;
+    if (props.schema !== undefined) {
+      this.schema = props.schema;
     }
 
-    if (routes !== undefined) {
-      this.routes = routes;
+    if (props.routes !== undefined) {
+      this.routes = props.routes;
     }
 
-    if (handlers !== undefined) {
-      this.handlers = handlers;
+    if (props.handlers !== undefined) {
+      this.handlers = props.handlers;
     }
 
-    if (tags !== undefined) {
-      this.tags = tags;
+    if (props.tags !== undefined) {
+      this.tags = props.tags;
     }
 
-    if (database !== undefined) {
-      this.database = { ...this.database, ...database };
+    if (props.database !== undefined) {
+      this.database = { ...this.database, ...props.database };
     }
 
-    if (cors !== undefined) {
-      this.cors = cors;
+    if (props.cors !== undefined) {
+      this.cors = props.cors;
     }
 
-    if (forceCreateTables) {
-      this.forceCreateTables = forceCreateTables;
+    if (props.forceCreateTables) {
+      this.forceCreateTables = props.forceCreateTables;
     }
 
-    if (config !== undefined) {
-      this.config = config;
+    if (props.config !== undefined) {
+      this.config = props.config;
     }
 
     return this;
   }
 
+  loadSpec({
+    resources,
+    tags,
+    routes = [],
+    handlers = {}
+  }: LoadSpecOptions): void {
+    const resourcesImported = resources as Resources;
+
+    let openApiSchemaPaths: Paths = {};
+
+    Object.keys(resourcesImported).forEach((key) => {
+      const paths = generateOpenapiSchemas(resourcesImported[key], tags)
+        .paths as Paths;
+
+      createRouteResource({
+        paths,
+        resource: resourcesImported[key],
+        handlers: handlers
+      });
+
+      openApiSchemaPaths = { ...openApiSchemaPaths, ...paths } as Paths;
+    });
+
+    let paths = {} as Paths;
+
+    routes.forEach((route) => {
+      createRoutes({ ...route });
+      paths = { ...paths, ...route } as Paths;
+    });
+
+    createRoutes(health);
+
+    const healthPaths = health.paths as Paths;
+
+    const openapi = builderOpeapi({
+      ...openApiSchemaPaths,
+      ...healthPaths,
+      ...paths
+    });
+
+    createRoutes({ ...openapi });
+
+    this.api.setErrorHandler(function (
+      error: any,
+      request: FastifyRequest,
+      reply: FastifyReply
+    ) {
+      reply.send(error);
+    });
+  }
+
   load(callback?: (err?: any) => void): void {
-    databaseConnect(this.database);
+    databaseConnect({
+      ...this.database
+    } as DatabaseConnect);
 
-    const { model, routes, tags, handlers, database } = this;
+    const { schema, routes, tags, handlers, database } = this;
 
-    this.models = importModel(model);
+    if (schema) {
+      this.resources = importResources(schema);
+    }
 
-    if (this.database.sync !== false) {
-      const createTablesConfig: any = {};
+    if (this.database.sync !== DatabaseSync.NONE) {
+      const createTablesConfig: SyncOptions = {};
 
-      if (database.sync === 'alter') {
+      if (database.sync === DatabaseSync.ALTER) {
         createTablesConfig.alter = true;
-      } else if (database.sync === 'force') {
+      } else if (database.sync === DatabaseSync.FORCE) {
         createTablesConfig.force = true;
       }
 
@@ -218,32 +254,33 @@ class FastAPI {
     }
   }
 
-  builder(routes: any[], tags: any, handlers: any): void {
+  builder(routes: Routes[], tags: Tags, handlers: Handlers): void {
     preBuilder();
 
-    loadSpec({
+    this.loadSpec({
       routes,
       tags,
       handlers,
-      models: this.models
+      resources: this.resources
     });
   }
 
   defaultListen(err?: any): void {
     if (err) {
-      fastify.log.error(err);
+      this.api.log.error(err);
       process.exit(1);
     }
   }
 
   listen(callback?: (err?: any) => void): void {
-    serveListen(this.config, callback || this.defaultListen);
+    this.api.listen(this.config, callback || this.defaultListen);
   }
 
   start(callback?: (err?: any) => void): void {
     this.load((err) => {
       if (err) {
-        return callback(err);
+        if (callback) return callback(err);
+        return;
       }
 
       this.listen(callback);
@@ -255,70 +292,12 @@ class FastAPI {
     return this;
   }
 
-  setModel(model: any): FastAPI {
-    this.model = model;
+  addRoutes(routes: Routes): FastAPI {
+    this.routes.push(routes);
     return this;
   }
 
-  addRoutes(
-    name: string,
-    specMethods: any,
-    handler: RouteHandlerMethod
-  ): FastAPI {
-    this.routes.push({ paths: { [name]: specMethods }, handler });
-    return this;
-  }
-
-  addRoute(
-    path: string,
-    method: string,
-    specMethod: any,
-    handler: RouteHandlerMethod
-  ): FastAPI {
-    this.routes.push({ paths: { [path]: { [method]: specMethod } }, handler });
-    return this;
-  }
-
-  get(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
-    this.addRoute(path, 'get', spec, handler);
-    return this;
-  }
-
-  post(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
-    this.addRoute(path, 'post', spec, handler);
-    return this;
-  }
-
-  put(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
-    this.addRoute(path, 'put', spec, handler);
-    return this;
-  }
-
-  delete(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
-    this.addRoute(path, 'delete', spec, handler);
-    return this;
-  }
-
-  patch(path: string, spec: any, handler: RouteHandlerMethod): FastAPI {
-    this.addRoute(path, 'patch', spec, handler);
-    return this;
-  }
-
-  setHandler(name: string, handler: RouteHandlerMethod): FastAPI {
-    this.handlers[name] = handler;
-    return this;
-  }
-
-  setTags(name: string, tags: any): FastAPI {
-    this.tags[name] = tags;
-    return this;
-  }
-
-  getModels(): any {
-    return this.models;
-  }
-
-  on(modelName: string, action: string, callback: Function): FastAPI {
+  on(modelName: string, action: string, callback: EventCallback): FastAPI {
     on(modelName, action, callback);
     return this;
   }

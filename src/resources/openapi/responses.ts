@@ -19,7 +19,7 @@ const errorResponse = (description: string): Response => {
   };
 };
 
-const resolveResponses = (
+const makeResponses = (
   resourceName: string,
   defaultSuccessStatusCode: number,
   successProperties: Properties,
@@ -39,16 +39,16 @@ const resolveResponses = (
     }
   };
 
-  const errors: Record<number, string> = {
-    400: 'Bad Request',
-    401: 'Unauthorized',
-    403: 'Forbidden',
-    404: 'Not Found',
-    500: 'Internal Server Error'
+  const errors: Record<string, string> = {
+    '400': 'Bad Request',
+    '401': 'Unauthorized',
+    '403': 'Forbidden',
+    '404': 'Not Found',
+    '500': 'Internal Server Error'
   };
 
   if (conflict) {
-    errors[409] = 'Conflict';
+    errors['409'] = 'Conflict';
   }
 
   Object.keys(errors).forEach((statusCode) => {
@@ -59,4 +59,4 @@ const resolveResponses = (
   return responses;
 };
 
-export { resolveResponses };
+export { makeResponses };

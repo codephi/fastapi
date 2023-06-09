@@ -1,10 +1,10 @@
 import { resolvePlural } from './openapi/utils';
 
-interface EventCallback {
+export interface EventCallback {
   (err: any, data: any): void;
 }
 
-interface EventsStorage {
+export interface EventsStorage {
   [key: string]: EventCallback[];
 }
 

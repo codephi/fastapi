@@ -1,17 +1,120 @@
 import os from 'os';
-import { FastifyRequest, FastifyReply } from 'fastify';
 import { global } from '../middle/database';
-import { resolveResponses } from '../resources/openapi/responses';
+import { RoutesBuilder } from '../resources/routes';
+import { FastifyReply, FastifyRequest } from 'fastify';
 
-export interface Server {
-  platform: string;
-  release: string;
-  arch: string;
-  uptime: number;
-  cpus: number;
+const healthRoute = new RoutesBuilder('health');
+const responsesAll = healthRoute.responses(200, {
+  server: {
+    type: 'object',
+    properties: {
+      platform: { type: 'string' },
+      release: { type: 'string' },
+      arch: { type: 'string' },
+      uptime: { type: 'number' },
+      cpus: { type: 'number' }
+    }
+  },
+  memory: {
+    type: 'object',
+    properties: {
+      total: { type: 'number' },
+      free: { type: 'number' },
+      used: { type: 'number' },
+      active: { type: 'number' },
+      available: { type: 'number' }
+    }
+  },
+  process: {
+    type: 'object',
+    properties: {
+      pid: { type: 'number' },
+      uptime: { type: 'number' },
+      versions: { type: 'object' },
+      memoryUsage: { type: 'object' }
+    }
+  },
+  os: {
+    type: 'object',
+    properties: {
+      hostname: { type: 'string' },
+      type: { type: 'string' },
+      platform: { type: 'string' },
+      release: { type: 'string' },
+      arch: { type: 'string' },
+      uptime: { type: 'number' },
+      cpus: { type: 'number' }
+    }
+  },
+  container: {
+    type: 'object',
+    properties: {
+      image: { type: 'string' },
+      version: { type: 'string' },
+      containerId: { type: 'string' }
+    }
+  },
+  database: {
+    type: 'object',
+    properties: {
+      dialect: { type: 'string' },
+      host: { type: 'string' },
+      port: { type: 'number' },
+      database: { type: 'string' },
+      username: { type: 'string' }
+    }
+  },
+  status: { type: 'string' }
+});
+
+export default healthRoute
+  .path('/health')
+  .get({
+    tags: ['Health'],
+    summary: 'Get health information',
+    description: 'Get health information',
+    responses: healthRoute.responses(200, {
+      status: { type: 'string' }
+    }),
+    handler: handlerStatus
+  })
+  .path('/health/all')
+  .get({
+    tags: ['Health'],
+    summary: 'Get all health information',
+    description: 'Get all health information',
+    responses: responsesAll,
+    handler: handlerAll
+  })
+  .build();
+
+function handlerStatus(_request: FastifyRequest, reply: FastifyReply) {
+  reply.send({ status: 'ok' });
 }
 
-export interface Memory {
+function handlerAll(_request: FastifyRequest, reply: FastifyReply) {
+  reply.send({
+    memory: getMemoryInfo(),
+    process: getProcessInfo(),
+    os: getOsInfo(),
+    database: getDatabaseInfo(),
+    container: getContainerInfo(),
+    app: getAppInfo(),
+    status: 'ok'
+  } as Response);
+}
+
+interface Response {
+  status: string;
+  memory?: MemoryInfo;
+  process?: ProcessInfo;
+  os?: OsInfo;
+  database?: DatabaseInfo;
+  container?: ContainerInfo;
+  app?: AppInfo;
+}
+
+interface MemoryInfo {
   total: number;
   free: number;
   used: number;
@@ -19,14 +122,44 @@ export interface Memory {
   available: number;
 }
 
-export interface Process {
+function getMemoryInfo(): MemoryInfo {
+  const total = os.totalmem();
+  const free = os.freemem();
+  const used = total - free;
+  const active = total - free;
+  const available = total - free;
+
+  return {
+    total,
+    free,
+    used,
+    active,
+    available
+  };
+}
+
+interface ProcessInfo {
   pid: number;
   uptime: number;
   versions: NodeJS.ProcessVersions;
   memoryUsage: NodeJS.MemoryUsage;
 }
 
-export interface Os {
+function getProcessInfo(): ProcessInfo {
+  const pid = process.pid;
+  const uptime = process.uptime();
+  const versions = process.versions;
+  const memoryUsage = process.memoryUsage();
+
+  return {
+    pid,
+    uptime,
+    versions,
+    memoryUsage
+  };
+}
+
+interface OsInfo {
   hostname: string;
   type: string;
   platform: string;
@@ -36,13 +169,27 @@ export interface Os {
   cpus: number;
 }
 
-export interface Container {
-  image: string;
-  version: string;
-  containerId: string;
+function getOsInfo(): OsInfo {
+  const hostname = os.hostname();
+  const type = os.type();
+  const platform = os.platform();
+  const release = os.release();
+  const arch = os.arch();
+  const uptime = os.uptime();
+  const cpus = os.cpus().length;
+
+  return {
+    hostname,
+    type,
+    platform,
+    release,
+    arch,
+    uptime,
+    cpus
+  };
 }
 
-export interface Database {
+interface DatabaseInfo {
   dialect: string;
   host: string;
   port: number;
@@ -50,168 +197,52 @@ export interface Database {
   username: string;
 }
 
-export interface HealthResponse {
-  server: Server;
-  memory: Memory;
-  process: Process;
-  os: Os;
-  database: Database;
-  container: Container;
-  status: string;
-}
-
-export interface HealthQuery {
-  info?: string;
-}
-
-const healthHandler = (request: FastifyRequest, reply: FastifyReply): void => {
-  const { info } = request.query as HealthQuery;
-
+function getDatabaseInfo(): DatabaseInfo {
   const sequelize = global.getSequelize();
+  const dialect = sequelize.getDialect();
+  const host = sequelize.config.host as string;
+  const port = parseInt(sequelize.config.port as string);
+  const database = sequelize.config.database;
+  const username = sequelize.config.username;
 
-  if (info === 'all') {
-    const serverInfo = {
-      platform: os.platform(),
-      release: os.release(),
-      arch: os.arch(),
-      uptime: os.uptime(),
-      cpus: os.cpus().length
-    } as Server;
-    const memoryInfo = {
-      total: os.totalmem(),
-      free: os.freemem(),
-      used: os.totalmem() - os.freemem(),
-      active: os.totalmem() - os.freemem(),
-      available: os.totalmem() - os.freemem()
-    } as Memory;
-    const processInfo = {
-      pid: process.pid,
-      uptime: process.uptime(),
-      versions: process.versions,
-      memoryUsage: process.memoryUsage()
-    } as Process;
-    const osInfo = {
-      hostname: os.hostname(),
-      type: os.type(),
-      platform: os.platform(),
-      release: os.release(),
-      arch: os.arch(),
-      uptime: os.uptime(),
-      cpus: os.cpus().length
-    } as Os;
-    const databaseInfo = {
-      dialect: global.getSequelize().getDialect(),
-      host: sequelize.config.host,
-      port: sequelize.config.port ? parseInt(sequelize.config.port) || 0 : 0,
-      database: sequelize.config.database,
-      username: sequelize.config.username
-    } as Database;
-    const container = {
-      image: process.env.IMAGE,
-      version: process.env.VERSION,
-      containerId: process.env.HOSTNAME
-    } as Container;
+  return {
+    dialect,
+    host,
+    port,
+    database,
+    username
+  };
+}
 
-    const response: HealthResponse = {
-      server: serverInfo,
-      memory: memoryInfo,
-      process: processInfo,
-      os: osInfo,
-      database: databaseInfo,
-      container,
-      status: 'ok'
-    };
+interface ContainerInfo {
+  image: string;
+  version: string;
+  containerId: string;
+}
 
-    reply.send(response);
-  } else {
-    const response = { status: 'ok' };
-    reply.send(response);
-  }
-};
+function getContainerInfo(): ContainerInfo {
+  const image = process.env.IMAGE as string;
+  const version = process.env.VERSION as string;
+  const containerId = process.env.HOSTNAME as string;
 
-const healthPath = {
-  '/api/health': {
-    get: {
-      tags: ['Health'],
-      summary: 'Get health information',
-      description: 'Get health information',
-      parameters: [
-        {
-          name: 'info',
-          in: 'query',
-          description: 'Get all information',
-          required: false,
-          schema: {
-            type: 'string',
-            enum: ['all', 'off']
-          }
-        }
-      ],
-      responses: resolveResponses('health', 200, {
-        server: {
-          type: 'object',
-          properties: {
-            platform: { type: 'string' },
-            release: { type: 'string' },
-            arch: { type: 'string' },
-            uptime: { type: 'number' },
-            cpus: { type: 'number' }
-          }
-        },
-        memory: {
-          type: 'object',
-          properties: {
-            total: { type: 'number' },
-            free: { type: 'number' },
-            used: { type: 'number' },
-            active: { type: 'number' },
-            available: { type: 'number' }
-          }
-        },
-        process: {
-          type: 'object',
-          properties: {
-            pid: { type: 'number' },
-            uptime: { type: 'number' },
-            versions: { type: 'object' },
-            memoryUsage: { type: 'object' }
-          }
-        },
-        os: {
-          type: 'object',
-          properties: {
-            hostname: { type: 'string' },
-            type: { type: 'string' },
-            platform: { type: 'string' },
-            release: { type: 'string' },
-            arch: { type: 'string' },
-            uptime: { type: 'number' },
-            cpus: { type: 'number' }
-          }
-        },
-        container: {
-          type: 'object',
-          properties: {
-            image: { type: 'string' },
-            version: { type: 'string' },
-            containerId: { type: 'string' }
-          }
-        },
-        database: {
-          type: 'object',
-          properties: {
-            dialect: { type: 'string' },
-            host: { type: 'string' },
-            port: { type: 'number' },
-            database: { type: 'string' },
-            username: { type: 'string' }
-          }
-        },
-        status: { type: 'string' }
-      }),
-      handler: healthHandler
-    }
-  }
-};
+  return {
+    image,
+    version,
+    containerId
+  };
+}
 
-export default healthPath;
+interface AppInfo {
+  image: string;
+  version: string;
+}
+
+function getAppInfo(): AppInfo {
+  const image = process.env.NAME as string;
+  const version = process.env.VERSION as string;
+
+  return {
+    image,
+    version
+  };
+}
