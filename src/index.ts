@@ -52,17 +52,11 @@ export interface FastAPIOptions {
   listen?: FastifyListenOptions;
 }
 
-export enum DatabaseSync {
-  FORCE = 'force',
-  ALTER = 'alter',
-  NONE = 'none'
-}
-
 export interface DatabaseOptions {
   database?: string | null;
   username?: string | null;
   password?: string | null;
-  sync?: DatabaseSync;
+  sync?: SyncOptions;
   testConnection?: boolean;
   host?: string;
   port?: number;
@@ -111,7 +105,9 @@ export class FastAPI {
     port: 5432,
     dialect: 'postgres',
     logging: undefined,
-    sync: DatabaseSync.NONE,
+    sync: {
+      force: false
+    },
     testConnection: true
   };
   cors: Cors = {
@@ -259,12 +255,12 @@ export class FastAPI {
   async connect(): Promise<void> {
     const { database } = this;
 
-    if (this.database.sync !== DatabaseSync.NONE) {
+    if (this.database.sync !== undefined) {
       const createTablesConfig: SyncOptions = {};
 
-      if (database.sync === DatabaseSync.ALTER) {
+      if (database.sync.alter === true) {
         createTablesConfig.alter = true;
-      } else if (database.sync === DatabaseSync.FORCE) {
+      } else if (database.sync.force === true) {
         createTablesConfig.force = true;
       }
 

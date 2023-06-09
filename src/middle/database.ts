@@ -1,4 +1,4 @@
-import { Sequelize, Options } from 'sequelize';
+import { Sequelize, Options, SyncOptions } from 'sequelize';
 
 class Global {
   sequelize: Sequelize | null;

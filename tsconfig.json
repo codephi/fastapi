@@ -3,10 +3,9 @@
     "baseUrl": "./",
     "target": "es2020",
     "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
     "outDir": "./dist",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noImplicitAny": true,
   },
   "include": [
     "./tests/**/*.ts",

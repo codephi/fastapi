@@ -1,6 +1,6 @@
-import os from 'os';
+import * as os from 'os';
 import { global } from '../middle/database';
-import { Route, RoutesBuilder } from '../resources/routes';
+import { RoutesBuilder } from '../resources/routes';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 const healthRoute = new RoutesBuilder('health');

@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { global } from '../../middle/database';
-import fs from 'fs';
+import * as fs from 'fs';
 
 export type DataTypesResult =
   | DataTypes.StringDataType

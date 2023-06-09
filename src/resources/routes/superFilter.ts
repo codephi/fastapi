@@ -1,4 +1,4 @@
-import dictPtBr from '../../dicts/pt_BR.json';
+import * as dictPtBr from '../../dicts/pt_BR.json';
 import { Op } from 'sequelize';
 
 const spellingDictionary: { [key: string]: string } = dictPtBr;

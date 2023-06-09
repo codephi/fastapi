@@ -1,10 +1,5 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import {
-  FastAPI,
-  DatabaseSync,
-  makeResponses,
-  SchemaBuilder
-} from '../src/index';
+import { FastAPI, makeResponses, SchemaBuilder } from '../src/index';
 import { Sequelize } from 'sequelize';
 
 describe('FastAPI', () => {
@@ -22,7 +17,6 @@ describe('FastAPI', () => {
       expect(fastAPI.database.database).toBeNull();
       expect(fastAPI.database.username).toBeNull();
       expect(fastAPI.database.password).toBeNull();
-      expect(fastAPI.database.sync).toEqual(DatabaseSync.NONE);
       expect(fastAPI.database.testConnection).toBe(true);
     });
 
@@ -31,14 +25,12 @@ describe('FastAPI', () => {
         database: 'testDB',
         username: 'testUser',
         password: 'testPassword',
-        sync: DatabaseSync.NONE,
         testConnection: true
       });
 
       expect(fastAPI.database.database).toEqual('testDB');
       expect(fastAPI.database.username).toEqual('testUser');
       expect(fastAPI.database.password).toEqual('testPassword');
-      expect(fastAPI.database.sync).toEqual(DatabaseSync.NONE);
       expect(fastAPI.database.testConnection).toBe(true);
     });
   });
