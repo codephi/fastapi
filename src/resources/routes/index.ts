@@ -1,5 +1,5 @@
 import { getAll, getOne, create, update, remove, RouteHandler } from './routes';
-import { api } from '../../middle/serve';
+import api from '../../middle/serve';
 import { Resource } from '../sequelize';
 import {
   Operation,

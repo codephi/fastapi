@@ -1,6 +1,6 @@
 import { SyncOptions } from 'sequelize';
 import { global } from '../../middle/database';
-import { api } from '../../middle/serve';
+import api from '../../middle/serve';
 
 export async function createTables(
   config: SyncOptions,

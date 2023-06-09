@@ -1,4 +1,4 @@
-import { api } from '../../middle/serve';
+import api from '../../middle/serve';
 import { superFiler } from './superFilter';
 import { emit } from '../events';
 import { Resource } from '../sequelize';

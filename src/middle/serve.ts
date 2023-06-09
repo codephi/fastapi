@@ -1,9 +1,9 @@
 import fastify, { FastifyInstance } from 'fastify';
 
-export const api: FastifyInstance = fastify({ logger: true });
+const api: FastifyInstance = fastify({ logger: true });
 
-export const preBuilder = (): void => {
-  api.register(require('@fastify/cors'), {
-    origin: '*'
-  });
-};
+api.register(require('@fastify/cors'), {
+  origin: '*'
+});
+
+export default api;

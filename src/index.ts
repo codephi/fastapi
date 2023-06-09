@@ -1,4 +1,4 @@
-import { preBuilder } from './middle/serve';
+import api from './middle/serve';
 import { FastifyRequest, FastifyReply, FastifyListenOptions } from 'fastify';
 import { generateOpenapiSchemas } from './resources/openapi';
 import {
@@ -31,8 +31,8 @@ import health from './routes/health';
 import builderOpeapi from './routes/openapi';
 import { on, emit, remove, EventCallback } from './resources/events';
 import { Paths } from './resources/openapi/openapiTypes';
-import { api } from './middle/serve';
 import { Sequelize, SyncOptions } from 'sequelize';
+import { promisify } from 'util';
 
 export interface LoadSpecOptions {
   resources: Resources;
@@ -111,9 +111,7 @@ export class FastAPI {
     host: 'localhost',
     port: 5432,
     dialect: 'postgres',
-    logging: (sql: string) => {
-      api.log.info(sql);
-    },
+    logging: undefined,
     sync: DatabaseSync.NONE,
     testConnection: true
   };
@@ -123,6 +121,9 @@ export class FastAPI {
   forceCreateTables = false;
   api = api;
   private databaseLoaded = false;
+  private listen: (options: FastifyListenOptions) => Promise<void> = promisify(
+    api.listen.bind(api)
+  );
 
   constructor(props?: FastAPIOptions) {
     if (props === undefined) return;
@@ -202,8 +203,6 @@ export class FastAPI {
   }
 
   loadRoutes(): void {
-    preBuilder();
-
     let shemasPaths: Paths = {};
 
     const resources = this.resources;
@@ -258,7 +257,7 @@ export class FastAPI {
     return this;
   }
 
-  connect(callback?: (err?: any) => void): void {
+  async connect(): Promise<void> {
     const { database } = this;
 
     if (this.database.sync !== DatabaseSync.NONE) {
@@ -270,41 +269,14 @@ export class FastAPI {
         createTablesConfig.force = true;
       }
 
-      testDatabaseConnection()
-        .then(() => {
-          createTables(createTablesConfig).then(() => {
-            if (callback) {
-              callback();
-            }
-          });
-        })
-        .catch((err) => {
-          if (callback) {
-            callback(err);
-          } else {
-            throw Error(err);
-          }
-        });
-    } else {
-      if (callback) {
-        callback();
-      }
+      await testDatabaseConnection();
+      await createTables(createTablesConfig);
     }
   }
 
-  listen(callback?: (err?: any) => void): void {
-    this.api.listen(this.listenConfig, callback || this.defaultListen);
-  }
-
-  start(callback?: (err?: any) => void): void {
-    this.connect((err) => {
-      if (err) {
-        if (callback) return callback(err);
-        return;
-      }
-
-      this.listen(callback);
-    });
+  async start(): Promise<void> {
+    await this.connect();
+    await this.listen(this.listenConfig);
   }
 
   //Resources
@@ -376,7 +348,7 @@ export class FastAPI {
     return this;
   }
 
-  private defaultListen(err?: any): void {
+  private defaultListen(err?: Error | null): void {
     if (err) {
       this.api.log.error(err);
       process.exit(1);

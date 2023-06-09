@@ -12,9 +12,11 @@ describe('FastAPI', () => {
 
   beforeEach(() => {
     fastAPI = new FastAPI();
+
+    fastAPI.api.log.level = 'silent';
   });
 
-  describe('constructor', () => {
+  describe('Constructor', () => {
     it('should initialize FastAPI with default values if no parameters are passed', () => {
       expect(fastAPI).toBeInstanceOf(FastAPI);
       expect(fastAPI.database.database).toBeNull();
@@ -41,34 +43,7 @@ describe('FastAPI', () => {
     });
   });
 
-  describe('loadRoutes', () => {
-    it('should add a route for /hello', async () => {
-      fastAPI.get('/hello', {
-        responses: makeResponses('hello', 201, {
-          message: {
-            type: 'string'
-          }
-        }),
-        handler: (_request: FastifyRequest, reply: FastifyReply) => {
-          reply.status(201).send({
-            message: 'Hello, world!'
-          });
-        }
-      });
-
-      fastAPI.loadRoutes();
-
-      const response = await fastAPI.api.inject({
-        method: 'GET',
-        url: '/hello'
-      });
-
-      expect(response.statusCode).toBe(201);
-      expect(response.json()).toEqual({ message: 'Hello, world!' });
-    });
-  });
-
-  describe('loadSchemas', () => {
+  describe('Schemas and Database', () => {
     it('should add a schema for hello', async () => {
       const schema = new SchemaBuilder();
       const helloSchema = schema
@@ -98,7 +73,9 @@ describe('FastAPI', () => {
         message: 'Hello, world!'
       };
 
-      const sequelize = new Sequelize('sqlite::memory:');
+      const sequelize = new Sequelize('sqlite::memory:', {
+        logging: false
+      });
 
       fastAPI.setDatabaseInstance(sequelize);
 
@@ -116,6 +93,47 @@ describe('FastAPI', () => {
 
       expect(result).toBeTruthy();
       expect(result?.dataValues.message).toBe(mockHello.message);
+    });
+  });
+
+  describe('Routes', () => {
+    it('should add a route for /hello', async () => {
+      fastAPI.get('/', {
+        responses: makeResponses('init', 222, {
+          message: {
+            type: 'string'
+          }
+        }),
+        handler: (_request: FastifyRequest, reply: FastifyReply) => {
+          reply.status(222).send({
+            message: 'Hello, world!'
+          });
+        }
+      });
+
+      fastAPI.loadRoutes();
+
+      const response = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/'
+      });
+
+      expect(response.statusCode).toBe(222);
+      expect(response.json()).toEqual({ message: 'Hello, world!' });
+    });
+  });
+
+  describe('Server', () => {
+    it('should start the server', async () => {
+      await fastAPI.start();
+
+      const response = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/health'
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({ status: 'ok' });
     });
   });
 });
