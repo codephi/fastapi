@@ -245,7 +245,7 @@ export class RoutesBuilder {
 
   responses(
     defaultSuccessStatusCode: number,
-    successProperties: Properties,
+    successProperties: Properties | Reference,
     conflict = false
   ): Responses {
     return makeResponses(

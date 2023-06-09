@@ -24,7 +24,6 @@ import {
   Resources,
   Schema,
   SequelizeModel,
-  Table,
   importResources
 } from './resources/sequelize';
 import health from './routes/health';
@@ -359,6 +358,8 @@ export class FastAPI {
 export { PathBuilder, RoutesBuilder } from './resources/routes';
 export { makeResponses } from './resources/openapi/responses';
 export { SchemaBuilder } from './resources/sequelize/builder';
+export { SequelizeModel as Model };
+export { FastifyReply as Reply, FastifyRequest as Request };
 
 function toFirstUpperCase(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);

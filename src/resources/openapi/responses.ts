@@ -1,4 +1,4 @@
-import { Responses, Response, Properties } from './openapiTypes';
+import { Responses, Response, Properties, Reference } from './openapiTypes';
 
 const errorResponse = (description: string): Response => {
   return {
@@ -19,10 +19,23 @@ const errorResponse = (description: string): Response => {
   };
 };
 
+const resolveSchema = (
+  target: Properties | Reference
+): Properties | Reference => {
+  if ((target as Reference).$ref) {
+    return target as Reference;
+  }
+
+  return {
+    type: 'object',
+    properties: target
+  } as Properties;
+};
+
 const makeResponses = (
   resourceName: string,
   defaultSuccessStatusCode: number,
-  successProperties: Properties,
+  successProperties: Properties | Reference,
   conflict = false
 ): Responses => {
   const responses: Responses = {
@@ -30,10 +43,7 @@ const makeResponses = (
       description: `Response for get ${resourceName}`,
       content: {
         'application/json': {
-          schema: {
-            type: 'object',
-            properties: successProperties
-          }
+          schema: resolveSchema(successProperties)
         }
       }
     }
