@@ -8,32 +8,32 @@ describe('FastAPI', () => {
     fastAPI = new FastAPI();
   });
 
-  // describe('constructor', () => {
-  //   it('should initialize FastAPI with default values if no parameters are passed', () => {
-  //     expect(fastAPI).toBeInstanceOf(FastAPI);
-  //     expect(fastAPI.database.database).toBeNull();
-  //     expect(fastAPI.database.username).toBeNull();
-  //     expect(fastAPI.database.password).toBeNull();
-  //     expect(fastAPI.database.sync).toEqual(DatabaseSync.NONE);
-  //     expect(fastAPI.database.testConnection).toBe(true);
-  //   });
+  describe('constructor', () => {
+    it('should initialize FastAPI with default values if no parameters are passed', () => {
+      expect(fastAPI).toBeInstanceOf(FastAPI);
+      expect(fastAPI.database.database).toBeNull();
+      expect(fastAPI.database.username).toBeNull();
+      expect(fastAPI.database.password).toBeNull();
+      expect(fastAPI.database.sync).toEqual(DatabaseSync.NONE);
+      expect(fastAPI.database.testConnection).toBe(true);
+    });
 
-  //   it('should initialize FastAPI with the passed parameters', () => {
-  //     fastAPI.setDatabse({
-  //       database: 'testDB',
-  //       username: 'testUser',
-  //       password: 'testPassword',
-  //       sync: DatabaseSync.NONE,
-  //       testConnection: true
-  //     });
+    it('should initialize FastAPI with the passed parameters', () => {
+      fastAPI.setDatabse({
+        database: 'testDB',
+        username: 'testUser',
+        password: 'testPassword',
+        sync: DatabaseSync.NONE,
+        testConnection: true
+      });
 
-  //     expect(fastAPI.database.database).toEqual('testDB');
-  //     expect(fastAPI.database.username).toEqual('testUser');
-  //     expect(fastAPI.database.password).toEqual('testPassword');
-  //     expect(fastAPI.database.sync).toEqual(DatabaseSync.NONE);
-  //     expect(fastAPI.database.testConnection).toBe(true);
-  //   });
-  // });
+      expect(fastAPI.database.database).toEqual('testDB');
+      expect(fastAPI.database.username).toEqual('testUser');
+      expect(fastAPI.database.password).toEqual('testPassword');
+      expect(fastAPI.database.sync).toEqual(DatabaseSync.NONE);
+      expect(fastAPI.database.testConnection).toBe(true);
+    });
+  });
 
   describe('addRoutes', () => {
     it('should add a route for /hello', async () => {
