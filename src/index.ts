@@ -16,12 +16,14 @@ import { createTables } from './resources/sequelize/createTables';
 import {
   databaseConnect,
   testDatabaseConnection,
-  DatabaseConnect
+  DatabaseConnect,
+  setGlobalSequelize
 } from './middle/database';
 import {
   Resource,
   Resources,
   Schema,
+  SequelizeModel,
   Table,
   importResources
 } from './resources/sequelize';
@@ -30,7 +32,7 @@ import builderOpeapi from './routes/openapi';
 import { on, emit, remove, EventCallback } from './resources/events';
 import { Paths } from './resources/openapi/openapiTypes';
 import { api } from './middle/serve';
-import { SyncOptions } from 'sequelize';
+import { Sequelize, SyncOptions } from 'sequelize';
 
 export interface LoadSpecOptions {
   resources: Resources;
@@ -81,6 +83,10 @@ export interface Tags {
   list: string[];
 }
 
+export interface Models {
+  [key: string]: typeof SequelizeModel;
+}
+
 export class FastAPI {
   listenConfig: FastifyListenOptions = {
     port: 3000,
@@ -97,6 +103,7 @@ export class FastAPI {
   handlers: Handlers = {};
   private schema?: string | Schema;
   resources: Resources = {};
+  models: Models = {};
   database: DatabaseOptions = {
     database: process.env.DB_NAME || process.env.DATABASE_NAME || null,
     username: process.env.DB_USER || process.env.DATABASE_USER || null,
@@ -115,6 +122,7 @@ export class FastAPI {
   };
   forceCreateTables = false;
   api = api;
+  private databaseLoaded = false;
 
   constructor(props?: FastAPIOptions) {
     if (props === undefined) return;
@@ -155,6 +163,8 @@ export class FastAPI {
   }
 
   private databaseInstance() {
+    if (this.databaseLoaded) return;
+
     const { database, password, username, ...options } = this.database;
 
     databaseConnect({
@@ -163,18 +173,36 @@ export class FastAPI {
       username,
       options
     } as DatabaseConnect);
+
+    this.databaseLoaded = true;
   }
 
-  builder(): void {
-    preBuilder();
+  setDatabaseInstance(database: Sequelize): void {
+    setGlobalSequelize(database);
+    this.databaseLoaded = true;
+  }
 
+  loadSchema(schema?: string | Schema): void {
     this.databaseInstance();
 
-    const { schema } = this;
+    if (schema === undefined) {
+      schema = this.schema;
+    }
 
     if (schema) {
       this.resources = importResources(schema);
+
+      Object.keys(this.resources).forEach((key) => {
+        const resource = this.resources[key];
+        this.models[toFirstUpperCase(resource.name)] = resource.model;
+      });
+    } else {
+      throw new Error('Schema not found');
     }
+  }
+
+  loadRoutes(): void {
+    preBuilder();
 
     let shemasPaths: Paths = {};
 
@@ -220,7 +248,12 @@ export class FastAPI {
     });
   }
 
-  setDatabse(database: DatabaseOptions): FastAPI {
+  load() {
+    this.loadSchema();
+    this.loadRoutes();
+  }
+
+  setDatabase(database: DatabaseOptions): FastAPI {
     this.database = { ...this.database, ...database };
     return this;
   }
@@ -327,8 +360,6 @@ export class FastAPI {
     });
   }
 
-  responses() {}
-
   // Events
   on(modelName: string, action: string, callback: EventCallback): FastAPI {
     on(modelName, action, callback);
@@ -355,3 +386,8 @@ export class FastAPI {
 
 export { PathBuilder, RoutesBuilder } from './resources/routes';
 export { makeResponses } from './resources/openapi/responses';
+export { SchemaBuilder } from './resources/sequelize/builder';
+
+function toFirstUpperCase(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

@@ -1,5 +1,11 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { FastAPI, DatabaseSync, makeResponses } from '../src/index';
+import {
+  FastAPI,
+  DatabaseSync,
+  makeResponses,
+  SchemaBuilder
+} from '../src/index';
+import { Sequelize } from 'sequelize';
 
 describe('FastAPI', () => {
   let fastAPI: FastAPI;
@@ -19,7 +25,7 @@ describe('FastAPI', () => {
     });
 
     it('should initialize FastAPI with the passed parameters', () => {
-      fastAPI.setDatabse({
+      fastAPI.setDatabase({
         database: 'testDB',
         username: 'testUser',
         password: 'testPassword',
@@ -35,7 +41,7 @@ describe('FastAPI', () => {
     });
   });
 
-  describe('addRoutes', () => {
+  describe('loadRoutes', () => {
     it('should add a route for /hello', async () => {
       fastAPI.get('/hello', {
         responses: makeResponses('hello', 201, {
@@ -50,7 +56,7 @@ describe('FastAPI', () => {
         }
       });
 
-      fastAPI.builder();
+      fastAPI.loadRoutes();
 
       const response = await fastAPI.api.inject({
         method: 'GET',
@@ -59,6 +65,57 @@ describe('FastAPI', () => {
 
       expect(response.statusCode).toBe(201);
       expect(response.json()).toEqual({ message: 'Hello, world!' });
+    });
+  });
+
+  describe('loadSchemas', () => {
+    it('should add a schema for hello', async () => {
+      const schema = new SchemaBuilder();
+      const helloSchema = schema
+        .table('hello')
+        .column({
+          name: 'id',
+          type: 'integer',
+          primaryKey: true,
+          autoIncrement: true
+        })
+        .column({
+          name: 'message',
+          type: 'string',
+          allowNull: false
+        })
+        .column({
+          name: 'createdAt',
+          type: 'date'
+        })
+        .column({
+          name: 'updatedAt',
+          type: 'date'
+        })
+        .build();
+
+      const mockHello = {
+        message: 'Hello, world!'
+      };
+
+      const sequelize = new Sequelize('sqlite::memory:');
+
+      fastAPI.setDatabaseInstance(sequelize);
+
+      fastAPI.loadSchema(helloSchema);
+
+      const { Hello } = fastAPI.models;
+
+      await Hello.sync({ force: true });
+
+      await Hello.create(mockHello);
+
+      const result = await Hello.findOne({
+        where: { message: mockHello.message }
+      });
+
+      expect(result).toBeTruthy();
+      expect(result?.dataValues.message).toBe(mockHello.message);
     });
   });
 });

@@ -42,7 +42,11 @@ export function databaseConnect({
   password,
   options
 }: DatabaseConnect): void {
-  global.sequelize = new Sequelize(database, username, password, options);
+  setGlobalSequelize(new Sequelize(database, username, password, options));
+}
+
+export function setGlobalSequelize(sequelize: Sequelize): void {
+  global.sequelize = sequelize;
 }
 
 export function getSequelize(): Sequelize | null {

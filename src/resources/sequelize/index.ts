@@ -21,7 +21,7 @@ export interface Table {
 export interface Column {
   name: string;
   type: string;
-  constraints: string[];
+  constraints?: string[];
   autoIncrement?: boolean;
   values?: string[];
   min?: number;
@@ -71,7 +71,8 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
     const resource = {
       primaryKey: null,
       columns: {},
-      search: table.search
+      search: table.search,
+      name: table.name
     } as Resource;
 
     for (const column of table.columns) {
@@ -114,10 +115,14 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
       resource.columns[columnName] = columnParams;
     }
 
-    resource.model = SequelizeModel.init(tableColumns, {
+    class Table extends Model {}
+
+    Table.init(tableColumns, {
       sequelize: global.getSequelize(),
       tableName
     });
+
+    resource.model = Table;
 
     resources[resurceName] = resource;
   }
@@ -249,7 +254,9 @@ function getNumberProps(attributes: Record<string, any>): Record<string, any> {
 function getSequelizeDataType(
   column: Column
 ): [DataTypesResult, Record<string, any>] {
-  const { type: columnType, ...attributes } = column;
+  const { type, ...attributes } = column;
+
+  const columnType = type.toUpperCase();
 
   function getDataType(): DataTypesResult {
     if (
@@ -301,7 +308,7 @@ function getSequelizeDataType(
     throw new Error(`Unknown column type: ${columnType}`);
   }
 
-  return [getDataType(), {}];
+  return [getDataType(), attributes];
 }
 
 function getSequelizeConstraints(columnConstraints: string[]): string[] {
