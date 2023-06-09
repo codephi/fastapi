@@ -3,7 +3,11 @@ import { FastifyRequest, FastifyReply, FastifyListenOptions } from 'fastify';
 import { generateOpenapiSchemas } from './resources/openapi';
 import {
   Handlers,
+  Methods,
+  PathBuilder,
+  Route,
   Routes,
+  RoutesBuilder,
   createRouteResource,
   createRoutes
 } from './resources/routes';
@@ -13,7 +17,12 @@ import {
   testDatabaseConnection,
   DatabaseConnect
 } from './middle/database';
-import { Resources, Schema, importResources } from './resources/sequelize';
+import {
+  Resources,
+  Schema,
+  Table,
+  importResources
+} from './resources/sequelize';
 import health from './routes/health';
 import builderOpeapi from './routes/openapi';
 import { on, emit, remove, EventCallback } from './resources/events';
@@ -67,7 +76,7 @@ export interface Tags {
   list: string[];
 }
 
-class FastAPI {
+export class FastAPI {
   listenConfig: FastifyListenOptions = {
     port: 3000,
     host: '0.0.0.0'
@@ -275,11 +284,55 @@ class FastAPI {
     return this;
   }
 
-  addRoutes(routes: Routes): FastAPI {
+  // Routes
+  addRoutes(routes: Routes | RoutesBuilder | PathBuilder): FastAPI {
+    if (routes instanceof RoutesBuilder || routes instanceof PathBuilder) {
+      routes = routes.build();
+    }
+
     this.routes.push(routes);
     return this;
   }
 
+  path(path: string, options: Methods): FastAPI {
+    this.addRoutes({
+      [path]: options
+    });
+
+    return this;
+  }
+
+  get(path: string, options: Route): FastAPI {
+    return this.path(path, {
+      get: options
+    });
+  }
+
+  post(path: string, options: Route): FastAPI {
+    return this.path(path, {
+      post: options
+    });
+  }
+
+  put(path: string, options: Route): FastAPI {
+    return this.path(path, {
+      put: options
+    });
+  }
+
+  delete(path: string, options: Route): FastAPI {
+    return this.path(path, {
+      delete: options
+    });
+  }
+
+  patch(path: string, options: Route): FastAPI {
+    return this.path(path, {
+      patch: options
+    });
+  }
+
+  // Events
   on(modelName: string, action: string, callback: EventCallback): FastAPI {
     on(modelName, action, callback);
     return this;
@@ -296,43 +349,5 @@ class FastAPI {
   }
 }
 
-class TableBuilder {
-  name: string;
-  metadata: any = {};
-  columns: any[] = [];
-
-  constructor(name: string) {
-    this.name = name;
-  }
-
-  addMetadata(metadata: any): TableBuilder {
-    this.metadata = metadata;
-    return this;
-  }
-
-  addColumn(column: any): TableBuilder {
-    this.columns.push(column);
-    return this;
-  }
-
-  build(): any {
-    return {
-      name: this.name,
-      metadata: this.metadata,
-      columns: this.columns
-    };
-  }
-}
-
-class ModelBuilder {
-  model: any = { tables: [] };
-
-  addTable(table: TableBuilder): ModelBuilder {
-    this.model.tables.push(table.build());
-    return this;
-  }
-
-  build(): any {
-    return this.model;
-  }
-}
+export { PathBuilder, RoutesBuilder } from './resources/routes';
+export { makeResponses } from './resources/openapi/responses';
