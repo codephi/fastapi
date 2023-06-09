@@ -1,9 +1,9 @@
-const dictPtBr = require('../dicts/pt_BR.json');
-const { Op } = require('sequelize');
+import dictPtBr from '../../dicts/pt_BR.json';
+import { Op } from 'sequelize';
 
-const spellingDictionary = dictPtBr;
+const spellingDictionary: { [key: string]: string } = dictPtBr;
 
-function fixText(text) {
+function fixText(text: string): string[] {
   const words = text.toLowerCase().split(' ');
   const fixedWords = words.map((word) => {
     if (spellingDictionary[word]) {
@@ -15,13 +15,13 @@ function fixText(text) {
   return fixedWords;
 }
 
-const formaCondition = (searchTerm) => {
+const formaCondition = (searchTerm: string) => {
   return {
     [Op.iLike]: `%${searchTerm}%`
   };
 };
 
-const addTerm = (target, fullTarget) => {
+const addTerm = (target: any[], fullTarget: string): any[] => {
   const history = [fullTarget];
   target.push(formaCondition(fullTarget));
   const targetSplit = fullTarget.split(' ');
@@ -30,8 +30,8 @@ const addTerm = (target, fullTarget) => {
     targetSplit.forEach((word) => {
       const formated = formaCondition(word);
 
-      if (history.indexOf(formated) === -1) {
-        history.push(fullTarget);
+      if (history.indexOf(`%${word}%`) === -1) {
+        history.push(`%${word}%`);
         target.push(formated);
       }
     });
@@ -40,7 +40,7 @@ const addTerm = (target, fullTarget) => {
   return target;
 };
 
-const superFiler = (fields, searchTerm) => {
+const superFiler = (fields: string[], searchTerm: string) => {
   let term = addTerm([], searchTerm);
 
   const textFixed = fixText(searchTerm);
@@ -56,7 +56,7 @@ const superFiler = (fields, searchTerm) => {
     term = addTerm(term, termNotAccents);
   }
 
-  const termFields = [];
+  const termFields: any[] = [];
 
   fields.forEach((field) => {
     term.forEach((item) => {
@@ -71,8 +71,8 @@ const superFiler = (fields, searchTerm) => {
   };
 };
 
-function removeAccents(text) {
-  const accentMap = {
+function removeAccents(text: string): string {
+  const accentMap: { [key: string]: string } = {
     a: '[aàáâãäå]',
     ae: 'æ',
     c: 'ç',
@@ -93,4 +93,4 @@ function removeAccents(text) {
   return text;
 }
 
-module.exports.superFiler = superFiler;
+export { superFiler };

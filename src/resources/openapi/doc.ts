@@ -1,7 +1,20 @@
-const { convertOpenAPItoSchemas } = require('./utils');
+import { convertOpenAPItoSchemas } from './utils';
+import { OpenAPI, Paths } from './openapiTypes';
 
-const createFullDoc = (paths) => {
-  const openapi = {
+interface PathObject {
+  [path: string]: PathItemObject;
+}
+
+interface PathItemObject {
+  servers?: ServerObject[];
+}
+
+interface ServerObject {
+  url: string;
+}
+
+export function createFullDoc(paths: Paths): OpenAPI {
+  const openapi: OpenAPI = {
     openapi: '3.0.0',
     info: {
       title: process.env.APP_NAME || 'Fastapi',
@@ -17,9 +30,9 @@ const createFullDoc = (paths) => {
   };
 
   return convertOpenAPItoSchemas(openapi);
-};
+}
 
-const resolvePaths = (schemas) => {
+const resolvePaths = (schemas: PathObject): PathObject => {
   Object.keys(schemas).forEach((path) => {
     schemas[path].servers = [
       {
@@ -29,8 +42,4 @@ const resolvePaths = (schemas) => {
   });
 
   return schemas;
-};
-
-module.exports = {
-  createFullDoc
 };

@@ -1,8 +1,24 @@
-const { convertType } = require('./dataTypes');
-const { resolveResponses } = require('./responses');
-const { resolvePlural } = require('./utils');
+import { convertType } from './dataTypes';
+import { AdminReferences, OpenAPI, Operation } from './openapiTypes';
+import { makeResponses } from './responses';
+import { resolvePlural } from './utils';
 
-const resolveTags = (model, tags = []) => {
+interface Property {
+  type: string;
+  description: string;
+  maxLength?: number;
+  enum?: string[];
+  minimum?: number;
+  maximum?: number;
+  default?: any;
+  imutable?: boolean;
+}
+
+interface SchemaProperties {
+  [key: string]: Property;
+}
+
+const resolveTags = (model: any, tags: string[] = []): string[] => {
   const resourceName = model.name.toLowerCase();
 
   return tags.map((tag) => {
@@ -14,8 +30,11 @@ const resolveTags = (model, tags = []) => {
   });
 };
 
-const removeImutable = (properties, removeOnlyAllProp = false) => {
-  const newProperties = {};
+const removeImutable = (
+  properties: SchemaProperties,
+  removeOnlyAllProp: boolean = false
+): SchemaProperties => {
+  const newProperties: SchemaProperties = {};
 
   Object.entries(properties).forEach(([key, value]) => {
     const imutable = value.imutable;
@@ -32,20 +51,20 @@ const removeImutable = (properties, removeOnlyAllProp = false) => {
   return newProperties;
 };
 
-const generateSchemas = (resource, tags) => {
+export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
   const { model, metadata } = resource;
   const resourceName = model.name.toLowerCase();
   const resourcePlural = resolvePlural(resourceName);
   const attributeKeys = Object.keys(model.rawAttributes);
-  const properties = {};
-  const required = [];
+  const properties: SchemaProperties = {};
+  const required: string[] = [];
 
   attributeKeys.forEach((key) => {
     const data = metadata.columns[key];
     const attribute = model.rawAttributes[key];
     const propertyType = convertType(attribute.type.toString());
 
-    const property = {
+    const property: Property = {
       ...propertyType,
       description: `${model.name} ${key}`
     };
@@ -86,7 +105,7 @@ const generateSchemas = (resource, tags) => {
     }
   });
 
-  const makeAllResponseProperties = () => {
+  const makeAllResponseProperties = (): any => {
     return {
       data: {
         type: 'array',
@@ -107,11 +126,11 @@ const generateSchemas = (resource, tags) => {
     };
   };
 
-  const makeRequestProperties = () => {
+  const makeRequestProperties = (): SchemaProperties => {
     return removeImutable(properties, false);
   };
 
-  const makeCreateUpdateProperties = () => {
+  const makeCreateUpdateProperties = (): SchemaProperties => {
     const postProperties = { ...properties };
     delete postProperties.id;
     delete postProperties.createdAt;
@@ -119,7 +138,7 @@ const generateSchemas = (resource, tags) => {
     return removeImutable(postProperties, true);
   };
 
-  const getOrderByEnumValues = () => {
+  const getOrderByEnumValues = (): string[] => {
     const sortFields = Object.keys(properties);
     return sortFields.map((field) =>
       field.startsWith('-') ? field.substr(1) : field
@@ -130,18 +149,111 @@ const generateSchemas = (resource, tags) => {
 
   const requestProperties = makeRequestProperties();
 
-  const responseResolved = resolveResponses(model.name, 200, requestProperties);
-  const responseResolvedList = resolveResponses(
+  const responseResolved = makeResponses(model.name, 200, requestProperties);
+  const responseResolvedList = makeResponses(
     model.name,
     200,
     makeAllResponseProperties()
   );
-  const responseResolvedConflict = resolveResponses(
+  const responseResolvedConflict = makeResponses(
     model.name,
     200,
     requestProperties,
     true
   );
+
+  const operationGet: Operation = {
+    summary: `List ${model.name}`,
+    description: `List and search ${model.name}`,
+    tags: resolveTags(model, tags.list),
+    'x-admin': {
+      types: (() => {
+        if (metadata && metadata.search && metadata.search.length > 0) {
+          return ['list', 'search'];
+        } else {
+          return ['list'];
+        }
+      })(),
+      groupName: model.name,
+      resourceName: 'List',
+      ...metadata,
+      references: (() => {
+        const references: AdminReferences = {
+          list: {
+            query: {
+              pageSize: 'page_size',
+              page: 'page',
+              orderBy: 'order_by',
+              order: 'order',
+              searchTerm: 'search'
+            }
+          }
+        };
+
+        if (metadata && metadata.search && metadata.search.length > 0) {
+          references.search = {
+            query: {
+              pageSize: 'page_size',
+              page: 'page',
+              orderBy: 'order_by',
+              order: 'order',
+              searchTerm: 'search'
+            }
+          };
+        }
+
+        return references;
+      })()
+    },
+    parameters: [
+      {
+        name: 'page',
+        in: 'query',
+        description: 'Page number',
+        schema: {
+          type: 'integer',
+          minimum: 1
+        }
+      },
+      {
+        name: 'page_size',
+        in: 'query',
+        description: 'Number of items per page',
+        schema: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 100
+        }
+      },
+      {
+        name: 'search',
+        in: 'query',
+        description: 'Search query string',
+        schema: {
+          type: 'string'
+        }
+      },
+      {
+        name: 'order_by',
+        in: 'query',
+        description: 'Order field',
+        schema: {
+          type: 'string',
+          enum: getOrderByEnumValues()
+        }
+      },
+      {
+        name: 'order',
+        in: 'query',
+        description: 'Order direction',
+        schema: {
+          type: 'string',
+          enum: ['desc', 'asc']
+        }
+      }
+    ],
+    responses: responseResolvedList
+  };
 
   return {
     paths: {
@@ -162,7 +274,7 @@ const generateSchemas = (resource, tags) => {
             resourceName: 'List',
             ...metadata,
             references: (() => {
-              const references = {
+              const references: AdminReferences = {
                 list: {
                   query: {
                     pageSize: 'page_size',
@@ -224,8 +336,7 @@ const generateSchemas = (resource, tags) => {
               schema: {
                 type: 'string',
                 enum: getOrderByEnumValues()
-              },
-              'x-parameter-name': 'orderBy'
+              }
             },
             {
               name: 'order',
@@ -341,6 +452,4 @@ const generateSchemas = (resource, tags) => {
       }
     }
   };
-};
-
-module.exports.generateSchemas = generateSchemas;
+}

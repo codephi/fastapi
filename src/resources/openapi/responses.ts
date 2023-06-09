@@ -1,4 +1,6 @@
-function errorSchema(description) {
+import { Responses, Response, Properties } from './openapiTypes';
+
+const errorResponse = (description: string): Response => {
   return {
     description,
     content: {
@@ -15,15 +17,15 @@ function errorSchema(description) {
       }
     }
   };
-}
+};
 
-const resolveResponses = (
-  resourceName,
-  defaultSuccessStatusCode,
-  successProperties,
+const makeResponses = (
+  resourceName: string,
+  defaultSuccessStatusCode: number,
+  successProperties: Properties,
   conflict = false
-) => {
-  const responses = {
+): Responses => {
+  const responses: Responses = {
     [defaultSuccessStatusCode]: {
       description: `Response for get ${resourceName}`,
       content: {
@@ -37,24 +39,24 @@ const resolveResponses = (
     }
   };
 
-  const errors = {
-    400: 'Bad Request',
-    401: 'Unauthorized',
-    403: 'Forbidden',
-    404: 'Not Found',
-    500: 'Internal Server Error'
+  const errors: Record<string, string> = {
+    '400': 'Bad Request',
+    '401': 'Unauthorized',
+    '403': 'Forbidden',
+    '404': 'Not Found',
+    '500': 'Internal Server Error'
   };
 
   if (conflict) {
-    errors[409] = 'Conflict';
+    errors['409'] = 'Conflict';
   }
 
   Object.keys(errors).forEach((statusCode) => {
     const description = errors[statusCode];
-    responses[statusCode] = errorSchema(description);
+    responses[parseInt(statusCode)] = errorResponse(description);
   });
 
   return responses;
 };
 
-module.exports.resolveResponses = resolveResponses;
+export { makeResponses };

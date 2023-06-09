@@ -2,16 +2,31 @@ module.exports = {
   env: {
     commonjs: true,
     es2021: true,
-    node: true,
+    node: true
   },
-  extends: ['eslint:recommended', 'plugin:prettier/recommended', 'prettier'],
-  overrides: [],
-  parserOptions: {
-    ecmaVersion: 'latest',
-  },
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
+    'prettier'
+  ],
+  plugins: ['@typescript-eslint', 'prettier'],
+  overrides: [
+    {
+      files: ['*.ts'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        ecmaVersion: 2021,
+        sourceType: 'module'
+      },
+      rules: {
+        'prettier/prettier': 'error'
+      }
+    }
+  ],
   rules: {
     'no-console': 1,
-    'prettier/prettier': 2,
-  },
-  plugins: ['prettier'],
+    'no-debugger': 0
+  }
 };

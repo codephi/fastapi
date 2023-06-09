@@ -1,18 +1,79 @@
-const { DataTypes } = require('sequelize');
-const { global } = require('../../middle/database');
+import { DataTypes, Model } from 'sequelize';
+import { global } from '../../middle/database';
+import fs from 'fs';
 
-function generateSequelizeModelFromJSON(jsonSchema) {
-  const models = {};
+export type DataTypesResult =
+  | DataTypes.StringDataType
+  | DataTypes.NumberDataType
+  | DataTypes.DateDataType
+  | DataTypes.DataType;
+
+export interface Schema {
+  tables: Table[];
+}
+
+export interface Table {
+  name: string;
+  columns: Column[];
+  search?: string[];
+}
+
+export interface Column {
+  name: string;
+  type: string;
+  constraints?: string[];
+  autoIncrement?: boolean;
+  values?: string[];
+  min?: number;
+  max?: number;
+  imutable?: boolean;
+  required?: boolean;
+  unique?: boolean;
+  defaultValue?: any;
+  reference?: string;
+  primaryKey?: boolean;
+  allowNull?: boolean;
+  search?: string[];
+  label?: string;
+  maxLength?: number;
+  binary?: boolean;
+  length?: number;
+  decimals?: number;
+}
+
+export interface Relationship {
+  model: typeof SequelizeModel;
+  as: string;
+}
+
+export class SequelizeModel extends Model {}
+
+export interface Resource {
+  model: typeof SequelizeModel;
+  name: string;
+  primaryKey: string | null;
+  columns: Record<string, any>;
+  relationships?: Relationship[];
+  search?: string[];
+}
+
+export interface Resources {
+  [resurceName: string]: Resource;
+}
+
+function generateResourcesFromJSON(jsonSchema: Schema): Resources {
+  const resources: Resources = {};
 
   for (const table of jsonSchema.tables) {
-    const tableColumns = {};
+    const tableColumns: Record<string, any> = {};
     const tableName = getTableName(table.name);
-    const modelName = getModelName(table.name);
-    const metadata = {
-      ...table.metadata,
+    const resurceName = getResourceName(table.name);
+    const resource = {
       primaryKey: null,
-      columns: {}
-    };
+      columns: {},
+      search: table.search,
+      name: table.name
+    } as Resource;
 
     for (const column of table.columns) {
       const columnName = column.name;
@@ -48,34 +109,35 @@ function generateSequelizeModelFromJSON(jsonSchema) {
       };
 
       if (primaryKey) {
-        metadata.primaryKey = columnName;
+        resource.primaryKey = columnName;
       }
 
-      metadata.columns[columnName] = columnParams;
+      resource.columns[columnName] = columnParams;
     }
 
-    models[modelName] = {
-      model: global.sequelize.define(modelName, tableColumns, {
-        tableName
-      }),
-      metadata: {
-        ...metadata,
-        properties: table.properties
-      }
-    };
+    class Table extends Model {}
+
+    Table.init(tableColumns, {
+      sequelize: global.getSequelize(),
+      tableName
+    });
+
+    resource.model = Table;
+
+    resources[resurceName] = resource;
   }
 
   // Configurar as associações entre os modelos
   for (const table of jsonSchema.tables) {
-    const modelName = getModelName(table.name);
-    const model = models[modelName].model;
+    const resurceName = getResourceName(table.name);
+    const model = resources[resurceName].model;
 
     for (const column of table.columns) {
-      let tableName = null;
+      let tableName: string | null = null;
 
       if (column.reference) {
         tableName = getTableName(column.reference);
-      } else if (column.constraint) {
+      } else if (column.constraints) {
         for (const constraints of column.constraints) {
           if (constraints.indexOf('REFERENCES') > -1) {
             tableName = getTableName(constraints.split(' ')[1]);
@@ -88,21 +150,21 @@ function generateSequelizeModelFromJSON(jsonSchema) {
         continue;
       }
 
-      const referencedTable = getModelName(tableName);
-      const referencedModel = models[referencedTable].model;
+      const referencedTable = getResourceName(tableName);
+      const referencedModel = resources[referencedTable].model;
 
       model.belongsTo(referencedModel, { foreignKey: column.name });
       referencedModel.hasMany(model, { foreignKey: column.name });
 
-      if (models[modelName].metadata.relationships === undefined) {
-        models[modelName].metadata.relationships = [
+      if (resources[resurceName].relationships === undefined) {
+        resources[resurceName].relationships = [
           {
             model: referencedModel,
             as: column.name
           }
         ];
       } else {
-        models[modelName].metadata.relationships.push({
+        resources[resurceName].relationships?.push({
           model: referencedModel,
           as: column.name
         });
@@ -110,19 +172,22 @@ function generateSequelizeModelFromJSON(jsonSchema) {
     }
   }
 
-  return models;
+  return resources;
 }
 
-function getModelName(name) {
+function getResourceName(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1, -1);
 }
 
-function getTableName(name) {
+function getTableName(name: string): string {
   return name.toLowerCase();
 }
 
-function getDefaultValue(columnConstraints, columnType) {
-  const columnTypeString = columnType.toString();
+function getDefaultValue(
+  columnConstraints: string[],
+  columnType: DataTypesResult
+): any {
+  const columnTypeString = columnType.valueOf().toString();
   const defaultValue = columnConstraints.find((constraint) =>
     constraint.startsWith('DEFAULT')
   );
@@ -156,8 +221,8 @@ function getDefaultValue(columnConstraints, columnType) {
   return undefined;
 }
 
-function getNumberProps(attributes) {
-  const params = {};
+function getNumberProps(attributes: Record<string, any>): Record<string, any> {
+  const params: Record<string, any> = {};
 
   if (attributes.length) {
     params.length = attributes.length;
@@ -186,25 +251,27 @@ function getNumberProps(attributes) {
   return params;
 }
 
-function getSequelizeDataType({ type: columnType, ...attributes }) {
-  function getDataType() {
-    if (columnType.includes('VARCHAR')) {
-      const length =
-        attributes.maxLength ||
-        attributes.length ||
-        columnType.replace('VARCHAR', '').replace('(', '').replace(')', '');
+function getSequelizeDataType(
+  column: Column
+): [DataTypesResult, Record<string, any>] {
+  const { type, ...attributes } = column;
 
-      attributes.maxLength = parseInt(length, 10);
+  const columnType = type.toUpperCase();
 
-      return DataTypes.STRING(length, attributes.binary);
+  function getDataType(): DataTypesResult {
+    if (
+      (columnType.includes('TEXT') || columnType.includes('VARCHAR')) &&
+      attributes.maxLength
+    ) {
+      return DataTypes.STRING(attributes.maxLength, attributes.binary);
     } else if (columnType === 'STRING') {
-      return DataTypes.STRING(attributes.length, attributes.binary);
+      return DataTypes.STRING(attributes.maxLength, attributes.binary);
     } else if (columnType === 'CHAR') {
-      return DataTypes.CHAR(attributes.length, attributes.binary);
+      return DataTypes.CHAR(attributes.maxLength, attributes.binary);
     } else if (columnType === 'TEXT') {
-      return DataTypes.TEXT(attributes.length);
+      return DataTypes.TEXT;
     } else if (columnType === 'DATE') {
-      return DataTypes.DATE(attributes.length);
+      return DataTypes.DATE(attributes.maxLength);
     } else if (columnType === 'TIME') {
       return DataTypes.TIME;
     } else if (columnType === 'NOW') {
@@ -214,21 +281,9 @@ function getSequelizeDataType({ type: columnType, ...attributes }) {
     } else if (columnType === 'UUID') {
       return DataTypes.UUID;
     } else if (columnType === 'ENUM') {
-      return DataTypes.ENUM({
-        values: attributes.values
-      });
+      return DataTypes.ENUM.apply(attributes.values);
     } else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
-      return DataTypes.JSONTYPE;
-    } else if (columnType === 'ARRAY') {
-      return DataTypes.ARRAY(attributes.arrayType);
-    } else if (columnType === 'BLOB') {
-      const params = {};
-
-      if (attributes.length) {
-        params.length = attributes.length;
-      }
-
-      return DataTypes.BLOB(attributes.length);
+      return DataTypes.JSON;
     } else if (
       columnType === 'INT' ||
       columnType === 'INTEGER' ||
@@ -253,21 +308,19 @@ function getSequelizeDataType({ type: columnType, ...attributes }) {
     throw new Error(`Unknown column type: ${columnType}`);
   }
 
-  delete attributes.constraints;
-  attributes.label = attributes.name;
-  delete attributes.name;
-
   return [getDataType(), attributes];
 }
 
-function getSequelizeConstraints(columnConstraints) {
+function getSequelizeConstraints(columnConstraints: string[]): string[] {
   // Remover a referência ao modelo pai da restrição de chave estrangeira
   return columnConstraints.filter(
     (constraint) => !constraint.includes('REFERENCES')
   );
 }
 
-function parseReferences(columnConstraints) {
+function parseReferences(
+  columnConstraints: string[]
+): { model: string; key: string } | null {
   // Analisar a referência da restrição de chave estrangeira, se existir
   const referencesConstraint = columnConstraints.find((constraint) =>
     constraint.includes('REFERENCES')
@@ -276,7 +329,7 @@ function parseReferences(columnConstraints) {
   if (referencesConstraint) {
     const referencedTable = getReferencedTableName([referencesConstraint]);
     return {
-      model: referencedTable,
+      model: referencedTable!,
       key: 'id' // Assumindo que a coluna referenciada é sempre 'id'
     };
   }
@@ -284,7 +337,7 @@ function parseReferences(columnConstraints) {
   return null;
 }
 
-function getReferencedTableName(constraints) {
+function getReferencedTableName(constraints: string[]): string | null {
   // Extrair o nome da tabela referenciada da restrição de chave estrangeira
   const referenceRegex = /REFERENCES\s+(\w+)\s+\(.*\)/;
   const match = constraints[0].match(referenceRegex);
@@ -296,17 +349,13 @@ function getReferencedTableName(constraints) {
   return null;
 }
 
-module.exports.generateModel = generateSequelizeModelFromJSON;
-
-const fs = require('fs');
-
-module.exports.importModel = (target) => {
-  const modelJson =
+export function importResources(target: string | Schema): Resources {
+  const schemaJson =
     typeof target === 'string'
       ? JSON.parse(fs.readFileSync(target, 'utf8'))
       : target;
 
-  const models = generateSequelizeModelFromJSON(modelJson);
+  const resource = generateResourcesFromJSON(schemaJson);
 
-  return models;
-};
+  return resource;
+}
