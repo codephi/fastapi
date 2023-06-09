@@ -1,13 +1,5 @@
 import { preBuilder } from './middle/serve';
-import {
-  FastifyRequest,
-  FastifyReply,
-  RouteHandlerMethod,
-  FastifyInstance,
-  RawServerDefault,
-  FastifyBaseLogger,
-  FastifyTypeProviderDefault
-} from 'fastify';
+import { FastifyRequest, FastifyReply, FastifyListenOptions } from 'fastify';
 import { generateOpenapiSchemas } from './resources/openapi';
 import {
   Handlers,
@@ -15,12 +7,10 @@ import {
   createRouteResource,
   createRoutes
 } from './resources/routes';
-import { makeResponses } from './resources/openapi/responses';
 import { createTables } from './resources/sequelize/createTables';
 import {
   databaseConnect,
   testDatabaseConnection,
-  global,
   DatabaseConnect
 } from './middle/database';
 import { Resources, Schema, importResources } from './resources/sequelize';
@@ -30,22 +20,15 @@ import { on, emit, remove, EventCallback } from './resources/events';
 import { Paths } from './resources/openapi/openapiTypes';
 import { api } from './middle/serve';
 import { SyncOptions } from 'sequelize';
-import exp from 'constants';
-import { IncomingMessage, ServerResponse } from 'http';
 
-interface LoadSpecOptions {
+export interface LoadSpecOptions {
   resources: Resources;
   tags?: Tags;
   routes?: Routes[];
   handlers?: Handlers;
 }
 
-interface FastAPIConfig {
-  port: number;
-  address: string;
-}
-
-interface FastAPIOptions {
+export interface FastAPIOptions {
   routes?: Routes[];
   tags?: Tags;
   handlers?: Handlers;
@@ -54,7 +37,7 @@ interface FastAPIOptions {
   database?: DatabaseOptions;
   cors?: Cors;
   forceCreateTables?: boolean;
-  config?: FastAPIConfig;
+  listen?: FastifyListenOptions;
 }
 
 export enum DatabaseSync {
@@ -85,9 +68,9 @@ export interface Tags {
 }
 
 class FastAPI {
-  config: FastAPIConfig = {
+  listenConfig: FastifyListenOptions = {
     port: 3000,
-    address: '0.0.0.0'
+    host: '0.0.0.0'
   };
   routes: Routes[] = [];
   tags: Tags = {
@@ -152,8 +135,8 @@ class FastAPI {
       this.forceCreateTables = props.forceCreateTables;
     }
 
-    if (props.config !== undefined) {
-      this.config = props.config;
+    if (props.listen !== undefined) {
+      this.listenConfig = props.listen;
     }
 
     return this;
@@ -273,7 +256,7 @@ class FastAPI {
   }
 
   listen(callback?: (err?: any) => void): void {
-    this.api.listen(this.config, callback || this.defaultListen);
+    this.api.listen(this.listenConfig, callback || this.defaultListen);
   }
 
   start(callback?: (err?: any) => void): void {
