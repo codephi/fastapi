@@ -1,6 +1,6 @@
 import * as os from 'os';
 import { global } from '../middle/database';
-import { RoutesBuilder } from '../resources/routes';
+import { Route, Routes, RoutesBuilder } from '../resources/routes';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 const healthRoute = new RoutesBuilder('health');
@@ -67,28 +67,27 @@ const responsesAll = healthRoute.responses(200, {
   status: { type: 'string' }
 });
 
-const route = healthRoute
-  .path('/health')
-  .get({
-    tags: ['Health'],
-    summary: 'Get health information',
-    description: 'Get health information',
-    responses: healthRoute.responses(200, {
-      status: { type: 'string' }
-    }),
-    handler: handlerStatus
-  })
-  .path('/health/all')
-  .get({
-    tags: ['Health'],
-    summary: 'Get all health information',
-    description: 'Get all health information',
-    responses: responsesAll,
-    handler: handlerAll
-  })
-  .build();
-
-export default route;
+export default (): Routes =>
+  healthRoute
+    .path('/health')
+    .get({
+      tags: ['Health'],
+      summary: 'Get health information',
+      description: 'Get health information',
+      responses: healthRoute.responses(200, {
+        status: { type: 'string' }
+      }),
+      handler: handlerStatus
+    })
+    .path('/health/all')
+    .get({
+      tags: ['Health'],
+      summary: 'Get all health information',
+      description: 'Get all health information',
+      responses: responsesAll,
+      handler: handlerAll
+    })
+    .build();
 
 function handlerStatus(_request: FastifyRequest, reply: FastifyReply) {
   reply.send({ status: 'ok' });

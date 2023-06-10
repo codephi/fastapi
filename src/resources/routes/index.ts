@@ -1,5 +1,4 @@
 import { getAll, getOne, create, update, remove, RouteHandler } from './routes';
-import api from '../../middle/serve';
 import { Resource } from '../sequelize';
 import {
   Operation,
@@ -13,7 +12,7 @@ import {
   Response,
   Properties
 } from '../openapi/openapiTypes';
-import { RouteOptions } from 'fastify';
+import { FastifyInstance, RouteOptions } from 'fastify';
 import { makeResponses } from '../openapi/responses';
 import { extractByMethod } from '../openapi/utils';
 
@@ -55,36 +54,6 @@ function getOperations(value: Path): InnerOperation {
     delete: value.delete,
     patch: value.patch
   };
-}
-
-export function createRouteResource({
-  paths,
-  resource,
-  handlers
-}: ResourceProps) {
-  Object.entries(paths).forEach(([path, value]: [string, Path]) => {
-    const innerOperation = getOperations(value);
-
-    innerOperation['get'];
-
-    Object.keys(innerOperation).forEach((method) => {
-      const operation = extractByMethod(method, innerOperation) as Operation;
-
-      if (!operation) {
-        return;
-      }
-
-      const handler = handlers
-        ? (extractByMethod(method, handlers) as RouteHandler)
-        : getRouteHandler(method, resource, operation);
-
-      if (handler === undefined) {
-        return;
-      }
-
-      createRouteInner({ path, method, operation, handler });
-    });
-  });
 }
 
 export interface Routes {
@@ -261,15 +230,6 @@ export class RoutesBuilder {
   }
 }
 
-export function createRoutes(routes: Routes) {
-  Object.entries(routes).forEach(([path, methods]: [string, Methods]) => {
-    Object.entries(methods).forEach(([method, route]: [string, Route]) => {
-      const { handler, ...operation } = route;
-      createRouteInner({ path, method, operation, handler });
-    });
-  });
-}
-
 interface RouterInner {
   path: string;
   method: string;
@@ -277,43 +237,84 @@ interface RouterInner {
   operation: Operation;
 }
 
-function createRouteInner({ path, method, operation, handler }: RouterInner) {
-  const route = {
-    method: method.toUpperCase(),
-    url: resolvePath(path),
-    schema: {
-      response: resolveResponses(operation.responses)
-    },
-    handler
-  } as RouteOptions;
+export class CreateRoutes {
+  api: FastifyInstance;
 
-  if (route.schema !== undefined && operation.requestBody !== undefined) {
-    const responseBody = operation.requestBody as RequestBody;
-    const schema = responseBody.content['application/json'].schema as Schema;
-
-    route.schema.body = responseToProperties(schema);
+  constructor(api: FastifyInstance) {
+    this.api = api;
   }
 
-  if (route.schema !== undefined && operation.requestBody !== undefined) {
-    const query = operation.parameters?.filter((p: Parameter | Reference) => {
-      try {
-        const parameter = p as Parameter;
-        return parameter.in === 'query';
-      } catch (_) {
-        return false;
-      }
-    }) as Parameter[];
+  createRoutes(routes: Routes) {
+    Object.entries(routes).forEach(([path, methods]: [string, Methods]) => {
+      Object.entries(methods).forEach(([method, route]: [string, Route]) => {
+        const { handler, ...operation } = route;
+        this.createRouteInner({ path, method, operation, handler });
+      });
+    });
+  }
 
-    if (query.length > 0) {
-      const querySchema = {
-        type: 'object',
-        properties: queryToProperties(query)
-      };
-      route.schema.querystring = querySchema;
+  createRouteResource({ paths, resource, handlers }: ResourceProps) {
+    Object.entries(paths).forEach(([path, value]: [string, Path]) => {
+      const innerOperation = getOperations(value);
+
+      Object.keys(innerOperation).forEach((method) => {
+        const operation = extractByMethod(method, innerOperation) as Operation;
+
+        if (!operation) {
+          return;
+        }
+
+        const handler = handlers
+          ? (extractByMethod(method, handlers) as RouteHandler)
+          : getRouteHandler(method, resource, operation);
+
+        if (handler === undefined) {
+          return;
+        }
+
+        this.createRouteInner({ path, method, operation, handler });
+      });
+    });
+  }
+
+  createRouteInner({ path, method, operation, handler }: RouterInner) {
+    const route = {
+      method: method.toUpperCase(),
+      url: resolvePath(path),
+      schema: {
+        response: resolveResponses(operation.responses)
+      },
+      handler
+    } as RouteOptions;
+
+    if (route.schema !== undefined && operation.requestBody !== undefined) {
+      const responseBody = operation.requestBody as RequestBody;
+      const schema = responseBody.content['application/json'].schema as Schema;
+
+      route.schema.body = responseToProperties(schema);
     }
-  }
 
-  api.route(route);
+    if (route.schema !== undefined && operation.requestBody !== undefined) {
+      const query = operation.parameters?.filter((p: Parameter | Reference) => {
+        try {
+          const parameter = p as Parameter;
+          return parameter.in === 'query';
+        } catch (_) {
+          return false;
+        }
+      }) as Parameter[];
+
+      if (query.length > 0) {
+        const querySchema = {
+          type: 'object',
+          properties: queryToProperties(query)
+        };
+        route.schema.querystring = querySchema;
+      }
+    }
+
+    this.api.route(route);
+  }
 }
 
 function queryToProperties(properties: Parameter[]) {
@@ -361,7 +362,7 @@ export function resolveResponses(responses: Responses) {
     newResponses[statusCode] = {
       description: response.description,
       type: 'object',
-      properties: responseToProperties(properties)
+      properties: properties ? responseToProperties(properties) : undefined
     };
   });
 

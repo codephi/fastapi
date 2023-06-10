@@ -1,6 +1,6 @@
 import { SyncOptions } from 'sequelize';
 import { global } from '../../middle/database';
-import api from '../../middle/serve';
+import log from '../log';
 
 export async function createTables(
   config: SyncOptions,
@@ -10,13 +10,13 @@ export async function createTables(
 
   try {
     await sequelize.sync(config);
-    api.log.info('All tables created.');
+    log.info('All tables created.');
 
     if (closeConnection) {
       await sequelize.close();
     }
   } catch (error) {
-    api.log.error('Error creating tables:', error);
+    log.error('Error creating tables:', error);
     await sequelize.close();
   }
 }

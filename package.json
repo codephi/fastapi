@@ -7,15 +7,17 @@
     "start": "ts-node src/index.ts",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts*' --write",
     "prettier-watch": "onchange 'src/**/*.ts*' -- prettier --write {{changed}}",
-    "test": "jest --detectOpenHandles --config=jest.config.js"
+    "test": "jest --runInBand --detectOpenHandles --config=jest.config.js"
   },
   "author": "Philippe Assis <codephilippe@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@fastify/cors": "^8.2.1",
+    "@types/pino": "^7.0.5",
     "fastify": "4.17.0",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
+    "pino": "^8.14.1",
     "sequelize": "^6.31.1",
     "ts-node": "^10.9.1"
   },

@@ -3,16 +3,11 @@ import { FastAPI, makeResponses, SchemaBuilder } from '../src/index';
 import { Sequelize } from 'sequelize';
 
 describe('FastAPI', () => {
-  let fastAPI: FastAPI;
-
-  beforeEach(() => {
-    fastAPI = new FastAPI();
-
-    fastAPI.api.log.level = 'silent';
-  });
-
   describe('Constructor', () => {
     it('should initialize FastAPI with default values if no parameters are passed', () => {
+      const fastAPI = new FastAPI();
+      fastAPI.api.log.level = 'silent';
+
       expect(fastAPI).toBeInstanceOf(FastAPI);
       expect(fastAPI.database.database).toBeNull();
       expect(fastAPI.database.username).toBeNull();
@@ -21,6 +16,9 @@ describe('FastAPI', () => {
     });
 
     it('should initialize FastAPI with the passed parameters', () => {
+      const fastAPI = new FastAPI();
+      fastAPI.api.log.level = 'silent';
+
       fastAPI.setDatabase({
         database: 'testDB',
         username: 'testUser',
@@ -37,6 +35,9 @@ describe('FastAPI', () => {
 
   describe('Schemas and Database', () => {
     it('should add a schema for hello', async () => {
+      const fastAPI = new FastAPI();
+      fastAPI.api.log.level = 'silent';
+
       const schema = new SchemaBuilder();
       const helloSchema = schema
         .table('hello')
@@ -90,6 +91,9 @@ describe('FastAPI', () => {
 
   describe('Routes', () => {
     it('should add a route for /hello', async () => {
+      const fastAPI = new FastAPI();
+      fastAPI.api.log.level = 'silent';
+
       fastAPI.get('/', {
         responses: makeResponses('init', 222, {
           message: {
@@ -117,7 +121,10 @@ describe('FastAPI', () => {
 
   describe('Server', () => {
     it('should start the server', async () => {
-      await fastAPI.start();
+      const fastAPI = new FastAPI();
+      fastAPI.api.log.level = 'silent';
+
+      fastAPI.loadRoutes();
 
       const response = await fastAPI.api.inject({
         method: 'GET',
@@ -126,6 +133,57 @@ describe('FastAPI', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({ status: 'ok' });
+    });
+  });
+
+  describe('Schema and Server', () => {
+    it('should start the server', async () => {
+      const schema = new SchemaBuilder();
+      const helloSchema = schema
+        .table('hellos')
+        .column({
+          name: 'id',
+          type: 'integer',
+          primaryKey: true,
+          autoIncrement: true
+        })
+        .column({
+          name: 'message',
+          type: 'string',
+          allowNull: false
+        })
+        .column({
+          name: 'createdAt',
+          type: 'date'
+        })
+        .column({
+          name: 'updatedAt',
+          type: 'date'
+        })
+        .build();
+
+      const sequelize = new Sequelize('sqlite::memory:', {
+        logging: false
+      });
+
+      const fastAPI = new FastAPI({
+        schema: helloSchema
+      });
+      fastAPI.api.log.level = 'silent';
+
+      // fastAPI.setDatabaseInstance(sequelize);
+
+      fastAPI.load();
+
+      // await fastAPI.start();
+
+      // const response = await fastAPI.api.inject({
+      //   method: 'GET',
+      //   url: '/health'
+      // });
+
+      // expect(response.statusCode).toBe(200);
+      // expect(response.json()).toEqual({ status: 'ok' });
     });
   });
 });

@@ -1,7 +1,7 @@
-import api from '../../middle/serve';
 import { superFiler } from './superFilter';
 import { emit } from '../events';
 import { Resource } from '../sequelize';
+import log from '../log';
 
 export type RouteHandler = (request: any, reply: any) => Promise<void> | void;
 
@@ -41,7 +41,7 @@ export function getAll(resource: Resource): RouteHandler {
 
       emit(resource.name, 'list', null, data.rows);
     } catch (err) {
-      api.log.error(err);
+      log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${resource.name}.` });
       emit(resource.name, 'list', err);
     }
@@ -62,7 +62,7 @@ export function getOne(resource: Resource): RouteHandler {
       reply.send(data);
       emit(resource.name, 'read', null, values.rows);
     } catch (err) {
-      api.log.error(err);
+      log.error(err);
       reply.status(500).send({ error: `Failed to fetch ${resource.name}.` });
       emit(resource.name, 'read', err);
     }
@@ -76,7 +76,7 @@ export function create(resource: Resource): RouteHandler {
       reply.send(data);
       emit(resource.name, 'create', null, data);
     } catch (err) {
-      api.log.error(err);
+      log.error(err);
       reply.status(500).send({ error: `Failed to create ${resource.name}.` });
       emit(resource.name, 'create', err);
     }
@@ -99,7 +99,7 @@ export function update(resource: Resource): RouteHandler {
       reply.send(data);
       emit(resource.name, 'update', null, value.rows);
     } catch (err) {
-      api.log.error(err);
+      log.error(err);
       reply.status(500).send({ error: `Failed to update ${resource.name}.` });
       emit(resource.name, 'update', err);
     }
@@ -122,7 +122,7 @@ export function remove(resource: Resource): RouteHandler {
       reply.send({ message: `${resource.name} deleted successfully.` });
       emit(resource.name, 'remove', null, value.rows);
     } catch (err) {
-      api.log.error(err);
+      log.error(err);
       reply.status(500).send({ error: `Failed to delete ${resource.name}.` });
       emit(resource.name, 'remove', err);
     }

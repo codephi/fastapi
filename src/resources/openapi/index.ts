@@ -1,7 +1,16 @@
+import { Resource } from '../sequelize';
 import { convertType } from './dataTypes';
 import { AdminReferences, OpenAPI, Operation } from './openapiTypes';
 import { makeResponses } from './responses';
 import { resolvePlural } from './utils';
+
+export interface Tags {
+  create: string[];
+  read: string[];
+  update: string[];
+  delete: string[];
+  list: string[];
+}
 
 interface Property {
   type: string;
@@ -51,18 +60,21 @@ const removeImutable = (
   return newProperties;
 };
 
-export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
-  const { model, metadata } = resource;
+export function generateOpenapiSchemas(
+  resource: Resource,
+  tags: Tags
+): OpenAPI {
+  const { model, columns, search } = resource;
   const resourceName = model.name.toLowerCase();
   const resourcePlural = resolvePlural(resourceName);
-  const attributeKeys = Object.keys(model.rawAttributes);
+  const attributeKeys = Object.keys(model.getAttributes());
   const properties: SchemaProperties = {};
   const required: string[] = [];
 
   attributeKeys.forEach((key) => {
-    const data = metadata.columns[key];
-    const attribute = model.rawAttributes[key];
-    const propertyType = convertType(attribute.type.toString());
+    const data = columns[key];
+    const attribute = model.getAttributes()[key];
+    const propertyType = convertType(attribute.type.constructor.name);
 
     const property: Property = {
       ...propertyType,
@@ -168,7 +180,7 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
     tags: resolveTags(model, tags.list),
     'x-admin': {
       types: (() => {
-        if (metadata && metadata.search && metadata.search.length > 0) {
+        if (search && search.length > 0) {
           return ['list', 'search'];
         } else {
           return ['list'];
@@ -176,7 +188,6 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
       })(),
       groupName: model.name,
       resourceName: 'List',
-      ...metadata,
       references: (() => {
         const references: AdminReferences = {
           list: {
@@ -190,7 +201,7 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
           }
         };
 
-        if (metadata && metadata.search && metadata.search.length > 0) {
+        if (search && search.length > 0) {
           references.search = {
             query: {
               pageSize: 'page_size',
@@ -264,7 +275,7 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
           tags: resolveTags(model, tags.list),
           'x-admin': {
             types: (() => {
-              if (metadata && metadata.search && metadata.search.length > 0) {
+              if (search && search.length > 0) {
                 return ['list', 'search'];
               } else {
                 return ['list'];
@@ -272,7 +283,6 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
             })(),
             groupName: model.name,
             resourceName: 'List',
-            ...metadata,
             references: (() => {
               const references: AdminReferences = {
                 list: {
@@ -286,7 +296,7 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
                 }
               };
 
-              if (metadata && metadata.search && metadata.search.length > 0) {
+              if (search && search.length > 0) {
                 references.search = {
                   query: {
                     pageSize: 'page_size',
@@ -381,7 +391,7 @@ export function generateOpenapiSchemas(resource: any, tags: any): OpenAPI {
             resourceName: 'Read'
           },
           description: `Get ${model.name} by ID`,
-          tags: resolveTags(model, tags.get),
+          tags: resolveTags(model, tags.read),
           parameters: [
             {
               name: 'id',

@@ -281,7 +281,7 @@ function getSequelizeDataType(
     } else if (columnType === 'UUID') {
       return DataTypes.UUID;
     } else if (columnType === 'ENUM') {
-      return DataTypes.ENUM.apply(attributes.values);
+      return DataTypes.ENUM.apply(null, attributes.values);
     } else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
       return DataTypes.JSON;
     } else if (

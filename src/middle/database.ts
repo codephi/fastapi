@@ -18,14 +18,9 @@ export const global = new Global();
 
 export async function testDatabaseConnection(): Promise<void> {
   if (global.sequelize) {
-    try {
-      await global.sequelize.authenticate();
-      console.log('Database connection successful');
-    } catch (error) {
-      console.error('Database connection failed:', error);
-    }
+    await global.sequelize.authenticate();
   } else {
-    console.error('Database connection not established');
+    throw new Error('Database connection not established');
   }
 }
 

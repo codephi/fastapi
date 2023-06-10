@@ -1,6 +1,11 @@
 import api from './middle/serve';
-import { FastifyRequest, FastifyReply, FastifyListenOptions } from 'fastify';
-import { generateOpenapiSchemas } from './resources/openapi';
+import {
+  FastifyRequest,
+  FastifyReply,
+  FastifyListenOptions,
+  FastifyInstance
+} from 'fastify';
+import { Tags, generateOpenapiSchemas } from './resources/openapi';
 import {
   Handlers,
   Methods,
@@ -8,8 +13,7 @@ import {
   Route,
   Routes,
   RoutesBuilder,
-  createRouteResource,
-  createRoutes,
+  CreateRoutes,
   routesToPaths
 } from './resources/routes';
 import { createTables } from './resources/sequelize/createTables';
@@ -26,12 +30,13 @@ import {
   SequelizeModel,
   importResources
 } from './resources/sequelize';
-import health from './routes/health';
+import healthRoute from './routes/health';
 import builderOpeapi from './routes/openapi';
 import { on, emit, remove, EventCallback } from './resources/events';
-import { Paths } from './resources/openapi/openapiTypes';
+import { OpenAPI, Paths } from './resources/openapi/openapiTypes';
 import { Sequelize, SyncOptions } from 'sequelize';
 import { promisify } from 'util';
+import log from './resources/log';
 
 export interface LoadSpecOptions {
   resources: Resources;
@@ -66,14 +71,6 @@ export interface DatabaseOptions {
 
 export interface Cors {
   origin: string;
-}
-
-export interface Tags {
-  create: string[];
-  read: string[];
-  update: string[];
-  delete: string[];
-  list: string[];
 }
 
 export interface Models {
@@ -114,46 +111,47 @@ export class FastAPI {
     origin: '*'
   };
   forceCreateTables = false;
-  api = api;
+  api: FastifyInstance;
   private databaseLoaded = false;
-  private listen: (options: FastifyListenOptions) => Promise<void> = promisify(
-    api.listen.bind(api)
-  );
+  private listen: (options: FastifyListenOptions) => Promise<void>;
 
   constructor(props?: FastAPIOptions) {
-    if (props === undefined) return;
+    if (props) {
+      if (props.schema !== undefined) {
+        this.schema = props.schema;
+      }
 
-    if (props.schema !== undefined) {
-      this.schema = props.schema;
+      if (props.routes !== undefined) {
+        this.routes = props.routes;
+      }
+
+      if (props.handlers !== undefined) {
+        this.handlers = props.handlers;
+      }
+
+      if (props.tags !== undefined) {
+        this.tags = props.tags;
+      }
+
+      if (props.database !== undefined) {
+        this.database = { ...this.database, ...props.database };
+      }
+
+      if (props.cors !== undefined) {
+        this.cors = props.cors;
+      }
+
+      if (props.forceCreateTables) {
+        this.forceCreateTables = props.forceCreateTables;
+      }
+
+      if (props.listen !== undefined) {
+        this.listenConfig = props.listen;
+      }
     }
 
-    if (props.routes !== undefined) {
-      this.routes = props.routes;
-    }
-
-    if (props.handlers !== undefined) {
-      this.handlers = props.handlers;
-    }
-
-    if (props.tags !== undefined) {
-      this.tags = props.tags;
-    }
-
-    if (props.database !== undefined) {
-      this.database = { ...this.database, ...props.database };
-    }
-
-    if (props.cors !== undefined) {
-      this.cors = props.cors;
-    }
-
-    if (props.forceCreateTables) {
-      this.forceCreateTables = props.forceCreateTables;
-    }
-
-    if (props.listen !== undefined) {
-      this.listenConfig = props.listen;
-    }
+    this.api = api();
+    this.listen = promisify(this.api.listen.bind(this.api));
 
     return this;
   }
@@ -188,10 +186,10 @@ export class FastAPI {
     if (schema) {
       this.resources = importResources(schema);
 
-      Object.keys(this.resources).forEach((key) => {
+      for (const key in this.resources) {
         const resource = this.resources[key];
         this.models[toFirstUpperCase(resource.name)] = resource.model;
-      });
+      }
     } else {
       throw new Error('Schema not found');
     }
@@ -204,10 +202,12 @@ export class FastAPI {
     const tags = this.tags;
     const handlers = this.handlers;
 
+    const createRoutes = new CreateRoutes(this.api);
+
     Object.keys(resources).forEach((key) => {
       const paths = generateOpenapiSchemas(resources[key], tags).paths as Paths;
 
-      createRouteResource({
+      createRoutes.createRouteResource({
         paths,
         resource: resources[key],
         handlers
@@ -219,11 +219,13 @@ export class FastAPI {
     let paths = {} as Paths;
 
     this.routes.forEach((route) => {
-      createRoutes({ ...route });
+      createRoutes.createRoutes({ ...route });
       paths = { ...paths, ...routesToPaths(route) };
     });
 
-    createRoutes(health);
+    const health = healthRoute();
+
+    createRoutes.createRoutes(health);
 
     const openapi = builderOpeapi({
       ...shemasPaths,
@@ -231,9 +233,9 @@ export class FastAPI {
       ...paths
     });
 
-    createRoutes(openapi);
+    createRoutes.createRoutes(openapi);
 
-    this.api.setErrorHandler(function (
+    createRoutes.api.setErrorHandler(function (
       error: any,
       request: FastifyRequest,
       reply: FastifyReply
@@ -342,19 +344,12 @@ export class FastAPI {
     remove(modelName, action);
     return this;
   }
-
-  private defaultListen(err?: Error | null): void {
-    if (err) {
-      this.api.log.error(err);
-      process.exit(1);
-    }
-  }
 }
 
 export { PathBuilder, RoutesBuilder } from './resources/routes';
 export { makeResponses } from './resources/openapi/responses';
 export { SchemaBuilder } from './resources/sequelize/builder';
-export { SequelizeModel as Model };
+export { SequelizeModel as Model, Tags, log };
 export { FastifyReply as Reply, FastifyRequest as Request };
 
 function toFirstUpperCase(text: string): string {

@@ -1,9 +1,11 @@
 import fastify, { FastifyInstance } from 'fastify';
 
-const api: FastifyInstance = fastify({ logger: true });
+export default () => {
+  const api: FastifyInstance = fastify({ logger: true });
 
-api.register(require('@fastify/cors'), {
-  origin: '*'
-});
+  api.register(require('@fastify/cors'), {
+    origin: '*'
+  });
 
-export default api;
+  return api;
+};
