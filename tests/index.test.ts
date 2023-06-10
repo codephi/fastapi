@@ -122,7 +122,7 @@ describe('FastAPI', () => {
       expect(response.statusCode).toBe(222);
       expect(response.json()).toEqual({ message: 'Hello, world!' });
 
-      fastAPI.api.close();
+      await fastAPI.api.close();
     });
 
     it('should add a route for /hello 2', async () => {
@@ -157,7 +157,7 @@ describe('FastAPI', () => {
       expect(response.statusCode).toBe(222);
       expect(response.json()).toEqual({ message: 'Hello, world!' });
 
-      fastAPI.api.close();
+      await fastAPI.api.close();
     });
   });
 
@@ -178,7 +178,7 @@ describe('FastAPI', () => {
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({ status: 'ok' });
 
-      fastAPI.api.close();
+      await fastAPI.api.close();
     });
   });
 
@@ -186,7 +186,7 @@ describe('FastAPI', () => {
     it('should start the server', async () => {
       const schema = new SchemaBuilder();
       const helloSchema = schema
-        .table('hellos')
+        .table('messages')
         .column({
           name: 'id',
           type: 'integer',
@@ -223,15 +223,26 @@ describe('FastAPI', () => {
 
       await fastAPI.start();
 
-      const response = await fastAPI.api.inject({
-        method: 'GET',
-        url: '/health'
+      const responsePost = await fastAPI.api.inject({
+        method: 'POST',
+        url: '/messages',
+        payload: {
+          message: 'Hello, world!'
+        }
       });
 
-      expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual({ status: 'ok' });
+      expect(responsePost.statusCode).toBe(201);
+      expect(responsePost.json()).toEqual({ message: 'Hello, world!' });
 
-      await fastAPI.api.close();
+      // const responseGet = await fastAPI.api.inject({
+      //   method: 'GET',
+      //   url: '/messages'
+      // });
+
+      // expect(responseGet.statusCode).toBe(200);
+      // expect(responseGet.json()).toEqual({ status: 'ok' });
+
+      // await fastAPI.api.close();
     });
   });
 });

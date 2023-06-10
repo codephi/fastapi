@@ -262,6 +262,7 @@ export class CreateRoutes {
   }
 
   createRouteResource({ paths, resource, handlers }: ResourceProps) {
+    //TODO: ALgum problema aqui.
     Object.entries(paths).forEach(([path, value]: [string, Path]) => {
       const innerOperation = getOperations(value);
 
