@@ -126,6 +126,8 @@ describe('FastAPI', () => {
 
       fastAPI.loadRoutes();
 
+      await fastAPI.start();
+
       const response = await fastAPI.api.inject({
         method: 'GET',
         url: '/health'
@@ -133,6 +135,8 @@ describe('FastAPI', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({ status: 'ok' });
+
+      fastAPI.api.close();
     });
   });
 
@@ -184,6 +188,8 @@ describe('FastAPI', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({ status: 'ok' });
+
+      await fastAPI.api.close();
     });
   });
 });
