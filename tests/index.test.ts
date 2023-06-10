@@ -171,19 +171,19 @@ describe('FastAPI', () => {
       });
       fastAPI.api.log.level = 'silent';
 
-      // fastAPI.setDatabaseInstance(sequelize);
+      fastAPI.setDatabaseInstance(sequelize);
 
       fastAPI.load();
 
-      // await fastAPI.start();
+      await fastAPI.start();
 
-      // const response = await fastAPI.api.inject({
-      //   method: 'GET',
-      //   url: '/health'
-      // });
+      const response = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/health'
+      });
 
-      // expect(response.statusCode).toBe(200);
-      // expect(response.json()).toEqual({ status: 'ok' });
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({ status: 'ok' });
     });
   });
 });
