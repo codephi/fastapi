@@ -227,9 +227,11 @@ export class FastAPI {
 
     createRoutes.createRoutes(health);
 
+    const healthPaths = routesToPaths(health);
+
     const openapi = builderOpeapi({
       ...shemasPaths,
-      ...routesToPaths(health),
+      ...healthPaths,
       ...paths
     });
 

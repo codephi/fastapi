@@ -1,5 +1,10 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { FastAPI, makeResponses, SchemaBuilder } from '../src/index';
+import {
+  FastAPI,
+  makeResponses,
+  RoutesBuilder,
+  SchemaBuilder
+} from '../src/index';
 import { Sequelize } from 'sequelize';
 
 describe('FastAPI', () => {
@@ -116,6 +121,43 @@ describe('FastAPI', () => {
 
       expect(response.statusCode).toBe(222);
       expect(response.json()).toEqual({ message: 'Hello, world!' });
+
+      fastAPI.api.close();
+    });
+
+    it('should add a route for /hello 2', async () => {
+      const fastAPI = new FastAPI();
+      fastAPI.api.log.level = 'silent';
+      const routes = new RoutesBuilder();
+      const builded = routes
+        .path('/')
+        .get({
+          responses: makeResponses('init', 222, {
+            message: {
+              type: 'string'
+            }
+          }),
+          handler: (_request: FastifyRequest, reply: FastifyReply) => {
+            reply.status(222).send({
+              message: 'Hello, world!'
+            });
+          }
+        })
+        .build();
+
+      fastAPI.addRoutes(builded);
+
+      fastAPI.loadRoutes();
+
+      const response = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/'
+      });
+
+      expect(response.statusCode).toBe(222);
+      expect(response.json()).toEqual({ message: 'Hello, world!' });
+
+      fastAPI.api.close();
     });
   });
 

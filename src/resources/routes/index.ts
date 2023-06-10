@@ -112,6 +112,7 @@ export class PathBuilder {
   private methods: Methods = {};
   private pathName: string;
   private parent: RoutesBuilder;
+  private builded = false;
 
   constructor(parent: RoutesBuilder, pathName: string) {
     this.pathName = pathName;
@@ -144,6 +145,12 @@ export class PathBuilder {
   }
 
   buildPath() {
+    if (this.builded) {
+      return;
+    }
+
+    this.builded = true;
+
     if (this.methods.get) {
       this.parent.addRoute(this.pathName, MethodType.GET, this.methods.get);
     }
@@ -171,7 +178,7 @@ export class PathBuilder {
 
   path(path: string): PathBuilder {
     this.buildPath();
-    return new PathBuilder(this.parent, this.pathName + path);
+    return new PathBuilder(this.parent, path);
   }
 
   responses(
@@ -187,6 +194,7 @@ export class PathBuilder {
   }
 
   build(): Routes {
+    this.buildPath();
     return this.parent.build();
   }
 }
