@@ -314,5 +314,35 @@ describe('FastAPI', () => {
 
       expect(responseGet.statusCode).toBe(404);
     });
+
+    it('should get health', async () => {
+      const responseGet = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/health'
+      });
+
+      expect(responseGet.statusCode).toBe(200);
+      expect(responseGet.json()).toEqual({
+        status: 'UP'
+      });
+    });
+
+    it('should get all info health', async () => {
+      const responseGet = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/health/all'
+      });
+
+      expect(responseGet.statusCode).toBe(200);
+    });
+
+    it('should get openapi especification', async () => {
+      const responseGet = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/openapi.json'
+      });
+
+      expect(responseGet.statusCode).toBe(200);
+    });
   });
 });

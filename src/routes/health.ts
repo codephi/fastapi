@@ -90,7 +90,7 @@ export default (): Routes =>
     .build();
 
 function handlerStatus(_request: FastifyRequest, reply: FastifyReply) {
-  reply.send({ status: 'ok' });
+  reply.send({ status: 'UP' });
 }
 
 function handlerAll(_request: FastifyRequest, reply: FastifyReply) {
@@ -101,7 +101,7 @@ function handlerAll(_request: FastifyRequest, reply: FastifyReply) {
     database: getDatabaseInfo(),
     container: getContainerInfo(),
     app: getAppInfo(),
-    status: 'ok'
+    status: 'UP'
   } as Response);
 }
 
