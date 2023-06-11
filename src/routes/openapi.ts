@@ -16,8 +16,6 @@ export default function builderOpeapi(paths: Paths): Routes {
       description: 'Get OpenAPI JSON',
       responses: route.responses(200, openapiSchema.properties),
       handler: async (_request, reply: FastifyReply): Promise<void> => {
-        console.log(openapiSchema);
-        console.log(doc);
         reply.send(doc);
       }
     })
