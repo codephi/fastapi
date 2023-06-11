@@ -176,6 +176,10 @@ export class FastAPI {
     this.databaseLoaded = true;
   }
 
+  setSchema(schema: string | Schema): void {
+    this.schema = schema;
+  }
+
   loadSchema(schema?: string | Schema): void {
     this.databaseInstance();
 
@@ -188,7 +192,7 @@ export class FastAPI {
 
       for (const key in this.resources) {
         const resource = this.resources[key];
-        this.models[toFirstUpperCase(resource.name)] = resource.model;
+        this.models[modelName(resource.name)] = resource.model;
       }
     } else {
       throw new Error('Schema not found');
@@ -354,6 +358,13 @@ export { SchemaBuilder } from './resources/sequelize/builder';
 export { SequelizeModel as Model, Tags, log };
 export { FastifyReply as Reply, FastifyRequest as Request };
 
-function toFirstUpperCase(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1);
+export function modelName(text: string): string {
+  const name = text.charAt(0).toUpperCase();
+
+  // se terminar com s, remove a ultima letra
+  if (text[text.length - 1] === 's') {
+    return name + text.slice(1, -1);
+  }
+
+  return name + text.slice(1);
 }

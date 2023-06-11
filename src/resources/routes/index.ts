@@ -245,6 +245,24 @@ interface RouterInner {
   operation: Operation;
 }
 
+function isHandler(handlers: Handlers | undefined): boolean {
+  if (handlers === undefined) {
+    return false;
+  }
+
+  if (
+    handlers.get ||
+    handlers.post ||
+    handlers.put ||
+    handlers.delete ||
+    handlers.patch
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export class CreateRoutes {
   api: FastifyInstance;
 
@@ -273,7 +291,7 @@ export class CreateRoutes {
           return;
         }
 
-        const handler = handlers
+        const handler = isHandler(handlers)
           ? (extractByMethod(method, handlers) as RouteHandler)
           : getRouteHandler(method, resource, operation);
 
@@ -303,7 +321,11 @@ export class CreateRoutes {
       route.schema.body = responseToProperties(schema);
     }
 
-    if (route.schema !== undefined && operation.requestBody !== undefined) {
+    if (
+      route.schema !== undefined &&
+      operation.requestBody !== undefined &&
+      operation.parameters !== undefined
+    ) {
       const query = operation.parameters?.filter((p: Parameter | Reference) => {
         try {
           const parameter = p as Parameter;

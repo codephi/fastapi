@@ -73,7 +73,7 @@ export function create(resource: Resource): RouteHandler {
   return async (request: any, reply: any) => {
     try {
       const data = await resource.model.create(request.body);
-      reply.send(data);
+      reply.status(201).send(data);
       emit(resource.name, 'create', null, data);
     } catch (err) {
       log.error(err);
@@ -119,7 +119,9 @@ export function remove(resource: Resource): RouteHandler {
 
       await data.destroy();
 
-      reply.send({ message: `${resource.name} deleted successfully.` });
+      reply
+        .status(204)
+        .send({ message: `${resource.name} deleted successfully.` });
       emit(resource.name, 'remove', null, value.rows);
     } catch (err) {
       log.error(err);

@@ -64,8 +64,8 @@ export function generateOpenapiSchemas(
   resource: Resource,
   tags: Tags
 ): OpenAPI {
-  const { model, columns, search } = resource;
-  const resourceName = model.name.toLowerCase();
+  const { model, columns, search, name } = resource;
+  const resourceName = name.toLowerCase();
   const resourcePlural = resolvePlural(resourceName);
   const attributeKeys = Object.keys(model.getAttributes());
   const properties: SchemaProperties = {};
@@ -161,17 +161,26 @@ export function generateOpenapiSchemas(
 
   const requestProperties = makeRequestProperties();
 
-  const responseResolved = makeResponses(model.name, 200, requestProperties);
+  const responseResolvedPost = makeResponses(
+    model.name,
+    201,
+    requestProperties,
+    true
+  );
+  const responseResolvedDelete = makeResponses(
+    model.name,
+    204,
+    requestProperties
+  );
+  const responseResolvedGetAndPut = makeResponses(
+    model.name,
+    200,
+    requestProperties
+  );
   const responseResolvedList = makeResponses(
     model.name,
     200,
     makeAllResponseProperties()
-  );
-  const responseResolvedConflict = makeResponses(
-    model.name,
-    200,
-    requestProperties,
-    true
   );
 
   const operationGet: Operation = {
@@ -379,7 +388,7 @@ export function generateOpenapiSchemas(
               }
             }
           },
-          responses: responseResolvedConflict
+          responses: responseResolvedPost
         }
       },
       [`/api/${resourcePlural}/{id}`]: {
@@ -403,7 +412,7 @@ export function generateOpenapiSchemas(
               required: true
             }
           ],
-          responses: responseResolved
+          responses: responseResolvedGetAndPut
         },
         put: {
           summary: `Update ${model.name}`,
@@ -435,7 +444,7 @@ export function generateOpenapiSchemas(
               }
             }
           },
-          responses: responseResolved
+          responses: responseResolvedGetAndPut
         },
         delete: {
           summary: `Delete ${model.name}`,
@@ -457,7 +466,7 @@ export function generateOpenapiSchemas(
               required: true
             }
           ],
-          responses: responseResolved
+          responses: responseResolvedDelete
         }
       }
     }

@@ -176,7 +176,13 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
 }
 
 function getResourceName(name: string): string {
-  return name.charAt(0).toUpperCase() + name.slice(1, -1);
+  // se terminar com s, remove o s
+  const lastPosition = name.length - 1;
+  if (name.lastIndexOf('s') !== lastPosition) {
+    return name.slice(0, -1).toLocaleLowerCase();
+  }
+
+  return name.toLocaleLowerCase();
 }
 
 function getTableName(name: string): string {
