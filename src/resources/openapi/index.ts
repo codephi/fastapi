@@ -33,6 +33,7 @@ interface Property {
   nullable?: boolean;
   readOnly?: boolean;
   writeOnly?: boolean;
+  'x-admin-type'?: string;
 }
 
 interface SchemaProperties {
@@ -128,6 +129,8 @@ export function generateOpenapiSchemas(
     if (column.allowNull === true) {
       property.nullable = true;
     }
+
+    property['x-admin-type'] = column.type;
 
     properties[key] = property;
     if (!attribute.allowNull || column.required) {

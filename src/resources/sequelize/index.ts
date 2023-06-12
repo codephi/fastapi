@@ -22,7 +22,6 @@ export interface Table {
 export interface Column {
   name: string;
   type: string;
-  constraints?: string[];
   autoIncrement?: boolean;
   values?: string[];
   min?: number;
@@ -40,7 +39,6 @@ export interface Column {
   binary?: boolean;
   length?: number;
   decimals?: number;
-  subtype?: string;
 }
 
 export interface Relationship {
@@ -70,7 +68,6 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
     const tableColumns: Record<string, any> = {};
     const tableName = getTableName(table.name);
     const singleName = convertToSingle(tableName);
-    // const modelName = singleName.charAt(0).toUpperCase() + singleName.slice(1);
     const resurceName = getResourceName(table.name);
     const resource = {
       primaryKey: null,
@@ -82,21 +79,11 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
     for (const column of table.columns) {
       const columnName = column.name;
       const columnType = getSequelizeDataType(column);
-      const columnConstraints = column.constraints
-        ? getSequelizeConstraints(column.constraints)
-        : [];
 
-      const primaryKey =
-        column.primaryKey || columnConstraints.includes('PRIMARY KEY');
-      const allowNull =
-        column.allowNull !== undefined
-          ? column.allowNull
-          : column.constraints
-          ? !columnConstraints.includes('NOT NULL')
-          : false;
-      const defaultValue =
-        column.defaultValue || getDefaultValue(columnConstraints, columnType);
-      const unique = column.unique || columnConstraints.includes('UNIQUE');
+      const primaryKey = column.primaryKey ?? false;
+      const allowNull = column.allowNull ?? false;
+      const defaultValue = column.defaultValue;
+      const unique = column.unique ?? false;
 
       column.required = !allowNull || column.required;
 
@@ -104,7 +91,7 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
         type: columnType,
         allowNull,
         primaryKey,
-        references: parseReferences(columnConstraints),
+        references: null,
         autoIncrement: column.autoIncrement || false,
         defaultValue,
         unique
@@ -135,22 +122,11 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
     const model = resources[resurceName].model;
 
     for (const column of table.columns) {
-      let tableName: string | null = null;
-
-      if (column.reference) {
-        tableName = getTableName(column.reference);
-      } else if (column.constraints) {
-        for (const constraints of column.constraints) {
-          if (constraints.indexOf('REFERENCES') > -1) {
-            tableName = getTableName(constraints.split(' ')[1]);
-            break;
-          }
-        }
-      }
-
-      if (tableName === null) {
+      if (!column.reference) {
         continue;
       }
+
+      const tableName = getTableName(column.reference);
 
       const referencedTable = getResourceName(tableName);
       const referencedModel = resources[referencedTable].model;

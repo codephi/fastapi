@@ -167,7 +167,7 @@ describe('FastAPI', () => {
         .table('messages')
         .column({
           name: 'message',
-          type: 'string',
+          type: 'code',
           allowNull: false
         })
         .table('chats')

@@ -280,7 +280,6 @@ export class CreateRoutes {
   }
 
   createRouteResource({ paths, resource, handlers }: ResourceProps) {
-    //TODO: ALgum problema aqui.
     Object.entries(paths).forEach(([path, value]: [string, Path]) => {
       const innerOperation = getOperations(value);
 
@@ -357,10 +356,13 @@ function queryToProperties(properties: Parameter[]) {
 }
 
 function responseToProperties(properties: Schema) {
+  const propertiesFiltered = filterPropertiesRecursive(properties);
   const newProperties: { [key: string]: Schema } = {};
-  Object.entries(properties).forEach(([key, value]) => {
+
+  Object.entries(propertiesFiltered).forEach(([key, value]) => {
     newProperties[key] = propertiesToItems(value);
   });
+
   return newProperties;
 }
 
@@ -371,6 +373,32 @@ function propertiesToItems(value: any) {
   }
 
   return value;
+}
+
+function filterPropertiesRecursive(
+  properties: Record<string, any>
+): Properties {
+  const newProperties: Properties = {};
+
+  Object.entries(properties).forEach(([key, value]) => {
+    if (key.startsWith('x-')) return;
+
+    // value is Schema
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        newProperties[key] = filterPropertiesRecursive(value);
+        return;
+      }
+    }
+
+    newProperties[key] = value;
+  });
+
+  return newProperties;
 }
 
 export function resolveResponses(responses: Responses) {

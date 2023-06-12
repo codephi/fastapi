@@ -207,18 +207,18 @@ export class FastAPI {
     const handlers = this.handlers;
 
     const createRoutes = new CreateRoutes(this.api);
-
-    Object.keys(resources).forEach((key) => {
-      const paths = generateOpenapiSchemas(resources[key], tags).paths as Paths;
+    for (const key in this.resources) {
+      const resource = resources[key];
+      const paths = generateOpenapiSchemas(resource, tags).paths as Paths;
 
       createRoutes.createRouteResource({
         paths,
-        resource: resources[key],
+        resource,
         handlers
       });
 
       shemasPaths = { ...shemasPaths, ...paths } as Paths;
-    });
+    }
 
     let paths = {} as Paths;
 
