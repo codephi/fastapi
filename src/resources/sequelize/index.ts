@@ -52,7 +52,7 @@ export interface Resource {
   model: typeof SequelizeModel;
   name: string;
   primaryKey: string | null;
-  columns: Record<string, any>;
+  columns: Record<string, Column>;
   relationships?: Relationship[];
   search?: string[];
 }
@@ -77,26 +77,24 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
 
     for (const column of table.columns) {
       const columnName = column.name;
-      const [columnType, columnParams] = getSequelizeDataType(column);
+      const columnType = getSequelizeDataType(column);
       const columnConstraints = column.constraints
         ? getSequelizeConstraints(column.constraints)
         : [];
 
       const primaryKey =
-        columnParams.primaryKey || columnConstraints.includes('PRIMARY KEY');
+        column.primaryKey || columnConstraints.includes('PRIMARY KEY');
       const allowNull =
-        columnParams.allowNull !== undefined
-          ? columnParams.allowNull
+        column.allowNull !== undefined
+          ? column.allowNull
           : column.constraints
           ? !columnConstraints.includes('NOT NULL')
           : false;
       const defaultValue =
-        columnParams.defaultValue ||
-        getDefaultValue(columnConstraints, columnType);
-      const unique =
-        columnParams.unique || columnConstraints.includes('UNIQUE');
+        column.defaultValue || getDefaultValue(columnConstraints, columnType);
+      const unique = column.unique || columnConstraints.includes('UNIQUE');
 
-      columnParams.required = !allowNull || columnParams.required;
+      column.required = !allowNull || column.required;
 
       tableColumns[columnName] = {
         type: columnType,
@@ -112,7 +110,7 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
         resource.primaryKey = columnName;
       }
 
-      resource.columns[columnName] = columnParams;
+      resource.columns[columnName] = column;
     }
 
     class Table extends Model {}
@@ -257,64 +255,58 @@ function getNumberProps(attributes: Record<string, any>): Record<string, any> {
   return params;
 }
 
-function getSequelizeDataType(
-  column: Column
-): [DataTypesResult, Record<string, any>] {
+function getSequelizeDataType(column: Column): DataTypesResult {
   const { type, ...attributes } = column;
 
   const columnType = type.toUpperCase();
 
-  function getDataType(): DataTypesResult {
-    if (
-      (columnType.includes('TEXT') || columnType.includes('VARCHAR')) &&
-      attributes.maxLength
-    ) {
-      return DataTypes.STRING(attributes.maxLength, attributes.binary);
-    } else if (columnType === 'STRING') {
-      return DataTypes.STRING(attributes.maxLength, attributes.binary);
-    } else if (columnType === 'CHAR') {
-      return DataTypes.CHAR(attributes.maxLength, attributes.binary);
-    } else if (columnType === 'TEXT') {
-      return DataTypes.TEXT;
-    } else if (columnType === 'DATE') {
-      return DataTypes.DATE(attributes.maxLength);
-    } else if (columnType === 'TIME') {
-      return DataTypes.TIME;
-    } else if (columnType === 'NOW') {
-      return DataTypes.NOW;
-    } else if (columnType === 'BOOLEAN') {
-      return DataTypes.BOOLEAN;
-    } else if (columnType === 'UUID') {
-      return DataTypes.UUID;
-    } else if (columnType === 'ENUM') {
-      return DataTypes.ENUM.apply(null, attributes.values);
-    } else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
-      return DataTypes.JSON;
-    } else if (
-      columnType === 'INT' ||
-      columnType === 'INTEGER' ||
-      columnType === 'SERIAL'
-    ) {
-      return DataTypes.INTEGER;
-    } else if (columnType === 'FLOAT') {
-      return DataTypes.FLOAT(attributes.length, attributes.decimals);
-    } else if (
-      columnType === 'BIGINT' ||
-      columnType === 'SMALLINT' ||
-      columnType === 'TINYINT' ||
-      columnType === 'MEDIUMINT' ||
-      columnType === 'DOUBLE' ||
-      columnType === 'DECIMAL' ||
-      columnType === 'REAL' ||
-      columnType === 'NUMERIC'
-    ) {
-      return DataTypes.NUMBER(getNumberProps(attributes));
-    }
-
-    throw new Error(`Unknown column type: ${columnType}`);
+  if (
+    (columnType.includes('TEXT') || columnType.includes('VARCHAR')) &&
+    attributes.maxLength
+  ) {
+    return DataTypes.STRING(attributes.maxLength, attributes.binary);
+  } else if (columnType === 'STRING') {
+    return DataTypes.STRING(attributes.maxLength, attributes.binary);
+  } else if (columnType === 'CHAR') {
+    return DataTypes.CHAR(attributes.maxLength, attributes.binary);
+  } else if (columnType === 'TEXT') {
+    return DataTypes.TEXT;
+  } else if (columnType === 'DATE') {
+    return DataTypes.DATE(attributes.maxLength);
+  } else if (columnType === 'TIME') {
+    return DataTypes.TIME;
+  } else if (columnType === 'NOW') {
+    return DataTypes.NOW;
+  } else if (columnType === 'BOOLEAN') {
+    return DataTypes.BOOLEAN;
+  } else if (columnType === 'UUID') {
+    return DataTypes.UUID;
+  } else if (columnType === 'ENUM') {
+    return DataTypes.ENUM.apply(null, attributes.values);
+  } else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
+    return DataTypes.JSON;
+  } else if (
+    columnType === 'INT' ||
+    columnType === 'INTEGER' ||
+    columnType === 'SERIAL'
+  ) {
+    return DataTypes.INTEGER;
+  } else if (columnType === 'FLOAT') {
+    return DataTypes.FLOAT(attributes.length, attributes.decimals);
+  } else if (
+    columnType === 'BIGINT' ||
+    columnType === 'SMALLINT' ||
+    columnType === 'TINYINT' ||
+    columnType === 'MEDIUMINT' ||
+    columnType === 'DOUBLE' ||
+    columnType === 'DECIMAL' ||
+    columnType === 'REAL' ||
+    columnType === 'NUMERIC'
+  ) {
+    return DataTypes.NUMBER(getNumberProps(attributes));
   }
 
-  return [getDataType(), attributes];
+  throw new Error(`Unknown column type: ${columnType}`);
 }
 
 function getSequelizeConstraints(columnConstraints: string[]): string[] {

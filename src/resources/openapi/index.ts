@@ -21,6 +21,18 @@ interface Property {
   maximum?: number;
   default?: any;
   imutable?: boolean;
+  anyOf?: Property[];
+  allOf?: Property[];
+  oneOf?: Property[];
+  not?: Property;
+  items?: Property;
+  required?: string[];
+  properties?: SchemaProperties;
+  additionalProperties?: boolean;
+  format?: string;
+  nullable?: boolean;
+  readOnly?: boolean;
+  writeOnly?: boolean;
 }
 
 interface SchemaProperties {
@@ -72,7 +84,7 @@ export function generateOpenapiSchemas(
   const required: string[] = [];
 
   attributeKeys.forEach((key) => {
-    const data = columns[key];
+    const column = columns[key];
     const attribute = model.getAttributes()[key];
     const propertyType = convertType(attribute.type.constructor.name);
 
@@ -83,36 +95,39 @@ export function generateOpenapiSchemas(
 
     if (
       property.type === 'string' &&
-      'maxLength' in data &&
-      data.maxLength !== undefined
+      'maxLength' in column &&
+      column.maxLength !== undefined
     ) {
-      property.maxLength = data.maxLength;
+      property.maxLength = column.maxLength;
     }
 
     if (attribute.type.constructor.name === 'ENUM') {
       property.type = 'string';
-      property.enum = data.values;
+      property.enum = column.values;
     }
 
-    if ('min' in data) {
-      property.minimum = data.min;
+    if ('min' in column) {
+      property.minimum = column.min;
     }
 
-    if ('max' in data) {
-      property.maximum = data.max;
+    if ('max' in column) {
+      property.maximum = column.max;
     }
 
-    if ('defaultValue' in data) {
-      property.default = data.defaultValue;
+    if ('defaultValue' in column) {
+      property.default = column.defaultValue;
     }
 
-    if ('imutable' in data) {
-      property.imutable = data.imutable;
+    if ('imutable' in column) {
+      property.imutable = column.imutable;
+    }
+
+    if (column.allowNull === true) {
+      property.nullable = true;
     }
 
     properties[key] = property;
-
-    if (!attribute.allowNull || data.required) {
+    if (!attribute.allowNull || column.required) {
       required.push(key);
     }
   });

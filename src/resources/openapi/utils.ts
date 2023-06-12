@@ -56,7 +56,7 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
                 continue;
               }
 
-              const schemaKey = JSON.stringify(path);
+              const schemaKey = JSON.stringify(schema);
 
               // Check if the schema has already been registered
               if (schemasCache[schemaKey]) {
@@ -123,9 +123,11 @@ function getReferenceSchemaNameInner(
   statusCode: string | number
 ): string {
   return `${method.toUpperCase()}_${path.replace(
-    /[\/\:]/g,
+    /[\/\:\{\}]/g,
     '_'
-  )}_${statusCode}`.replace(/__/g, '_');
+  )}_${statusCode}`
+    .replace(/__/g, '_')
+    .replace(/_$/, '');
 }
 
 function resolvePlural(resourceName: string): string {
