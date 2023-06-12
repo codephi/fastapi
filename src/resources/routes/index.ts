@@ -317,7 +317,9 @@ export class CreateRoutes {
       const responseBody = operation.requestBody as RequestBody;
       const schema = responseBody.content['application/json'].schema as Schema;
 
-      route.schema.body = responseToProperties(schema);
+      route.schema.body = responseToProperties(
+        filterPropertiesRecursive(schema)
+      );
     }
 
     if (
@@ -356,10 +358,9 @@ function queryToProperties(properties: Parameter[]) {
 }
 
 function responseToProperties(properties: Schema) {
-  const propertiesFiltered = filterPropertiesRecursive(properties);
   const newProperties: { [key: string]: Schema } = {};
 
-  Object.entries(propertiesFiltered).forEach(([key, value]) => {
+  Object.entries(properties).forEach(([key, value]) => {
     newProperties[key] = propertiesToItems(value);
   });
 
