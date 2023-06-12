@@ -1,13 +1,6 @@
 import { RouteHandler } from 'fastify';
 import { Handlers, InnerOperation } from '../routes';
-import {
-  OpenAPI,
-  Operation,
-  Schema,
-  Response,
-  Parameter,
-  Path
-} from './openapiTypes';
+import { OpenAPI, Operation, Response, Parameter, Path } from './openapiTypes';
 
 export function extractByMethod(
   method: string,
@@ -59,7 +52,11 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
             const schema = mediaType.schema;
 
             if (schema) {
-              const schemaKey = JSON.stringify(schema);
+              if ('$ref' in schema) {
+                continue;
+              }
+
+              const schemaKey = JSON.stringify(path);
 
               // Check if the schema has already been registered
               if (schemasCache[schemaKey]) {
@@ -68,10 +65,11 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
                   $ref: `#/components/schemas/${schemasCache[schemaKey]}`
                 };
               } else {
-                const schemaName = `${method.toUpperCase()}_${path.replace(
-                  /\//g,
-                  '_'
-                )}_${statusCode}`;
+                const schemaName = getReferenceSchemaNameInner(
+                  path,
+                  method,
+                  statusCode
+                );
 
                 // Add the schema to the schemas object
                 schemasCache[schemaKey] = schemaName;
@@ -105,6 +103,29 @@ function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
   }
 
   return openAPI;
+}
+
+export function getReferenceSchemaName(
+  path: string,
+  method: string,
+  statusCode: string | number
+): string {
+  return `#/components/schemas/${getReferenceSchemaNameInner(
+    path,
+    method,
+    statusCode
+  )}`;
+}
+
+function getReferenceSchemaNameInner(
+  path: string,
+  method: string,
+  statusCode: string | number
+): string {
+  return `${method.toUpperCase()}_${path.replace(
+    /[\/\:]/g,
+    '_'
+  )}_${statusCode}`.replace(/__/g, '_');
 }
 
 function resolvePlural(resourceName: string): string {
