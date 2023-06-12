@@ -39,8 +39,8 @@ interface SchemaProperties {
   [key: string]: Property;
 }
 
-const resolveTags = (model: any, tags: string[] = []): string[] => {
-  const resourceName = model.name.toLowerCase();
+const resolveTags = (name: string, tags: string[] = []): string[] => {
+  const resourceName = name.toLowerCase();
 
   return tags.map((tag) => {
     if (tag.indexOf('$name') > -1) {
@@ -90,7 +90,7 @@ export function generateOpenapiSchemas(
 
     const property: Property = {
       ...propertyType,
-      description: `${model.name} ${key}`
+      description: `${name} ${key}`
     };
 
     if (
@@ -177,31 +177,23 @@ export function generateOpenapiSchemas(
   const requestProperties = makeRequestProperties();
 
   const responseResolvedPost = makeResponses(
-    model.name,
+    name,
     201,
     requestProperties,
     true
   );
-  const responseResolvedDelete = makeResponses(
-    model.name,
-    204,
-    requestProperties
-  );
-  const responseResolvedGetAndPut = makeResponses(
-    model.name,
-    200,
-    requestProperties
-  );
+  const responseResolvedDelete = makeResponses(name, 204, requestProperties);
+  const responseResolvedGetAndPut = makeResponses(name, 200, requestProperties);
   const responseResolvedList = makeResponses(
-    model.name,
+    name,
     200,
     makeAllResponseProperties()
   );
 
   const operationGet: Operation = {
-    summary: `List ${model.name}`,
-    description: `List and search ${model.name}`,
-    tags: resolveTags(model, tags.list),
+    summary: `List ${name}`,
+    description: `List and search ${name}`,
+    tags: resolveTags(name, tags.list),
     'x-admin': {
       types: (() => {
         if (search && search.length > 0) {
@@ -210,7 +202,7 @@ export function generateOpenapiSchemas(
           return ['list'];
         }
       })(),
-      groupName: model.name,
+      groupName: name,
       resourceName: 'List',
       references: (() => {
         const references: AdminReferences = {
@@ -294,9 +286,9 @@ export function generateOpenapiSchemas(
     paths: {
       [`/api/${resourcePlural}`]: {
         get: {
-          summary: `List ${model.name}`,
-          description: `List and search ${model.name}`,
-          tags: resolveTags(model, tags.list),
+          summary: `List ${name}`,
+          description: `List and search ${name}`,
+          tags: resolveTags(name, tags.list),
           'x-admin': {
             types: (() => {
               if (search && search.length > 0) {
@@ -305,7 +297,7 @@ export function generateOpenapiSchemas(
                 return ['list'];
               }
             })(),
-            groupName: model.name,
+            groupName: name,
             resourceName: 'List',
             references: (() => {
               const references: AdminReferences = {
@@ -385,14 +377,14 @@ export function generateOpenapiSchemas(
           responses: responseResolvedList
         },
         post: {
-          summary: `Create ${model.name}`,
+          summary: `Create ${name}`,
           'x-admin': {
             types: ['create'],
-            groupName: model.name,
+            groupName: name,
             resourceName: 'Create'
           },
-          description: `Create ${model.name}`,
-          tags: resolveTags(model, tags.create),
+          description: `Create ${name}`,
+          tags: resolveTags(name, tags.create),
           requestBody: {
             content: {
               'application/json': {
@@ -408,19 +400,19 @@ export function generateOpenapiSchemas(
       },
       [`/api/${resourcePlural}/{id}`]: {
         get: {
-          summary: `Get ${model.name} by ID`,
+          summary: `Get ${name} by ID`,
           'x-admin': {
             types: ['read'],
-            groupName: model.name,
+            groupName: name,
             resourceName: 'Read'
           },
-          description: `Get ${model.name} by ID`,
-          tags: resolveTags(model, tags.read),
+          description: `Get ${name} by ID`,
+          tags: resolveTags(name, tags.read),
           parameters: [
             {
               name: 'id',
               in: 'path',
-              description: `${model.name} ID`,
+              description: `${name} ID`,
               schema: {
                 type: 'integer'
               },
@@ -430,19 +422,19 @@ export function generateOpenapiSchemas(
           responses: responseResolvedGetAndPut
         },
         put: {
-          summary: `Update ${model.name}`,
+          summary: `Update ${name}`,
           'x-admin': {
             types: ['update'],
-            groupName: model.name,
+            groupName: name,
             resourceName: 'Update'
           },
-          description: `Update ${model.name}`,
-          tags: resolveTags(model, tags.update),
+          description: `Update ${name}`,
+          tags: resolveTags(name, tags.update),
           parameters: [
             {
               name: 'id',
               in: 'path',
-              description: `${model.name} ID`,
+              description: `${name} ID`,
               schema: {
                 type: 'integer'
               },
@@ -462,19 +454,19 @@ export function generateOpenapiSchemas(
           responses: responseResolvedGetAndPut
         },
         delete: {
-          summary: `Delete ${model.name}`,
+          summary: `Delete ${name}`,
           'x-admin': {
             types: ['delete'],
-            groupName: model.name,
+            groupName: name,
             resourceName: 'Delete'
           },
-          description: `Delete ${model.name}`,
-          tags: resolveTags(model, tags.delete),
+          description: `Delete ${name}`,
+          tags: resolveTags(name, tags.delete),
           parameters: [
             {
               name: 'id',
               in: 'path',
-              description: `${model.name} ID`,
+              description: `${name} ID`,
               schema: {
                 type: 'integer'
               },
