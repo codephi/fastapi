@@ -170,6 +170,13 @@ describe('FastAPI', () => {
           type: 'string',
           allowNull: false
         })
+        .table('chats')
+        .column({
+          name: 'messageId',
+          type: 'int',
+          allowNull: false,
+          reference: 'messages'
+        })
         .build();
 
       const sequelize = new Sequelize('sqlite::memory:', {
@@ -329,6 +336,25 @@ describe('FastAPI', () => {
       const responseGet = await fastAPI.api.inject({
         method: 'GET',
         url: '/openapi.json'
+      });
+
+      expect(responseGet.statusCode).toBe(200);
+    });
+
+    it('should relationship', async () => {
+      const data = await fastAPI.api.inject({
+        method: 'POST',
+        url: '/api/chats',
+        payload: {
+          messageId: 1
+        }
+      });
+
+      expect(data.statusCode).toBe(201);
+
+      const responseGet = await fastAPI.api.inject({
+        method: 'GET',
+        url: '/api/chats/1'
       });
 
       expect(responseGet.statusCode).toBe(200);

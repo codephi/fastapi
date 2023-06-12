@@ -1,6 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import { global } from '../../middle/database';
 import * as fs from 'fs';
+import { convertToSingle } from '../openapi/utils';
 
 export type DataTypesResult =
   | DataTypes.StringDataType
@@ -67,6 +68,8 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
   for (const table of jsonSchema.tables) {
     const tableColumns: Record<string, any> = {};
     const tableName = getTableName(table.name);
+    const singleName = convertToSingle(tableName);
+    // const modelName = singleName.charAt(0).toUpperCase() + singleName.slice(1);
     const resurceName = getResourceName(table.name);
     const resource = {
       primaryKey: null,
@@ -113,14 +116,14 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
       resource.columns[columnName] = column;
     }
 
-    class Table extends Model {}
+    class DynamicTable extends Model {}
 
-    Table.init(tableColumns, {
+    DynamicTable.init(tableColumns, {
       sequelize: global.getSequelize(),
-      tableName
+      modelName: singleName
     });
 
-    resource.model = Table;
+    resource.model = DynamicTable;
 
     resources[resurceName] = resource;
   }
