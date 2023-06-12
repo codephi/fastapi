@@ -19,7 +19,7 @@ export function extractByMethod(
   }
 }
 
-function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
+export function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI {
   const schemasCache: Record<string, string> = {};
 
   // Create the components object if it doesn't exist
@@ -130,8 +130,10 @@ function getReferenceSchemaNameInner(
     .replace(/_$/, '');
 }
 
-function resolvePlural(resourceName: string): string {
+export function convertToPlural(resourceName: string): string {
   return resourceName.endsWith('s') ? resourceName : `${resourceName}s`;
 }
 
-export { convertOpenAPItoSchemas, resolvePlural };
+export function convertToSingle(resourceName: string): string {
+  return resourceName.endsWith('s') ? resourceName.slice(0, -1) : resourceName;
+}

@@ -1,4 +1,4 @@
-import { resolvePlural } from './openapi/utils';
+import { convertToPlural } from './openapi/utils';
 
 export interface EventCallback {
   (err: any, data: any): void;
@@ -15,7 +15,7 @@ export function on(
   action: string,
   callback: EventCallback
 ): void {
-  const event = `${resolvePlural(modelName.toLowerCase())}.${action}`;
+  const event = `${convertToPlural(modelName.toLowerCase())}.${action}`;
 
   if (!eventsStorage[event]) {
     eventsStorage[event] = [];
@@ -30,7 +30,7 @@ export function emit(
   err: any,
   data?: any
 ): void {
-  const event = `${resolvePlural(modelName.toLowerCase())}.${action}`;
+  const event = `${convertToPlural(modelName.toLowerCase())}.${action}`;
 
   if (eventsStorage[event]) {
     eventsStorage[event].forEach((callback) => {

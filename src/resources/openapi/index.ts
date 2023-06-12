@@ -2,7 +2,7 @@ import { Resource } from '../sequelize';
 import { convertType } from './dataTypes';
 import { AdminReferences, OpenAPI, Operation } from './openapiTypes';
 import { makeResponses } from './responses';
-import { resolvePlural } from './utils';
+import { convertToPlural, convertToSingle } from './utils';
 
 export interface Tags {
   create: string[];
@@ -78,7 +78,10 @@ export function generateOpenapiSchemas(
 ): OpenAPI {
   const { model, columns, search, name } = resource;
   const resourceName = name.toLowerCase();
-  const resourcePlural = resolvePlural(resourceName);
+  const singleName = convertToSingle(name);
+  const pluralName = convertToPlural(resourceName);
+  const groupName = singleName.charAt(0).toUpperCase() + singleName.slice(1);
+
   const attributeKeys = Object.keys(model.getAttributes());
   const properties: SchemaProperties = {};
   const required: string[] = [];
@@ -202,7 +205,7 @@ export function generateOpenapiSchemas(
           return ['list'];
         }
       })(),
-      groupName: name,
+      groupName,
       resourceName: 'List',
       references: (() => {
         const references: AdminReferences = {
@@ -284,7 +287,7 @@ export function generateOpenapiSchemas(
 
   return {
     paths: {
-      [`/api/${resourcePlural}`]: {
+      [`/api/${pluralName}`]: {
         get: {
           summary: `List ${name}`,
           description: `List and search ${name}`,
@@ -297,7 +300,7 @@ export function generateOpenapiSchemas(
                 return ['list'];
               }
             })(),
-            groupName: name,
+            groupName,
             resourceName: 'List',
             references: (() => {
               const references: AdminReferences = {
@@ -380,7 +383,7 @@ export function generateOpenapiSchemas(
           summary: `Create ${name}`,
           'x-admin': {
             types: ['create'],
-            groupName: name,
+            groupName,
             resourceName: 'Create'
           },
           description: `Create ${name}`,
@@ -398,12 +401,12 @@ export function generateOpenapiSchemas(
           responses: responseResolvedPost
         }
       },
-      [`/api/${resourcePlural}/{id}`]: {
+      [`/api/${pluralName}/{id}`]: {
         get: {
           summary: `Get ${name} by ID`,
           'x-admin': {
             types: ['read'],
-            groupName: name,
+            groupName,
             resourceName: 'Read'
           },
           description: `Get ${name} by ID`,
@@ -425,7 +428,7 @@ export function generateOpenapiSchemas(
           summary: `Update ${name}`,
           'x-admin': {
             types: ['update'],
-            groupName: name,
+            groupName,
             resourceName: 'Update'
           },
           description: `Update ${name}`,
@@ -457,7 +460,7 @@ export function generateOpenapiSchemas(
           summary: `Delete ${name}`,
           'x-admin': {
             types: ['delete'],
-            groupName: name,
+            groupName,
             resourceName: 'Delete'
           },
           description: `Delete ${name}`,
