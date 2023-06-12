@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, ModelAttributes, ModelStatic } from 'sequelize';
 import { global } from '../../middle/database';
 import * as fs from 'fs';
 import { convertToSingle } from '../openapi/utils';
@@ -40,6 +40,7 @@ export interface Column {
   binary?: boolean;
   length?: number;
   decimals?: number;
+  subtype?: string;
 }
 
 export interface Relationship {
@@ -307,6 +308,8 @@ function getSequelizeDataType(column: Column): DataTypesResult {
     columnType === 'NUMERIC'
   ) {
     return DataTypes.NUMBER(getNumberProps(attributes));
+  } else if (columnType === 'CODE') {
+    return DataTypes.STRING(attributes.maxLength, attributes.binary);
   }
 
   throw new Error(`Unknown column type: ${columnType}`);
