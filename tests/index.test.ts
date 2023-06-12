@@ -189,7 +189,7 @@ describe('FastAPI', () => {
 
       fastAPI.setSchema(helloSchema);
 
-      fastAPI.api.log.level = 'silent';
+      // fastAPI.api.log.level = 'silent';
 
       fastAPI.setDatabaseInstance(sequelize);
     });
