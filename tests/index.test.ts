@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import {
+  AutoColumn,
   FastAPI,
   makeResponses,
   RoutesBuilder,
@@ -158,28 +159,16 @@ describe('FastAPI', () => {
     const fastAPI = new FastAPI();
 
     beforeAll(async () => {
-      const schema = new SchemaBuilder();
+      const schema = new SchemaBuilder({
+        auto: [AutoColumn.ID, AutoColumn.CREATED_AT, AutoColumn.UPDATED_AT]
+      });
 
       const helloSchema = schema
         .table('messages')
         .column({
-          name: 'id',
-          type: 'integer',
-          primaryKey: true,
-          autoIncrement: true
-        })
-        .column({
           name: 'message',
           type: 'string',
           allowNull: false
-        })
-        .column({
-          name: 'createdAt',
-          type: 'date'
-        })
-        .column({
-          name: 'updatedAt',
-          type: 'date'
         })
         .build();
 
