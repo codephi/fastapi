@@ -1,16 +1,9 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "createFullDoc", {
-    enumerable: true,
-    get: function() {
-        return createFullDoc;
-    }
-});
-const _utils = require("./utils");
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createFullDoc = void 0;
+var utils_1 = require("./utils");
 function createFullDoc(paths) {
-    const openapi = {
+    var openapi = {
         openapi: '3.0.0',
         info: {
             title: process.env.APP_NAME || 'Fastapi',
@@ -24,10 +17,11 @@ function createFullDoc(paths) {
         ],
         paths: resolvePaths(paths)
     };
-    return (0, _utils.convertOpenAPItoSchemas)(openapi);
+    return (0, utils_1.convertOpenAPItoSchemas)(openapi);
 }
-const resolvePaths = (schemas)=>{
-    Object.keys(schemas).forEach((path)=>{
+exports.createFullDoc = createFullDoc;
+var resolvePaths = function (schemas) {
+    Object.keys(schemas).forEach(function (path) {
         schemas[path].servers = [
             {
                 url: process.env.APP_URL || 'http://localhost:3000'
@@ -35,6 +29,4 @@ const resolvePaths = (schemas)=>{
         ];
     });
     return schemas;
-};
-hemas;
 };

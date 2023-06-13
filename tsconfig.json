@@ -6,6 +6,8 @@
     "outDir": "./dist",
     "resolveJsonModule": true,
     "noImplicitAny": true,
+    "declaration": true,
+    "declarationDir": "./types",
   },
   "include": [
     "./tests/**/*.ts",

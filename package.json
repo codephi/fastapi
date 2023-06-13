@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles --config=jest.config.js",
-    "build": "swc src -d src"
+    "build": "tsc src/index.ts --resolveJsonModule -d --outDir dist"
   },
   "author": "Philippe Assis <codephilippe@gmail.com>",
   "license": "MIT",
@@ -22,9 +22,6 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.0",
-    "@swc/cli": "^0.1.62",
-    "@swc/core": "^1.3.63",
-    "@swc/jest": "^0.2.26",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.2.5",
     "eslint": "^8.40.0",

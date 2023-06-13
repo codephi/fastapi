@@ -1,6 +1,8 @@
 import * as dictPtBr from '../../dicts/pt_BR.json';
 import { Op } from 'sequelize';
 
+const { iLike, or } = Op;
+
 const spellingDictionary: { [key: string]: string } = dictPtBr;
 
 function fixText(text: string): string[] {
@@ -17,7 +19,7 @@ function fixText(text: string): string[] {
 
 const formaCondition = (searchTerm: string) => {
   return {
-    [Op.iLike]: `%${searchTerm}%`
+    [iLike]: `%${searchTerm}%`
   };
 };
 
@@ -40,7 +42,7 @@ const addTerm = (target: any[], fullTarget: string): any[] => {
   return target;
 };
 
-const superFiler = (fields: string[], searchTerm: string) => {
+const superFilter = (fields: string[], searchTerm: string) => {
   let term = addTerm([], searchTerm);
 
   const textFixed = fixText(searchTerm);
@@ -67,7 +69,7 @@ const superFiler = (fields: string[], searchTerm: string) => {
   });
 
   return {
-    [Op.or]: termFields
+    [or]: termFields
   };
 };
 
@@ -93,4 +95,4 @@ function removeAccents(text: string): string {
   return text;
 }
 
-export { superFiler };
+export { superFilter };

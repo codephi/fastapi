@@ -1,4 +1,4 @@
-import { superFiler } from './superFilter';
+import { superFilter } from './superFilter';
 import { emit } from '../events';
 import { Resource } from '../sequelize';
 import log from '../log';
@@ -17,7 +17,7 @@ export function getAll(resource: Resource): RouteHandler {
 
       const searchFilter =
         resource.search && searchTerm
-          ? superFiler(resource.search, searchTerm)
+          ? superFilter(resource.search, searchTerm)
           : {};
 
       const data = await resource.model.findAndCountAll({
