@@ -1,36 +1,22 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateOpenapiSchemas = void 0;
-var dataTypes_1 = require("./dataTypes");
-var responses_1 = require("./responses");
-var utils_1 = require("./utils");
-var resolveTags = function (name, tags) {
-    if (tags === void 0) { tags = []; }
-    var resourceName = name.toLowerCase();
-    return tags.map(function (tag) {
+const dataTypes_1 = require("./dataTypes");
+const responses_1 = require("./responses");
+const utils_1 = require("./utils");
+const resolveTags = (name, tags = []) => {
+    const resourceName = name.toLowerCase();
+    return tags.map((tag) => {
         if (tag.indexOf('$name') > -1) {
             return tag.replace('$name', resourceName);
         }
         return tag;
     });
 };
-var removeImutable = function (properties, removeOnlyAllProp) {
-    if (removeOnlyAllProp === void 0) { removeOnlyAllProp = false; }
-    var newProperties = {};
-    Object.entries(properties).forEach(function (_a) {
-        var key = _a[0], value = _a[1];
-        var imutable = value.imutable;
+const removeImutable = (properties, removeOnlyAllProp = false) => {
+    const newProperties = {};
+    Object.entries(properties).forEach(([key, value]) => {
+        const imutable = value.imutable;
         delete value.imutable;
         if (removeOnlyAllProp && imutable) {
             return;
@@ -40,20 +26,22 @@ var removeImutable = function (properties, removeOnlyAllProp) {
     return newProperties;
 };
 function generateOpenapiSchemas(resource, tags) {
-    var _a;
-    var model = resource.model, columns = resource.columns, search = resource.search, name = resource.name;
-    var resourceName = name.toLowerCase();
-    var singleName = (0, utils_1.convertToSingle)(name);
-    var pluralName = (0, utils_1.convertToPlural)(resourceName);
-    var groupName = singleName.charAt(0).toUpperCase() + singleName.slice(1);
-    var attributeKeys = Object.keys(model.getAttributes());
-    var properties = {};
-    var required = [];
-    attributeKeys.forEach(function (key) {
-        var column = columns[key];
-        var attribute = model.getAttributes()[key];
-        var propertyType = (0, dataTypes_1.convertType)(attribute.type.constructor.name);
-        var property = __assign(__assign({}, propertyType), { description: "".concat(name, " ").concat(key) });
+    const { model, columns, search, name } = resource;
+    const resourceName = name.toLowerCase();
+    const singleName = (0, utils_1.convertToSingle)(name);
+    const pluralName = (0, utils_1.convertToPlural)(resourceName);
+    const groupName = singleName.charAt(0).toUpperCase() + singleName.slice(1);
+    const attributeKeys = Object.keys(model.getAttributes());
+    const properties = {};
+    const required = [];
+    attributeKeys.forEach((key) => {
+        const column = columns[key];
+        const attribute = model.getAttributes()[key];
+        const propertyType = (0, dataTypes_1.convertType)(attribute.type.constructor.name);
+        const property = {
+            ...propertyType,
+            description: `${name} ${key}`
+        };
         if (property.type === 'string' &&
             'maxLength' in column &&
             column.maxLength !== undefined) {
@@ -84,13 +72,13 @@ function generateOpenapiSchemas(resource, tags) {
             required.push(key);
         }
     });
-    var makeAllResponseProperties = function () {
+    const makeAllResponseProperties = () => {
         return {
             data: {
                 type: 'array',
                 properties: {
                     type: 'object',
-                    properties: __assign({}, properties)
+                    properties: { ...properties }
                 }
             },
             meta: {
@@ -104,34 +92,32 @@ function generateOpenapiSchemas(resource, tags) {
             }
         };
     };
-    var makeRequestProperties = function () {
+    const makeRequestProperties = () => {
         return removeImutable(properties, false);
     };
-    var makeCreateUpdateProperties = function () {
-        var postProperties = __assign({}, properties);
+    const makeCreateUpdateProperties = () => {
+        const postProperties = { ...properties };
         delete postProperties.id;
         delete postProperties.createdAt;
         delete postProperties.updatedAt;
         return removeImutable(postProperties, true);
     };
-    var getOrderByEnumValues = function () {
-        var sortFields = Object.keys(properties);
-        return sortFields.map(function (field) {
-            return field.startsWith('-') ? field.substr(1) : field;
-        });
+    const getOrderByEnumValues = () => {
+        const sortFields = Object.keys(properties);
+        return sortFields.map((field) => field.startsWith('-') ? field.substr(1) : field);
     };
-    var createUpdateProperties = makeCreateUpdateProperties();
-    var requestProperties = makeRequestProperties();
-    var responseResolvedPost = (0, responses_1.makeResponses)(name, 201, requestProperties, true);
-    var responseResolvedDelete = (0, responses_1.makeResponses)(name, 204, requestProperties);
-    var responseResolvedGetAndPut = (0, responses_1.makeResponses)(name, 200, requestProperties);
-    var responseResolvedList = (0, responses_1.makeResponses)(name, 200, makeAllResponseProperties());
-    var operationGet = {
-        summary: "List ".concat(name),
-        description: "List and search ".concat(name),
+    const createUpdateProperties = makeCreateUpdateProperties();
+    const requestProperties = makeRequestProperties();
+    const responseResolvedPost = (0, responses_1.makeResponses)(name, 201, requestProperties, true);
+    const responseResolvedDelete = (0, responses_1.makeResponses)(name, 204, requestProperties);
+    const responseResolvedGetAndPut = (0, responses_1.makeResponses)(name, 200, requestProperties);
+    const responseResolvedList = (0, responses_1.makeResponses)(name, 200, makeAllResponseProperties());
+    const operationGet = {
+        summary: `List ${name}`,
+        description: `List and search ${name}`,
         tags: resolveTags(name, tags.list),
         'x-admin': {
-            types: (function () {
+            types: (() => {
                 if (search && search.length > 0) {
                     return ['list', 'search'];
                 }
@@ -139,10 +125,10 @@ function generateOpenapiSchemas(resource, tags) {
                     return ['list'];
                 }
             })(),
-            groupName: groupName,
+            groupName,
             resourceName: 'List',
-            references: (function () {
-                var references = {
+            references: (() => {
+                const references = {
                     list: {
                         query: {
                             pageSize: 'page_size',
@@ -217,14 +203,14 @@ function generateOpenapiSchemas(resource, tags) {
         responses: responseResolvedList
     };
     return {
-        paths: (_a = {},
-            _a["/api/".concat(pluralName)] = {
+        paths: {
+            [`/api/${pluralName}`]: {
                 get: {
-                    summary: "List ".concat(name),
-                    description: "List and search ".concat(name),
+                    summary: `List ${name}`,
+                    description: `List and search ${name}`,
                     tags: resolveTags(name, tags.list),
                     'x-admin': {
-                        types: (function () {
+                        types: (() => {
                             if (search && search.length > 0) {
                                 return ['list', 'search'];
                             }
@@ -232,10 +218,10 @@ function generateOpenapiSchemas(resource, tags) {
                                 return ['list'];
                             }
                         })(),
-                        groupName: groupName,
+                        groupName,
                         resourceName: 'List',
-                        references: (function () {
-                            var references = {
+                        references: (() => {
+                            const references = {
                                 list: {
                                     query: {
                                         pageSize: 'page_size',
@@ -310,13 +296,13 @@ function generateOpenapiSchemas(resource, tags) {
                     responses: responseResolvedList
                 },
                 post: {
-                    summary: "Create ".concat(name),
+                    summary: `Create ${name}`,
                     'x-admin': {
                         types: ['create'],
-                        groupName: groupName,
+                        groupName,
                         resourceName: 'Create'
                     },
-                    description: "Create ".concat(name),
+                    description: `Create ${name}`,
                     tags: resolveTags(name, tags.create),
                     requestBody: {
                         content: {
@@ -331,21 +317,21 @@ function generateOpenapiSchemas(resource, tags) {
                     responses: responseResolvedPost
                 }
             },
-            _a["/api/".concat(pluralName, "/{id}")] = {
+            [`/api/${pluralName}/{id}`]: {
                 get: {
-                    summary: "Get ".concat(name, " by ID"),
+                    summary: `Get ${name} by ID`,
                     'x-admin': {
                         types: ['read'],
-                        groupName: groupName,
+                        groupName,
                         resourceName: 'Read'
                     },
-                    description: "Get ".concat(name, " by ID"),
+                    description: `Get ${name} by ID`,
                     tags: resolveTags(name, tags.read),
                     parameters: [
                         {
                             name: 'id',
                             in: 'path',
-                            description: "".concat(name, " ID"),
+                            description: `${name} ID`,
                             schema: {
                                 type: 'integer'
                             },
@@ -355,19 +341,19 @@ function generateOpenapiSchemas(resource, tags) {
                     responses: responseResolvedGetAndPut
                 },
                 put: {
-                    summary: "Update ".concat(name),
+                    summary: `Update ${name}`,
                     'x-admin': {
                         types: ['update'],
-                        groupName: groupName,
+                        groupName,
                         resourceName: 'Update'
                     },
-                    description: "Update ".concat(name),
+                    description: `Update ${name}`,
                     tags: resolveTags(name, tags.update),
                     parameters: [
                         {
                             name: 'id',
                             in: 'path',
-                            description: "".concat(name, " ID"),
+                            description: `${name} ID`,
                             schema: {
                                 type: 'integer'
                             },
@@ -387,19 +373,19 @@ function generateOpenapiSchemas(resource, tags) {
                     responses: responseResolvedGetAndPut
                 },
                 delete: {
-                    summary: "Delete ".concat(name),
+                    summary: `Delete ${name}`,
                     'x-admin': {
                         types: ['delete'],
-                        groupName: groupName,
+                        groupName,
                         resourceName: 'Delete'
                     },
-                    description: "Delete ".concat(name),
+                    description: `Delete ${name}`,
                     tags: resolveTags(name, tags.delete),
                     parameters: [
                         {
                             name: 'id',
                             in: 'path',
-                            description: "".concat(name, " ID"),
+                            description: `${name} ID`,
                             schema: {
                                 type: 'integer'
                             },
@@ -408,8 +394,9 @@ function generateOpenapiSchemas(resource, tags) {
                     ],
                     responses: responseResolvedDelete
                 }
-            },
-            _a)
+            }
+        }
     };
 }
 exports.generateOpenapiSchemas = generateOpenapiSchemas;
+//# sourceMappingURL=index.js.map

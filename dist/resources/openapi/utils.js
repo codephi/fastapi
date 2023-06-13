@@ -20,8 +20,7 @@ function extractByMethod(method, target) {
 }
 exports.extractByMethod = extractByMethod;
 function convertOpenAPItoSchemas(openAPI) {
-    var _a, _b;
-    var schemasCache = {};
+    const schemasCache = {};
     // Create the components object if it doesn't exist
     if (!openAPI.components) {
         openAPI.components = {};
@@ -31,77 +30,75 @@ function convertOpenAPItoSchemas(openAPI) {
         openAPI.components.schemas = {};
     }
     // Iterate over the paths defined in OpenAPI
-    for (var path in openAPI.paths) {
-        var pathItem = openAPI.paths[path];
-        var _loop_1 = function (method) {
+    for (const path in openAPI.paths) {
+        const pathItem = openAPI.paths[path];
+        for (const method in pathItem) {
             if (method !== 'parameters') {
-                var operation = extractByMethod(method, pathItem);
+                const operation = extractByMethod(method, pathItem);
                 if (!operation)
-                    return "continue";
-                var responses = operation.responses;
-                for (var statusCode in responses) {
-                    var response = responses[statusCode];
-                    var content = response.content;
-                    for (var contentType in content) {
-                        var mediaType = content[contentType];
-                        var schema = mediaType.schema;
+                    continue;
+                const { responses } = operation;
+                for (const statusCode in responses) {
+                    const response = responses[statusCode];
+                    const { content } = response;
+                    for (const contentType in content) {
+                        const mediaType = content[contentType];
+                        const schema = mediaType.schema;
                         if (schema) {
                             if ('$ref' in schema) {
                                 continue;
                             }
-                            var schemaKey = JSON.stringify(schema);
+                            const schemaKey = JSON.stringify(schema);
                             // Check if the schema has already been registered
                             if (schemasCache[schemaKey]) {
                                 // Reuse the existing schema
                                 mediaType.schema = {
-                                    $ref: "#/components/schemas/".concat(schemasCache[schemaKey])
+                                    $ref: `#/components/schemas/${schemasCache[schemaKey]}`
                                 };
                             }
                             else {
-                                var schemaName = getReferenceSchemaNameInner(path, method, statusCode);
+                                const schemaName = getReferenceSchemaNameInner(path, method, statusCode);
                                 // Add the schema to the schemas object
                                 schemasCache[schemaKey] = schemaName;
                                 openAPI.components.schemas[schemaName] = schema;
                                 // Update the reference to the schema
                                 mediaType.schema = {
-                                    $ref: "#/components/schemas/".concat(schemaName)
+                                    $ref: `#/components/schemas/${schemaName}`
                                 };
                             }
                         }
                     }
                 }
                 // Check for undeclared path parameters
-                var parameters = (_a = operation.parameters) !== null && _a !== void 0 ? _a : [];
-                var declaredPathParams_1 = (_b = path.match(/{\w+}/g)) !== null && _b !== void 0 ? _b : [];
-                parameters.forEach(function (parameter) {
+                const parameters = operation.parameters ?? [];
+                const declaredPathParams = path.match(/{\w+}/g) ?? [];
+                parameters.forEach((parameter) => {
                     if (parameter.in === 'path' &&
-                        !declaredPathParams_1.includes("{".concat(parameter.name, "}"))) {
-                        console.warn("Declared path parameter \"".concat(parameter.name, "\" needs to be defined as a path parameter at either the path or operation level"));
+                        !declaredPathParams.includes(`{${parameter.name}}`)) {
+                        console.warn(`Declared path parameter "${parameter.name}" needs to be defined as a path parameter at either the path or operation level`);
                     }
                 });
             }
-        };
-        for (var method in pathItem) {
-            _loop_1(method);
         }
     }
     return openAPI;
 }
 exports.convertOpenAPItoSchemas = convertOpenAPItoSchemas;
 function getReferenceSchemaName(path, method, statusCode) {
-    return "#/components/schemas/".concat(getReferenceSchemaNameInner(path, method, statusCode));
+    return `#/components/schemas/${getReferenceSchemaNameInner(path, method, statusCode)}`;
 }
 exports.getReferenceSchemaName = getReferenceSchemaName;
 function getReferenceSchemaNameInner(path, method, statusCode) {
-    return "".concat(method.toUpperCase(), "_").concat(path.replace(/[\/\:\{\}]/g, '_'), "_").concat(statusCode)
+    return `${method.toUpperCase()}_${path.replace(/[\/\:\{\}]/g, '_')}_${statusCode}`
         .replace(/__/g, '_')
         .replace(/_$/, '');
 }
 function convertToPlural(resourceName) {
-    return resourceName.endsWith('s') ? resourceName : "".concat(resourceName, "s");
+    return resourceName.endsWith('s') ? resourceName : `${resourceName}s`;
 }
 exports.convertToPlural = convertToPlural;
 function convertToSingle(resourceName) {
     return resourceName.endsWith('s') ? resourceName.slice(0, -1) : resourceName;
 }
 exports.convertToSingle = convertToSingle;
+//# sourceMappingURL=utils.js.map

@@ -14,3 +14,4 @@ export declare const convertType: (sequelizeType: string) => {
     format?: string;
 };
 export {};
+//# sourceMappingURL=dataTypes.d.ts.map

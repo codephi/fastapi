@@ -1,0 +1,1 @@
+{"version":3,"file":"createTables.d.ts","sourceRoot":"","sources":["../../../src/resources/sequelize/createTables.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,WAAW,EAAE,MAAM,WAAW,CAAC;AAIxC,wBAAsB,YAAY,CAChC,MAAM,EAAE,WAAW,EACnB,eAAe,UAAQ,GACtB,OAAO,CAAC,IAAI,CAAC,CAcf"}

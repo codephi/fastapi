@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeResponses = void 0;
-var errorResponse = function (description) {
+const errorResponse = (description) => {
     return {
-        description: description,
+        description,
         content: {
             'application/json': {
                 schema: {
@@ -19,7 +19,7 @@ var errorResponse = function (description) {
         }
     };
 };
-var resolveSchema = function (target) {
+const resolveSchema = (target) => {
     if (target.$ref) {
         return target;
     }
@@ -28,20 +28,18 @@ var resolveSchema = function (target) {
         properties: target
     };
 };
-var makeResponses = function (resourceName, defaultSuccessStatusCode, successProperties, conflict) {
-    var _a;
-    if (conflict === void 0) { conflict = false; }
-    var responses = (_a = {},
-        _a[defaultSuccessStatusCode] = {
-            description: "Response for get ".concat(resourceName),
+const makeResponses = (resourceName, defaultSuccessStatusCode, successProperties, conflict = false) => {
+    const responses = {
+        [defaultSuccessStatusCode]: {
+            description: `Response for get ${resourceName}`,
             content: {
                 'application/json': {
                     schema: resolveSchema(successProperties)
                 }
             }
-        },
-        _a);
-    var errors = {
+        }
+    };
+    const errors = {
         '400': 'Bad Request',
         '401': 'Unauthorized',
         '403': 'Forbidden',
@@ -51,10 +49,11 @@ var makeResponses = function (resourceName, defaultSuccessStatusCode, successPro
     if (conflict) {
         errors['409'] = 'Conflict';
     }
-    Object.keys(errors).forEach(function (statusCode) {
-        var description = errors[statusCode];
+    Object.keys(errors).forEach((statusCode) => {
+        const description = errors[statusCode];
         responses[parseInt(statusCode)] = errorResponse(description);
     });
     return responses;
 };
 exports.makeResponses = makeResponses;
+//# sourceMappingURL=responses.js.map

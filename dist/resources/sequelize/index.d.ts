@@ -47,3 +47,4 @@ export interface Resources {
     [resurceName: string]: Resource;
 }
 export declare function importResources(target: string | Schema): Resources;
+//# sourceMappingURL=index.d.ts.map

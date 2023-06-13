@@ -7,11 +7,11 @@
     "resolveJsonModule": true,
     "noImplicitAny": true,
     "declaration": true,
-    "declarationDir": "./types",
+    "sourceMap": true,
+    "declarationMap": true
   },
   "include": [
-    "./tests/**/*.ts",
-    "../src/index.d.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

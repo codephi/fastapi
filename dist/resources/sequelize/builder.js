@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchemaBuilder = exports.AutoColumn = exports.TableBuilder = void 0;
-var TableBuilder = /** @class */ (function () {
-    function TableBuilder(props) {
+class TableBuilder {
+    constructor(props) {
         this.columns = [];
         this.search = [];
         this.builded = false;
@@ -11,22 +11,22 @@ var TableBuilder = /** @class */ (function () {
         this.parent = props.parent;
         this.auto = props.auto;
     }
-    TableBuilder.prototype.column = function (column) {
+    column(column) {
         this.columns.push(column);
         return this;
-    };
-    TableBuilder.prototype.searchColumn = function (column) {
+    }
+    searchColumn(column) {
         this.search.push(column);
         return this;
-    };
-    TableBuilder.prototype.table = function (name) {
+    }
+    table(name) {
         this.buildTable();
         return this.parent.table(name);
-    };
-    TableBuilder.prototype.columnExists = function (name) {
-        return this.columns.find(function (column) { return column.name === name; }) !== undefined;
-    };
-    TableBuilder.prototype.createdUpdated = function () {
+    }
+    columnExists(name) {
+        return this.columns.find((column) => column.name === name) !== undefined;
+    }
+    createdUpdated() {
         if (this.auto.includes(AutoColumn.CREATED_AT) &&
             !this.columnExists('createdAt')) {
             this.column({
@@ -50,8 +50,8 @@ var TableBuilder = /** @class */ (function () {
                 primaryKey: true
             });
         }
-    };
-    TableBuilder.prototype.buildTable = function () {
+    }
+    buildTable() {
         if (this.builded)
             return;
         this.createdUpdated();
@@ -61,13 +61,12 @@ var TableBuilder = /** @class */ (function () {
             columns: this.columns,
             search: this.search
         });
-    };
-    TableBuilder.prototype.build = function () {
+    }
+    build() {
         this.buildTable();
         return this.parent.build();
-    };
-    return TableBuilder;
-}());
+    }
+}
 exports.TableBuilder = TableBuilder;
 var AutoColumn;
 (function (AutoColumn) {
@@ -75,25 +74,24 @@ var AutoColumn;
     AutoColumn[AutoColumn["CREATED_AT"] = 1] = "CREATED_AT";
     AutoColumn[AutoColumn["UPDATED_AT"] = 2] = "UPDATED_AT";
 })(AutoColumn || (exports.AutoColumn = AutoColumn = {}));
-var SchemaBuilder = /** @class */ (function () {
-    function SchemaBuilder(props) {
-        if (props === void 0) { props = {}; }
+class SchemaBuilder {
+    constructor(props = {}) {
         this.auto = [];
         this.schema = {
             tables: []
         };
         this.auto = props.auto || [];
     }
-    SchemaBuilder.prototype.table = function (table) {
+    table(table) {
         return new TableBuilder({
             name: table,
             parent: this,
             auto: this.auto
         });
-    };
-    SchemaBuilder.prototype.build = function () {
+    }
+    build() {
         return this.schema;
-    };
-    return SchemaBuilder;
-}());
+    }
+}
 exports.SchemaBuilder = SchemaBuilder;
+//# sourceMappingURL=builder.js.map

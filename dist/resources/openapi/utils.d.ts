@@ -6,3 +6,4 @@ export declare function convertOpenAPItoSchemas(openAPI: OpenAPI): OpenAPI;
 export declare function getReferenceSchemaName(path: string, method: string, statusCode: string | number): string;
 export declare function convertToPlural(resourceName: string): string;
 export declare function convertToSingle(resourceName: string): string;
+//# sourceMappingURL=utils.d.ts.map

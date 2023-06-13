@@ -1,20 +1,9 @@
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolveResponses = exports.CreateRoutes = exports.RoutesBuilder = exports.PathBuilder = exports.routesToPaths = exports.MethodType = void 0;
-var routes_1 = require("./routes");
-var responses_1 = require("../openapi/responses");
-var utils_1 = require("../openapi/utils");
+const routes_1 = require("./routes");
+const responses_1 = require("../openapi/responses");
+const utils_1 = require("../openapi/utils");
 var MethodType;
 (function (MethodType) {
     MethodType["GET"] = "get";
@@ -33,62 +22,62 @@ function getOperations(value) {
     };
 }
 function routesToPaths(routes) {
-    var paths = {};
-    Object.keys(routes).forEach(function (path) {
+    const paths = {};
+    Object.keys(routes).forEach((path) => {
         paths[path] = {};
-        var route = routes[path];
+        const route = routes[path];
         if (route.get) {
-            var _a = route.get, handler = _a.handler, get = __rest(_a, ["handler"]);
+            const { handler, ...get } = route.get;
             paths[path].get = get;
         }
         if (route.post) {
-            var _b = route.post, handler = _b.handler, post = __rest(_b, ["handler"]);
+            const { handler, ...post } = route.post;
             paths[path].post = post;
         }
         if (route.put) {
-            var _c = route.put, handler = _c.handler, put = __rest(_c, ["handler"]);
+            const { handler, ...put } = route.put;
             paths[path].put = put;
         }
         if (route.delete) {
-            var _d = route.delete, handler = _d.handler, del = __rest(_d, ["handler"]);
+            const { handler, ...del } = route.delete;
             paths[path].delete = del;
         }
         if (route.patch) {
-            var _e = route.patch, handler = _e.handler, patch = __rest(_e, ["handler"]);
+            const { handler, ...patch } = route.patch;
             paths[path].patch = patch;
         }
     });
     return paths;
 }
 exports.routesToPaths = routesToPaths;
-var PathBuilder = /** @class */ (function () {
-    function PathBuilder(parent, pathName) {
+class PathBuilder {
+    constructor(parent, pathName) {
         this.methods = {};
         this.builded = false;
         this.pathName = pathName;
         this.parent = parent;
     }
-    PathBuilder.prototype.get = function (route) {
+    get(route) {
         this.methods.get = route;
         return this;
-    };
-    PathBuilder.prototype.post = function (route) {
+    }
+    post(route) {
         this.methods.post = route;
         return this;
-    };
-    PathBuilder.prototype.put = function (route) {
+    }
+    put(route) {
         this.methods.put = route;
         return this;
-    };
-    PathBuilder.prototype.delete = function (route) {
+    }
+    delete(route) {
         this.methods.delete = route;
         return this;
-    };
-    PathBuilder.prototype.patch = function (route) {
+    }
+    patch(route) {
         this.methods.patch = route;
         return this;
-    };
-    PathBuilder.prototype.buildPath = function () {
+    }
+    buildPath() {
         if (this.builded) {
             return;
         }
@@ -108,46 +97,42 @@ var PathBuilder = /** @class */ (function () {
         if (this.methods.patch) {
             this.parent.addRoute(this.pathName, MethodType.PATCH, this.methods.patch);
         }
-    };
-    PathBuilder.prototype.path = function (path) {
+    }
+    path(path) {
         this.buildPath();
         return new PathBuilder(this.parent, path);
-    };
-    PathBuilder.prototype.responses = function (defaultSuccessStatusCode, successProperties, conflict) {
-        if (conflict === void 0) { conflict = false; }
+    }
+    responses(defaultSuccessStatusCode, successProperties, conflict = false) {
         return this.parent.responses(defaultSuccessStatusCode, successProperties, conflict);
-    };
-    PathBuilder.prototype.build = function () {
+    }
+    build() {
         this.buildPath();
         return this.parent.build();
-    };
-    return PathBuilder;
-}());
-exports.PathBuilder = PathBuilder;
-var RoutesBuilder = /** @class */ (function () {
-    function RoutesBuilder(resourceName) {
-        this.routes = {};
-        this.resourceName = resourceName !== null && resourceName !== void 0 ? resourceName : 'default';
     }
-    RoutesBuilder.prototype.addRoute = function (path, method, route) {
+}
+exports.PathBuilder = PathBuilder;
+class RoutesBuilder {
+    constructor(resourceName) {
+        this.routes = {};
+        this.resourceName = resourceName ?? 'default';
+    }
+    addRoute(path, method, route) {
         if (!this.routes[path]) {
             this.routes[path] = {};
         }
         this.routes[path][method] = route;
-    };
-    RoutesBuilder.prototype.path = function (path) {
-        var pathBuilder = new PathBuilder(this, path);
+    }
+    path(path) {
+        const pathBuilder = new PathBuilder(this, path);
         return pathBuilder;
-    };
-    RoutesBuilder.prototype.responses = function (defaultSuccessStatusCode, successProperties, conflict) {
-        if (conflict === void 0) { conflict = false; }
+    }
+    responses(defaultSuccessStatusCode, successProperties, conflict = false) {
         return (0, responses_1.makeResponses)(this.resourceName, defaultSuccessStatusCode, successProperties, conflict);
-    };
-    RoutesBuilder.prototype.build = function () {
+    }
+    build() {
         return this.routes;
-    };
-    return RoutesBuilder;
-}());
+    }
+}
 exports.RoutesBuilder = RoutesBuilder;
 function isHandler(handlers) {
     if (handlers === undefined) {
@@ -162,64 +147,56 @@ function isHandler(handlers) {
     }
     return false;
 }
-var CreateRoutes = /** @class */ (function () {
-    function CreateRoutes(api) {
+class CreateRoutes {
+    constructor(api) {
         this.api = api;
     }
-    CreateRoutes.prototype.createRoutes = function (routes) {
-        var _this = this;
-        Object.entries(routes).forEach(function (_a) {
-            var path = _a[0], methods = _a[1];
-            Object.entries(methods).forEach(function (_a) {
-                var method = _a[0], route = _a[1];
-                var handler = route.handler, operation = __rest(route, ["handler"]);
-                _this.createRouteInner({ path: path, method: method, operation: operation, handler: handler });
+    createRoutes(routes) {
+        Object.entries(routes).forEach(([path, methods]) => {
+            Object.entries(methods).forEach(([method, route]) => {
+                const { handler, ...operation } = route;
+                this.createRouteInner({ path, method, operation, handler });
             });
         });
-    };
-    CreateRoutes.prototype.createRouteResource = function (_a) {
-        var _this = this;
-        var paths = _a.paths, resource = _a.resource, handlers = _a.handlers;
-        Object.entries(paths).forEach(function (_a) {
-            var path = _a[0], value = _a[1];
-            var innerOperation = getOperations(value);
-            Object.keys(innerOperation).forEach(function (method) {
-                var operation = (0, utils_1.extractByMethod)(method, innerOperation);
+    }
+    createRouteResource({ paths, resource, handlers }) {
+        Object.entries(paths).forEach(([path, value]) => {
+            const innerOperation = getOperations(value);
+            Object.keys(innerOperation).forEach((method) => {
+                const operation = (0, utils_1.extractByMethod)(method, innerOperation);
                 if (!operation) {
                     return;
                 }
-                var handler = isHandler(handlers)
+                const handler = isHandler(handlers)
                     ? (0, utils_1.extractByMethod)(method, handlers)
                     : getRouteHandler(method, resource, operation);
                 if (handler === undefined) {
                     return;
                 }
-                _this.createRouteInner({ path: path, method: method, operation: operation, handler: handler });
+                this.createRouteInner({ path, method, operation, handler });
             });
         });
-    };
-    CreateRoutes.prototype.createRouteInner = function (_a) {
-        var _b;
-        var path = _a.path, method = _a.method, operation = _a.operation, handler = _a.handler;
-        var route = {
+    }
+    createRouteInner({ path, method, operation, handler }) {
+        const route = {
             method: method.toUpperCase(),
             url: resolvePath(path),
             schema: {
                 response: resolveResponses(operation.responses)
             },
-            handler: handler
+            handler
         };
         if (route.schema !== undefined && operation.requestBody !== undefined) {
-            var responseBody = operation.requestBody;
-            var schema = responseBody.content['application/json'].schema;
+            const responseBody = operation.requestBody;
+            const schema = responseBody.content['application/json'].schema;
             route.schema.body = responseToProperties(filterPropertiesRecursive(schema));
         }
         if (route.schema !== undefined &&
             operation.requestBody !== undefined &&
             operation.parameters !== undefined) {
-            var query = (_b = operation.parameters) === null || _b === void 0 ? void 0 : _b.filter(function (p) {
+            const query = operation.parameters?.filter((p) => {
                 try {
-                    var parameter = p;
+                    const parameter = p;
                     return parameter.in === 'query';
                 }
                 catch (_) {
@@ -227,7 +204,7 @@ var CreateRoutes = /** @class */ (function () {
                 }
             });
             if (query.length > 0) {
-                var querySchema = {
+                const querySchema = {
                     type: 'object',
                     properties: queryToProperties(query)
                 };
@@ -235,22 +212,19 @@ var CreateRoutes = /** @class */ (function () {
             }
         }
         this.api.route(route);
-    };
-    return CreateRoutes;
-}());
+    }
+}
 exports.CreateRoutes = CreateRoutes;
 function queryToProperties(properties) {
-    var newProperties = {};
-    properties.forEach(function (_a) {
-        var name = _a.name, value = __rest(_a, ["name"]);
+    const newProperties = {};
+    properties.forEach(({ name, ...value }) => {
         newProperties[name] = value.schema;
     });
     return newProperties;
 }
 function responseToProperties(properties) {
-    var newProperties = {};
-    Object.entries(properties).forEach(function (_a) {
-        var key = _a[0], value = _a[1];
+    const newProperties = {};
+    Object.entries(properties).forEach(([key, value]) => {
         newProperties[key] = propertiesToItems(value);
     });
     return newProperties;
@@ -263,9 +237,8 @@ function propertiesToItems(value) {
     return value;
 }
 function filterPropertiesRecursive(properties) {
-    var newProperties = {};
-    Object.entries(properties).forEach(function (_a) {
-        var key = _a[0], value = _a[1];
+    const newProperties = {};
+    Object.entries(properties).forEach(([key, value]) => {
         if (key.startsWith('x-'))
             return;
         // value is Schema
@@ -284,16 +257,16 @@ function filterPropertiesRecursive(properties) {
 function resolveResponses(responses) {
     if (!responses)
         return {};
-    var newResponses = {};
-    Object.keys(responses).forEach(function (statusCode) {
-        var response = responses[parseInt(statusCode)];
+    const newResponses = {};
+    Object.keys(responses).forEach((statusCode) => {
+        const response = responses[parseInt(statusCode)];
         if (!response.content)
             return;
-        var content = response.content['application/json'];
+        const content = response.content['application/json'];
         if (!content)
             return;
-        var schema = content.schema;
-        var properties = schema.properties;
+        const schema = content.schema;
+        const properties = schema.properties;
         newResponses[statusCode] = {
             description: response.description,
             type: 'object',
@@ -323,6 +296,7 @@ function getRouteHandler(method, resource, operation) {
     }
 }
 function resolvePath(path) {
-    var newPath = path.replace(/{/g, ':').replace(/}/g, '');
+    const newPath = path.replace(/{/g, ':').replace(/}/g, '');
     return newPath;
 }
+//# sourceMappingURL=index.js.map

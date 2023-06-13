@@ -81,3 +81,4 @@ export { SchemaBuilder, AutoColumn } from './resources/sequelize/builder';
 export { SequelizeModel as Model, Tags, log };
 export { FastifyReply as Reply, FastifyRequest as Request };
 export declare function modelName(text: string): string;
+//# sourceMappingURL=index.d.ts.map

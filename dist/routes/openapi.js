@@ -1,20 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.objectToJSONSchema7 = void 0;
-var doc_1 = require("../resources/openapi/doc");
-var routes_1 = require("../resources/routes");
+const doc_1 = require("../resources/openapi/doc");
+const routes_1 = require("../resources/routes");
 function builderOpeapi(paths) {
-    var doc = (0, doc_1.createFullDoc)(paths);
-    var openapiSchema = objectToJSONSchema7(doc);
-    var route = new routes_1.RoutesBuilder('openapi');
-    var openapi = route
+    const doc = (0, doc_1.createFullDoc)(paths);
+    const openapiSchema = objectToJSONSchema7(doc);
+    const route = new routes_1.RoutesBuilder('openapi');
+    const openapi = route
         .path('/openapi.json')
         .get({
         tags: ['Documentation'],
         summary: 'Get OpenAPI JSON',
         description: 'Get OpenAPI JSON',
         responses: route.responses(200, openapiSchema.properties),
-        handler: function (_request, reply) {
+        handler: (_request, reply) => {
             reply.send(doc);
         }
     })
@@ -40,19 +40,19 @@ function objectToJSONSchema7(json) {
             return { type: 'null' };
         }
         else if (typeof json === 'object' && Array.isArray(json)) {
-            return resolveArray(json.map(function (item) { return objectToJSONSchema7(item); }));
+            return resolveArray(json.map((item) => objectToJSONSchema7(item)));
         }
         else if (typeof json === 'object' && json !== null) {
             return objectToJSONSchema7(json);
         }
     }
-    var schema = {
+    const schema = {
         type: 'object',
         properties: {}
     };
-    for (var key in json) {
-        var value = json[key];
-        var valueType = typeof value;
+    for (const key in json) {
+        const value = json[key];
+        const valueType = typeof value;
         if (valueType === 'number') {
             schema.properties[key] = { type: 'number' };
         }
@@ -69,10 +69,10 @@ function objectToJSONSchema7(json) {
             schema.properties[key] = { type: 'null' };
         }
         else if (valueType === 'object' && Array.isArray(value)) {
-            var items = resolveArray(value.map(function (item) { return objectToJSONSchema7(item); }));
+            const items = resolveArray(value.map((item) => objectToJSONSchema7(item)));
             schema.properties[key] = {
                 type: 'array',
-                items: items
+                items
             };
         }
         else if (valueType === 'object' && value !== null) {
@@ -87,10 +87,11 @@ function resolveArray(item) {
     if (item.length === 1) {
         return item[0];
     }
-    var firstItem = item[0];
-    var sameType = item.every(function (i) { return i.type === firstItem.type; });
+    const firstItem = item[0];
+    const sameType = item.every((i) => i.type === firstItem.type);
     if (sameType) {
         return firstItem;
     }
     return item;
 }
+//# sourceMappingURL=openapi.js.map

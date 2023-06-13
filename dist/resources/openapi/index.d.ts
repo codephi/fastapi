@@ -8,3 +8,4 @@ export interface Tags {
     list: string[];
 }
 export declare function generateOpenapiSchemas(resource: Resource, tags: Tags): OpenAPI;
+//# sourceMappingURL=index.d.ts.map

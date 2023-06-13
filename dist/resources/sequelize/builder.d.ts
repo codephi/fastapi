@@ -36,3 +36,4 @@ export declare class SchemaBuilder {
     table(table: string): TableBuilder;
     build(): Schema;
 }
+//# sourceMappingURL=builder.d.ts.map

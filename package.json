@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles --config=jest.config.js",
-    "build": "tsc src/index.ts --resolveJsonModule -d --outDir dist"
+    "build": "tsc"
   },
   "author": "Philippe Assis <codephilippe@gmail.com>",
   "license": "MIT",

@@ -84,3 +84,4 @@ export declare function resolveResponses(responses: Responses): {
     [key: string]: any;
 };
 export {};
+//# sourceMappingURL=index.d.ts.map

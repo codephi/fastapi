@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var os = require("os");
-var database_1 = require("../middle/database");
-var routes_1 = require("../resources/routes");
-var healthRoute = new routes_1.RoutesBuilder('health');
-var responsesAll = healthRoute.responses(200, {
+const os = require("os");
+const database_1 = require("../middle/database");
+const routes_1 = require("../resources/routes");
+const healthRoute = new routes_1.RoutesBuilder('health');
+const responsesAll = healthRoute.responses(200, {
     server: {
         type: 'object',
         properties: {
@@ -66,28 +66,26 @@ var responsesAll = healthRoute.responses(200, {
     },
     status: { type: 'string' }
 });
-exports.default = (function () {
-    return healthRoute
-        .path('/health')
-        .get({
-        tags: ['Health'],
-        summary: 'Get health information',
-        description: 'Get health information',
-        responses: healthRoute.responses(200, {
-            status: { type: 'string' }
-        }),
-        handler: handlerStatus
-    })
-        .path('/health/all')
-        .get({
-        tags: ['Health'],
-        summary: 'Get all health information',
-        description: 'Get all health information',
-        responses: responsesAll,
-        handler: handlerAll
-    })
-        .build();
-});
+exports.default = () => healthRoute
+    .path('/health')
+    .get({
+    tags: ['Health'],
+    summary: 'Get health information',
+    description: 'Get health information',
+    responses: healthRoute.responses(200, {
+        status: { type: 'string' }
+    }),
+    handler: handlerStatus
+})
+    .path('/health/all')
+    .get({
+    tags: ['Health'],
+    summary: 'Get all health information',
+    description: 'Get all health information',
+    responses: responsesAll,
+    handler: handlerAll
+})
+    .build();
 function handlerStatus(_request, reply) {
     reply.send({ status: 'UP' });
 }
@@ -103,79 +101,80 @@ function handlerAll(_request, reply) {
     });
 }
 function getMemoryInfo() {
-    var total = os.totalmem();
-    var free = os.freemem();
-    var used = total - free;
-    var active = total - free;
-    var available = total - free;
+    const total = os.totalmem();
+    const free = os.freemem();
+    const used = total - free;
+    const active = total - free;
+    const available = total - free;
     return {
-        total: total,
-        free: free,
-        used: used,
-        active: active,
-        available: available
+        total,
+        free,
+        used,
+        active,
+        available
     };
 }
 function getProcessInfo() {
-    var pid = process.pid;
-    var uptime = process.uptime();
-    var versions = process.versions;
-    var memoryUsage = process.memoryUsage();
+    const pid = process.pid;
+    const uptime = process.uptime();
+    const versions = process.versions;
+    const memoryUsage = process.memoryUsage();
     return {
-        pid: pid,
-        uptime: uptime,
-        versions: versions,
-        memoryUsage: memoryUsage
+        pid,
+        uptime,
+        versions,
+        memoryUsage
     };
 }
 function getOsInfo() {
-    var hostname = os.hostname();
-    var type = os.type();
-    var platform = os.platform();
-    var release = os.release();
-    var arch = os.arch();
-    var uptime = os.uptime();
-    var cpus = os.cpus().length;
+    const hostname = os.hostname();
+    const type = os.type();
+    const platform = os.platform();
+    const release = os.release();
+    const arch = os.arch();
+    const uptime = os.uptime();
+    const cpus = os.cpus().length;
     return {
-        hostname: hostname,
-        type: type,
-        platform: platform,
-        release: release,
-        arch: arch,
-        uptime: uptime,
-        cpus: cpus
+        hostname,
+        type,
+        platform,
+        release,
+        arch,
+        uptime,
+        cpus
     };
 }
 function getDatabaseInfo() {
-    var sequelize = database_1.global.getSequelize();
-    var dialect = sequelize.getDialect();
-    var host = sequelize.config.host;
-    var port = parseInt(sequelize.config.port);
-    var database = sequelize.config.database;
-    var username = sequelize.config.username;
+    const sequelize = database_1.global.getSequelize();
+    const dialect = sequelize.getDialect();
+    const host = sequelize.config.host;
+    const port = parseInt(sequelize.config.port);
+    const database = sequelize.config.database;
+    const username = sequelize.config.username;
     return {
-        dialect: dialect,
-        host: host,
-        port: port,
-        database: database,
-        username: username
+        dialect,
+        host,
+        port,
+        database,
+        username
     };
 }
 function getContainerInfo() {
-    var image = process.env.IMAGE;
-    var version = process.env.VERSION;
-    var containerId = process.env.HOSTNAME;
+    const image = process.env.IMAGE;
+    const version = process.env.VERSION;
+    const containerId = process.env.HOSTNAME;
     return {
-        image: image,
-        version: version,
-        containerId: containerId
+        image,
+        version,
+        containerId
     };
 }
 function getAppInfo() {
-    var image = process.env.NAME;
-    var version = process.env.VERSION;
+    const image = process.env.NAME;
+    const version = process.env.VERSION;
     return {
-        image: image,
-        version: version
+        image,
+        version
     };
 }
+//# sourceMappingURL=health.js.map

@@ -1,89 +1,50 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.importResources = exports.SequelizeModel = void 0;
-var sequelize_1 = require("sequelize");
-var database_1 = require("../../middle/database");
-var fs = require("fs");
-var utils_1 = require("../openapi/utils");
-var SequelizeModel = /** @class */ (function (_super) {
-    __extends(SequelizeModel, _super);
-    function SequelizeModel() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return SequelizeModel;
-}(sequelize_1.Model));
+const sequelize_1 = require("sequelize");
+const database_1 = require("../../middle/database");
+const fs = require("fs");
+const utils_1 = require("../openapi/utils");
+class SequelizeModel extends sequelize_1.Model {
+}
 exports.SequelizeModel = SequelizeModel;
 function generateResourcesFromJSON(jsonSchema) {
-    var _a, _b, _c, _d;
-    var resources = {};
-    for (var _i = 0, _e = jsonSchema.tables; _i < _e.length; _i++) {
-        var table = _e[_i];
-        var tableColumns = {};
-        var tableName = getTableName(table.name);
-        var singleName = (0, utils_1.convertToSingle)(tableName);
-        var resurceName = getResourceName(table.name);
-        var resource = {
+    const resources = {};
+    for (const table of jsonSchema.tables) {
+        const tableColumns = {};
+        const tableName = getTableName(table.name);
+        const singleName = (0, utils_1.convertToSingle)(tableName);
+        const resurceName = getResourceName(table.name);
+        const resource = {
             primaryKey: null,
             columns: {},
             search: table.search,
             name: table.name
         };
-        for (var _f = 0, _g = table.columns; _f < _g.length; _f++) {
-            var column = _g[_f];
-            var columnName = column.name;
-            var columnType = getSequelizeDataType(column);
-            var primaryKey = (_a = column.primaryKey) !== null && _a !== void 0 ? _a : false;
-            var allowNull = (_b = column.allowNull) !== null && _b !== void 0 ? _b : false;
-            var defaultValue = column.defaultValue;
-            var unique = (_c = column.unique) !== null && _c !== void 0 ? _c : false;
+        for (const column of table.columns) {
+            const columnName = column.name;
+            const columnType = getSequelizeDataType(column);
+            const primaryKey = column.primaryKey ?? false;
+            const allowNull = column.allowNull ?? false;
+            const defaultValue = column.defaultValue;
+            const unique = column.unique ?? false;
             column.required = !allowNull || column.required;
             tableColumns[columnName] = {
                 type: columnType,
-                allowNull: allowNull,
-                primaryKey: primaryKey,
+                allowNull,
+                primaryKey,
                 references: null,
                 autoIncrement: column.autoIncrement || false,
-                defaultValue: defaultValue,
-                unique: unique
+                defaultValue,
+                unique
             };
             if (primaryKey) {
                 resource.primaryKey = columnName;
             }
             resource.columns[columnName] = column;
         }
-        var DynamicTable = /** @class */ (function (_super) {
-            __extends(DynamicTable, _super);
-            function DynamicTable() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            return DynamicTable;
-        }(sequelize_1.Model));
+        class DynamicTable extends sequelize_1.Model {
+        }
         DynamicTable.init(tableColumns, {
             sequelize: database_1.global.getSequelize(),
             modelName: singleName
@@ -92,18 +53,16 @@ function generateResourcesFromJSON(jsonSchema) {
         resources[resurceName] = resource;
     }
     // Configurar as associações entre os modelos
-    for (var _h = 0, _j = jsonSchema.tables; _h < _j.length; _h++) {
-        var table = _j[_h];
-        var resurceName = getResourceName(table.name);
-        var model = resources[resurceName].model;
-        for (var _k = 0, _l = table.columns; _k < _l.length; _k++) {
-            var column = _l[_k];
+    for (const table of jsonSchema.tables) {
+        const resurceName = getResourceName(table.name);
+        const model = resources[resurceName].model;
+        for (const column of table.columns) {
             if (!column.reference) {
                 continue;
             }
-            var tableName = getTableName(column.reference);
-            var referencedTable = getResourceName(tableName);
-            var referencedModel = resources[referencedTable].model;
+            const tableName = getTableName(column.reference);
+            const referencedTable = getResourceName(tableName);
+            const referencedModel = resources[referencedTable].model;
             model.belongsTo(referencedModel, { foreignKey: column.name });
             referencedModel.hasMany(model, { foreignKey: column.name });
             if (resources[resurceName].relationships === undefined) {
@@ -115,7 +74,7 @@ function generateResourcesFromJSON(jsonSchema) {
                 ];
             }
             else {
-                (_d = resources[resurceName].relationships) === null || _d === void 0 ? void 0 : _d.push({
+                resources[resurceName].relationships?.push({
                     model: referencedModel,
                     as: column.name
                 });
@@ -126,7 +85,7 @@ function generateResourcesFromJSON(jsonSchema) {
 }
 function getResourceName(name) {
     // se terminar com s, remove o s
-    var lastPosition = name.length - 1;
+    const lastPosition = name.length - 1;
     if (name.lastIndexOf('s') !== lastPosition) {
         return name.slice(0, -1).toLocaleLowerCase();
     }
@@ -136,12 +95,10 @@ function getTableName(name) {
     return name.toLowerCase();
 }
 function getDefaultValue(columnConstraints, columnType) {
-    var columnTypeString = columnType.valueOf().toString();
-    var defaultValue = columnConstraints.find(function (constraint) {
-        return constraint.startsWith('DEFAULT');
-    });
+    const columnTypeString = columnType.valueOf().toString();
+    const defaultValue = columnConstraints.find((constraint) => constraint.startsWith('DEFAULT'));
     if (defaultValue) {
-        var value = defaultValue.split('DEFAULT ')[1];
+        const value = defaultValue.split('DEFAULT ')[1];
         if (value === 'NULL') {
             return null;
         }
@@ -165,7 +122,7 @@ function getDefaultValue(columnConstraints, columnType) {
     return undefined;
 }
 function getNumberProps(attributes) {
-    var params = {};
+    const params = {};
     if (attributes.length) {
         params.length = attributes.length;
     }
@@ -187,8 +144,8 @@ function getNumberProps(attributes) {
     return params;
 }
 function getSequelizeDataType(column) {
-    var type = column.type, attributes = __rest(column, ["type"]);
-    var columnType = type.toUpperCase();
+    const { type, ...attributes } = column;
+    const columnType = type.toUpperCase();
     if ((columnType.includes('TEXT') || columnType.includes('VARCHAR')) &&
         attributes.maxLength) {
         return sequelize_1.DataTypes.STRING(attributes.maxLength, attributes.binary);
@@ -244,19 +201,17 @@ function getSequelizeDataType(column) {
     else if (columnType === 'CODE') {
         return sequelize_1.DataTypes.STRING(attributes.maxLength, attributes.binary);
     }
-    throw new Error("Unknown column type: ".concat(columnType));
+    throw new Error(`Unknown column type: ${columnType}`);
 }
 function getSequelizeConstraints(columnConstraints) {
     // Remover a referência ao modelo pai da restrição de chave estrangeira
-    return columnConstraints.filter(function (constraint) { return !constraint.includes('REFERENCES'); });
+    return columnConstraints.filter((constraint) => !constraint.includes('REFERENCES'));
 }
 function parseReferences(columnConstraints) {
     // Analisar a referência da restrição de chave estrangeira, se existir
-    var referencesConstraint = columnConstraints.find(function (constraint) {
-        return constraint.includes('REFERENCES');
-    });
+    const referencesConstraint = columnConstraints.find((constraint) => constraint.includes('REFERENCES'));
     if (referencesConstraint) {
-        var referencedTable = getReferencedTableName([referencesConstraint]);
+        const referencedTable = getReferencedTableName([referencesConstraint]);
         return {
             model: referencedTable,
             key: 'id' // Assumindo que a coluna referenciada é sempre 'id'
@@ -266,18 +221,19 @@ function parseReferences(columnConstraints) {
 }
 function getReferencedTableName(constraints) {
     // Extrair o nome da tabela referenciada da restrição de chave estrangeira
-    var referenceRegex = /REFERENCES\s+(\w+)\s+\(.*\)/;
-    var match = constraints[0].match(referenceRegex);
+    const referenceRegex = /REFERENCES\s+(\w+)\s+\(.*\)/;
+    const match = constraints[0].match(referenceRegex);
     if (match) {
         return match[1];
     }
     return null;
 }
 function importResources(target) {
-    var schemaJson = typeof target === 'string'
+    const schemaJson = typeof target === 'string'
         ? JSON.parse(fs.readFileSync(target, 'utf8'))
         : target;
-    var resource = generateResourcesFromJSON(schemaJson);
+    const resource = generateResourcesFromJSON(schemaJson);
     return resource;
 }
 exports.importResources = importResources;
+//# sourceMappingURL=index.js.map

@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertType = exports.dataTypes = void 0;
 exports.dataTypes = {
@@ -106,25 +95,29 @@ exports.dataTypes = {
         format: 'time'
     }
 };
-var convertType = function (sequelizeType) {
-    var propertyType = exports.dataTypes[sequelizeType];
+const convertType = (sequelizeType) => {
+    const propertyType = exports.dataTypes[sequelizeType];
     if (propertyType === undefined) {
-        var occurrence = sequelizeType.search(/[([]/);
+        const occurrence = sequelizeType.search(/[([]/);
         if (occurrence > -1) {
-            var complex = sequelizeType.split(/[([]/);
-            var type = complex[0];
-            var lengthString = complex[1].split(/[)\]]/)[0];
-            var maxLength = parseInt(lengthString) || undefined;
-            var typeDefinition = exports.dataTypes[type];
+            const complex = sequelizeType.split(/[([]/);
+            const type = complex[0];
+            const lengthString = complex[1].split(/[)\]]/)[0];
+            const maxLength = parseInt(lengthString) || undefined;
+            const typeDefinition = exports.dataTypes[type];
             if (typeDefinition !== undefined) {
                 if (type !== 'DECIMAL' && maxLength !== undefined) {
-                    return __assign(__assign({}, typeDefinition), { maxLength: maxLength });
+                    return {
+                        ...typeDefinition,
+                        maxLength
+                    };
                 }
                 return typeDefinition;
             }
         }
-        throw new Error("Unknown data type: ".concat(sequelizeType));
+        throw new Error(`Unknown data type: ${sequelizeType}`);
     }
     return propertyType;
 };
 exports.convertType = convertType;
+//# sourceMappingURL=dataTypes.js.map

@@ -323,3 +323,4 @@ export interface ExternalDocumentation {
     description?: string;
     url: string;
 }
+//# sourceMappingURL=openapiTypes.d.ts.map

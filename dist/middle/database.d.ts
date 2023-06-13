@@ -16,3 +16,4 @@ export declare function databaseConnect({ database, username, password, options 
 export declare function setGlobalSequelize(sequelize: Sequelize): void;
 export declare function getSequelize(): Sequelize | null;
 export {};
+//# sourceMappingURL=database.d.ts.map

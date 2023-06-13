@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.superFilter = void 0;
-var dictPtBr = require("../../dicts/pt_BR.json");
-var sequelize_1 = require("sequelize");
-var iLike = sequelize_1.Op.iLike, or = sequelize_1.Op.or;
-var spellingDictionary = dictPtBr;
+const dictPtBr = require("../../dicts/pt_BR.json");
+const sequelize_1 = require("sequelize");
+const { iLike, or } = sequelize_1.Op;
+const spellingDictionary = dictPtBr;
 function fixText(text) {
-    var words = text.toLowerCase().split(' ');
-    var fixedWords = words.map(function (word) {
+    const words = text.toLowerCase().split(' ');
+    const fixedWords = words.map((word) => {
         if (spellingDictionary[word]) {
             return spellingDictionary[word];
         }
@@ -17,55 +17,52 @@ function fixText(text) {
     });
     return fixedWords;
 }
-var formaCondition = function (searchTerm) {
-    var _a;
-    return _a = {},
-        _a[iLike] = "%".concat(searchTerm, "%"),
-        _a;
+const formaCondition = (searchTerm) => {
+    return {
+        [iLike]: `%${searchTerm}%`
+    };
 };
-var addTerm = function (target, fullTarget) {
-    var history = [fullTarget];
+const addTerm = (target, fullTarget) => {
+    const history = [fullTarget];
     target.push(formaCondition(fullTarget));
-    var targetSplit = fullTarget.split(' ');
+    const targetSplit = fullTarget.split(' ');
     if (targetSplit.length > 1) {
-        targetSplit.forEach(function (word) {
-            var formated = formaCondition(word);
-            if (history.indexOf("%".concat(word, "%")) === -1) {
-                history.push("%".concat(word, "%"));
+        targetSplit.forEach((word) => {
+            const formated = formaCondition(word);
+            if (history.indexOf(`%${word}%`) === -1) {
+                history.push(`%${word}%`);
                 target.push(formated);
             }
         });
     }
     return target;
 };
-var superFilter = function (fields, searchTerm) {
-    var _a;
-    var term = addTerm([], searchTerm);
-    var textFixed = fixText(searchTerm);
-    var textFixedJoin = textFixed.join(' ');
+const superFilter = (fields, searchTerm) => {
+    let term = addTerm([], searchTerm);
+    const textFixed = fixText(searchTerm);
+    const textFixedJoin = textFixed.join(' ');
     if (searchTerm !== textFixedJoin) {
         term = addTerm(term, textFixedJoin);
     }
-    var termNotAccents = removeAccents(searchTerm);
+    const termNotAccents = removeAccents(searchTerm);
     if (searchTerm !== termNotAccents && textFixedJoin !== termNotAccents) {
         term = addTerm(term, termNotAccents);
     }
-    var termFields = [];
-    fields.forEach(function (field) {
-        term.forEach(function (item) {
-            var _a;
-            termFields.push((_a = {},
-                _a[field] = item,
-                _a));
+    const termFields = [];
+    fields.forEach((field) => {
+        term.forEach((item) => {
+            termFields.push({
+                [field]: item
+            });
         });
     });
-    return _a = {},
-        _a[or] = termFields,
-        _a;
+    return {
+        [or]: termFields
+    };
 };
 exports.superFilter = superFilter;
 function removeAccents(text) {
-    var accentMap = {
+    const accentMap = {
         a: '[aàáâãäå]',
         ae: 'æ',
         c: 'ç',
@@ -77,9 +74,10 @@ function removeAccents(text) {
         u: '[uùúûűü]',
         y: '[yÿ]'
     };
-    for (var letter in accentMap) {
-        var regex = new RegExp(accentMap[letter], 'gi');
+    for (let letter in accentMap) {
+        const regex = new RegExp(accentMap[letter], 'gi');
         text = text.replace(regex, letter);
     }
     return text;
 }
+//# sourceMappingURL=superFilter.js.map
