@@ -156,7 +156,11 @@ describe('FastAPI', () => {
   });
 
   describe('Schema and Server', () => {
-    const fastAPI = new FastAPI();
+    const fastAPI = new FastAPI({
+      listen: {
+        port: 30000
+      }
+    });
 
     beforeAll(async () => {
       const schema = new SchemaBuilder({

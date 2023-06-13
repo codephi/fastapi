@@ -3,7 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   testRegex: './tests/.*\\.test\\.ts?$',
   transform: {
-    '^.+\\.ts?$': 'ts-jest'
+    '^.+\\.(t|j)sx?$': '@swc/jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   maxConcurrency: 1
