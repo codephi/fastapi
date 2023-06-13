@@ -1,3 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    global: function() {
+        return global;
+    },
+    testDatabaseConnection: function() {
+        return testDatabaseConnection;
+    },
+    databaseConnect: function() {
+        return databaseConnect;
+    },
+    setGlobalSequelize: function() {
+        return setGlobalSequelize;
+    },
+    getSequelize: function() {
+        return getSequelize;
+    }
+});
+const _sequelize = require("sequelize");
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
         var info = gen[key](arg);
@@ -154,7 +182,6 @@ function _ts_generator(thisArg, body) {
         };
     }
 }
-import { Sequelize } from "sequelize";
 var Global = /*#__PURE__*/ function() {
     "use strict";
     function Global() {
@@ -173,8 +200,8 @@ var Global = /*#__PURE__*/ function() {
     ]);
     return Global;
 }();
-export var global = new Global();
-export function testDatabaseConnection() {
+var global = new Global();
+function testDatabaseConnection() {
     return _testDatabaseConnection.apply(this, arguments);
 }
 function _testDatabaseConnection() {
@@ -207,13 +234,13 @@ function _testDatabaseConnection() {
     });
     return _testDatabaseConnection.apply(this, arguments);
 }
-export function databaseConnect(param) {
+function databaseConnect(param) {
     var database = param.database, username = param.username, password = param.password, options = param.options;
-    setGlobalSequelize(new Sequelize(database, username, password, options));
+    setGlobalSequelize(new _sequelize.Sequelize(database, username, password, options));
 }
-export function setGlobalSequelize(sequelize) {
+function setGlobalSequelize(sequelize) {
     global.sequelize = sequelize;
 }
-export function getSequelize() {
+function getSequelize() {
     return global.sequelize;
 }

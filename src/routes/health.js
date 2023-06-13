@@ -1,155 +1,202 @@
-import * as os from "os";
-import { global } from "../middle/database";
-import { RoutesBuilder } from "../resources/routes";
-var healthRoute = new RoutesBuilder("health");
-var responsesAll = healthRoute.responses(200, {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function() {
+        return _default;
+    }
+});
+const _os = /*#__PURE__*/ _interop_require_wildcard(require("os"));
+const _database = require("../middle/database");
+const _routes = require("../resources/routes/index");
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+}
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
+}
+const healthRoute = new _routes.RoutesBuilder('health');
+const responsesAll = healthRoute.responses(200, {
     server: {
-        type: "object",
+        type: 'object',
         properties: {
             platform: {
-                type: "string"
+                type: 'string'
             },
             release: {
-                type: "string"
+                type: 'string'
             },
             arch: {
-                type: "string"
+                type: 'string'
             },
             uptime: {
-                type: "number"
+                type: 'number'
             },
             cpus: {
-                type: "number"
+                type: 'number'
             }
         }
     },
     memory: {
-        type: "object",
+        type: 'object',
         properties: {
             total: {
-                type: "number"
+                type: 'number'
             },
             free: {
-                type: "number"
+                type: 'number'
             },
             used: {
-                type: "number"
+                type: 'number'
             },
             active: {
-                type: "number"
+                type: 'number'
             },
             available: {
-                type: "number"
+                type: 'number'
             }
         }
     },
     process: {
-        type: "object",
+        type: 'object',
         properties: {
             pid: {
-                type: "number"
+                type: 'number'
             },
             uptime: {
-                type: "number"
+                type: 'number'
             },
             versions: {
-                type: "object"
+                type: 'object'
             },
             memoryUsage: {
-                type: "object"
+                type: 'object'
             }
         }
     },
     os: {
-        type: "object",
+        type: 'object',
         properties: {
             hostname: {
-                type: "string"
+                type: 'string'
             },
             type: {
-                type: "string"
+                type: 'string'
             },
             platform: {
-                type: "string"
+                type: 'string'
             },
             release: {
-                type: "string"
+                type: 'string'
             },
             arch: {
-                type: "string"
+                type: 'string'
             },
             uptime: {
-                type: "number"
+                type: 'number'
             },
             cpus: {
-                type: "number"
+                type: 'number'
             }
         }
     },
     container: {
-        type: "object",
+        type: 'object',
         properties: {
             image: {
-                type: "string"
+                type: 'string'
             },
             version: {
-                type: "string"
+                type: 'string'
             },
             containerId: {
-                type: "string"
+                type: 'string'
             }
         }
     },
     database: {
-        type: "object",
+        type: 'object',
         properties: {
             dialect: {
-                type: "string"
+                type: 'string'
             },
             host: {
-                type: "string"
+                type: 'string'
             },
             port: {
-                type: "number"
+                type: 'number'
             },
             database: {
-                type: "string"
+                type: 'string'
             },
             username: {
-                type: "string"
+                type: 'string'
             }
         }
     },
     status: {
-        type: "string"
+        type: 'string'
     }
 });
-export default function() {
-    return healthRoute.path("/health").get({
+const _default = ()=>healthRoute.path('/health').get({
         tags: [
-            "Health"
+            'Health'
         ],
-        summary: "Get health information",
-        description: "Get health information",
+        summary: 'Get health information',
+        description: 'Get health information',
         responses: healthRoute.responses(200, {
             status: {
-                type: "string"
+                type: 'string'
             }
         }),
         handler: handlerStatus
-    }).path("/health/all").get({
+    }).path('/health/all').get({
         tags: [
-            "Health"
+            'Health'
         ],
-        summary: "Get all health information",
-        description: "Get all health information",
+        summary: 'Get all health information',
+        description: 'Get all health information',
         responses: responsesAll,
         handler: handlerAll
     }).build();
-};
 function handlerStatus(_request, reply) {
     reply.send({
-        status: "UP"
+        status: 'UP'
     });
 }
 function handlerAll(_request, reply) {
@@ -160,77 +207,87 @@ function handlerAll(_request, reply) {
         database: getDatabaseInfo(),
         container: getContainerInfo(),
         app: getAppInfo(),
-        status: "UP"
+        status: 'UP'
     });
 }
 function getMemoryInfo() {
-    var total = os.totalmem();
-    var free = os.freemem();
-    var used = total - free;
-    var active = total - free;
-    var available = total - free;
+    const total = _os.totalmem();
+    const free = _os.freemem();
+    const used = total - free;
+    const active = total - free;
+    const available = total - free;
     return {
-        total: total,
-        free: free,
-        used: used,
-        active: active,
-        available: available
+        total,
+        free,
+        used,
+        active,
+        available
     };
 }
 function getProcessInfo() {
-    var pid = process.pid;
-    var uptime = process.uptime();
-    var versions = process.versions;
-    var memoryUsage = process.memoryUsage();
+    const pid = process.pid;
+    const uptime = process.uptime();
+    const versions = process.versions;
+    const memoryUsage = process.memoryUsage();
     return {
-        pid: pid,
-        uptime: uptime,
-        versions: versions,
-        memoryUsage: memoryUsage
+        pid,
+        uptime,
+        versions,
+        memoryUsage
     };
 }
 function getOsInfo() {
-    var hostname = os.hostname();
-    var type = os.type();
-    var platform = os.platform();
-    var release = os.release();
-    var arch = os.arch();
-    var uptime = os.uptime();
-    var cpus = os.cpus().length;
+    const hostname = _os.hostname();
+    const type = _os.type();
+    const platform = _os.platform();
+    const release = _os.release();
+    const arch = _os.arch();
+    const uptime = _os.uptime();
+    const cpus = _os.cpus().length;
     return {
-        hostname: hostname,
-        type: type,
-        platform: platform,
-        release: release,
-        arch: arch,
-        uptime: uptime,
-        cpus: cpus
+        hostname,
+        type,
+        platform,
+        release,
+        arch,
+        uptime,
+        cpus
     };
 }
 function getDatabaseInfo() {
-    var sequelize = global.getSequelize();
-    var dialect = sequelize.getDialect();
-    var host = sequelize.config.host;
-    var port = parseInt(sequelize.config.port);
-    var database = sequelize.config.database;
-    var username = sequelize.config.username;
+    const sequelize = _database.global.getSequelize();
+    const dialect = sequelize.getDialect();
+    const host = sequelize.config.host;
+    const port = parseInt(sequelize.config.port);
+    const database = sequelize.config.database;
+    const username = sequelize.config.username;
     return {
-        dialect: dialect,
-        host: host,
-        port: port,
-        database: database,
-        username: username
+        dialect,
+        host,
+        port,
+        database,
+        username
     };
 }
 function getContainerInfo() {
-    var image = process.env.IMAGE;
-    var version = process.env.VERSION;
-    var containerId = process.env.HOSTNAME;
+    const image = process.env.IMAGE;
+    const version = process.env.VERSION;
+    const containerId = process.env.HOSTNAME;
     return {
-        image: image,
-        version: version,
-        containerId: containerId
+        image,
+        version,
+        containerId
     };
+}
+function getAppInfo() {
+    const image = process.env.NAME;
+    const version = process.env.VERSION;
+    return {
+        image,
+        version
+    };
+}
+};
 }
 function getAppInfo() {
     var image = process.env.NAME;

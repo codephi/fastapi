@@ -1,3 +1,38 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    getAll: function() {
+        return getAll;
+    },
+    getOne: function() {
+        return getOne;
+    },
+    create: function() {
+        return create;
+    },
+    update: function() {
+        return update;
+    },
+    remove: function() {
+        return remove;
+    }
+});
+const _superFilter = require("./superFilter");
+const _events = require("../events");
+const _log = /*#__PURE__*/ _interop_require_default(require("../log"));
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
         var info = gen[key](arg);
@@ -37,13 +72,13 @@ function _ts_generator(thisArg, body) {
         trys: [],
         ops: []
     };
-    return(g = {
+    return g = {
         next: verb(0),
         "throw": verb(1),
         "return": verb(2)
     }, typeof Symbol === "function" && (g[Symbol.iterator] = function() {
         return this;
-    }), g);
+    }), g;
     function verb(n) {
         return function(v) {
             return step([
@@ -122,10 +157,7 @@ function _ts_generator(thisArg, body) {
         };
     }
 }
-import { superFiler } from "./superFilter";
-import { emit } from "../events";
-import log from "../log";
-export function getAll(resource) {
+function getAll(resource) {
     return function() {
         var _ref = _async_to_generator(function(request, reply) {
             var page, pageSize, searchTerm, order, orderBy, offset, searchFilter, data, totalPages, err;
@@ -144,7 +176,7 @@ export function getAll(resource) {
                         order = request.query.order || "desc";
                         orderBy = request.query.orderBy || "updatedAt";
                         offset = (page - 1) * pageSize;
-                        searchFilter = resource.search && searchTerm ? superFiler(resource.search, searchTerm) : {};
+                        searchFilter = resource.search && searchTerm ? (0, _superFilter.superFiler)(resource.search, searchTerm) : {};
                         return [
                             4,
                             resource.model.findAndCountAll({
@@ -171,18 +203,18 @@ export function getAll(resource) {
                                 totalItems: data.count
                             }
                         });
-                        emit(resource.name, "list", null, data.rows);
+                        (0, _events.emit)(resource.name, "list", null, data.rows);
                         return [
                             3,
                             3
                         ];
                     case 2:
                         err = _state.sent();
-                        log.error(err);
+                        _log.default.error(err);
                         reply.status(500).send({
                             error: "Failed to fetch ".concat(resource.name, ".")
                         });
-                        emit(resource.name, "list", err);
+                        (0, _events.emit)(resource.name, "list", err);
                         return [
                             3,
                             3
@@ -199,7 +231,7 @@ export function getAll(resource) {
         };
     }();
 }
-export function getOne(resource) {
+function getOne(resource) {
     return function() {
         var _ref = _async_to_generator(function(request, reply) {
             var _data, data, values, err;
@@ -228,18 +260,18 @@ export function getOne(resource) {
                             ];
                         }
                         reply.send(data);
-                        emit(resource.name, "read", null, values.rows);
+                        (0, _events.emit)(resource.name, "read", null, values.rows);
                         return [
                             3,
                             3
                         ];
                     case 2:
                         err = _state.sent();
-                        log.error(err);
+                        _log.default.error(err);
                         reply.status(500).send({
                             error: "Failed to fetch ".concat(resource.name, ".")
                         });
-                        emit(resource.name, "read", err);
+                        (0, _events.emit)(resource.name, "read", err);
                         return [
                             3,
                             3
@@ -256,7 +288,7 @@ export function getOne(resource) {
         };
     }();
 }
-export function create(resource) {
+function create(resource) {
     return function() {
         var _ref = _async_to_generator(function(request, reply) {
             var data, err;
@@ -276,18 +308,18 @@ export function create(resource) {
                     case 1:
                         data = _state.sent();
                         reply.status(201).send(data);
-                        emit(resource.name, "create", null, data);
+                        (0, _events.emit)(resource.name, "create", null, data);
                         return [
                             3,
                             3
                         ];
                     case 2:
                         err = _state.sent();
-                        log.error(err);
+                        _log.default.error(err);
                         reply.status(500).send({
                             error: "Failed to create ".concat(resource.name, ".")
                         });
-                        emit(resource.name, "create", err);
+                        (0, _events.emit)(resource.name, "create", err);
                         return [
                             3,
                             3
@@ -304,7 +336,7 @@ export function create(resource) {
         };
     }();
 }
-export function update(resource) {
+function update(resource) {
     return function() {
         var _ref = _async_to_generator(function(request, reply) {
             var _data, data, value, err;
@@ -339,18 +371,18 @@ export function update(resource) {
                     case 2:
                         _state.sent();
                         reply.send(data);
-                        emit(resource.name, "update", null, value.rows);
+                        (0, _events.emit)(resource.name, "update", null, value.rows);
                         return [
                             3,
                             4
                         ];
                     case 3:
                         err = _state.sent();
-                        log.error(err);
+                        _log.default.error(err);
                         reply.status(500).send({
                             error: "Failed to update ".concat(resource.name, ".")
                         });
-                        emit(resource.name, "update", err);
+                        (0, _events.emit)(resource.name, "update", err);
                         return [
                             3,
                             4
@@ -367,7 +399,7 @@ export function update(resource) {
         };
     }();
 }
-export function remove(resource) {
+function remove(resource) {
     return function() {
         var _ref = _async_to_generator(function(request, reply) {
             var _data, data, value, err;
@@ -404,18 +436,18 @@ export function remove(resource) {
                         reply.status(204).send({
                             message: "".concat(resource.name, " deleted successfully.")
                         });
-                        emit(resource.name, "remove", null, value.rows);
+                        (0, _events.emit)(resource.name, "remove", null, value.rows);
                         return [
                             3,
                             4
                         ];
                     case 3:
                         err = _state.sent();
-                        log.error(err);
+                        _log.default.error(err);
                         reply.status(500).send({
                             error: "Failed to delete ".concat(resource.name, ".")
                         });
-                        emit(resource.name, "remove", err);
+                        (0, _events.emit)(resource.name, "remove", err);
                         return [
                             3,
                             4

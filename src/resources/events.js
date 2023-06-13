@@ -1,23 +1,48 @@
-import { convertToPlural } from "./openapi/utils";
-var eventsStorage = {};
-export function on(modelName, action, callback) {
-    var event = "".concat(convertToPlural(modelName.toLowerCase()), ".").concat(action);
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    on: function() {
+        return on;
+    },
+    emit: function() {
+        return emit;
+    },
+    remove: function() {
+        return remove;
+    }
+});
+const _utils = require("./openapi/utils");
+const eventsStorage = {};
+function on(modelName, action, callback) {
+    const event = `${(0, _utils.convertToPlural)(modelName.toLowerCase())}.${action}`;
     if (!eventsStorage[event]) {
         eventsStorage[event] = [];
     }
     eventsStorage[event].push(callback);
 }
-export function emit(modelName, action, err, data) {
-    var event = "".concat(convertToPlural(modelName.toLowerCase()), ".").concat(action);
+function emit(modelName, action, err, data) {
+    const event = `${(0, _utils.convertToPlural)(modelName.toLowerCase())}.${action}`;
     if (eventsStorage[event]) {
-        eventsStorage[event].forEach(function(callback) {
+        eventsStorage[event].forEach((callback)=>{
             callback(err, data);
         });
     }
 }
-export function remove(modelName, action) {
-    var event = "".concat(modelName, ".").concat(action);
+function remove(modelName, action) {
+    const event = `${modelName}.${action}`;
     if (eventsStorage[event]) {
+        delete eventsStorage[event];
+    }
+}
+{
         delete eventsStorage[event];
     }
 }

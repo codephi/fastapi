@@ -1,3 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "generateOpenapiSchemas", {
+    enumerable: true,
+    get: function() {
+        return generateOpenapiSchemas;
+    }
+});
+const _dataTypes = require("./dataTypes");
+const _responses = require("./responses");
+const _utils = require("./utils");
 function _array_like_to_array(arr, len) {
     if (len == null || len > arr.length) len = arr.length;
     for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
@@ -96,9 +109,6 @@ function _unsupported_iterable_to_array(o, minLen) {
     if (n === "Map" || n === "Set") return Array.from(n);
     if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array(o, minLen);
 }
-import { convertType } from "./dataTypes";
-import { makeResponses } from "./responses";
-import { convertToPlural, convertToSingle } from "./utils";
 var resolveTags = function(name) {
     var tags = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : [];
     var resourceName = name.toLowerCase();
@@ -123,11 +133,11 @@ var removeImutable = function(properties) {
     });
     return newProperties;
 };
-export function generateOpenapiSchemas(resource, tags) {
+function generateOpenapiSchemas(resource, tags) {
     var model = resource.model, columns = resource.columns, search = resource.search, name = resource.name;
     var resourceName = name.toLowerCase();
-    var singleName = convertToSingle(name);
-    var pluralName = convertToPlural(resourceName);
+    var singleName = (0, _utils.convertToSingle)(name);
+    var pluralName = (0, _utils.convertToPlural)(resourceName);
     var groupName = singleName.charAt(0).toUpperCase() + singleName.slice(1);
     var attributeKeys = Object.keys(model.getAttributes());
     var properties = {};
@@ -135,7 +145,7 @@ export function generateOpenapiSchemas(resource, tags) {
     attributeKeys.forEach(function(key) {
         var column = columns[key];
         var attribute = model.getAttributes()[key];
-        var propertyType = convertType(attribute.type.constructor.name);
+        var propertyType = (0, _dataTypes.convertType)(attribute.type.constructor.name);
         var property = _object_spread_props(_object_spread({}, propertyType), {
             description: "".concat(name, " ").concat(key)
         });
@@ -213,10 +223,10 @@ export function generateOpenapiSchemas(resource, tags) {
     };
     var createUpdateProperties = makeCreateUpdateProperties();
     var requestProperties = makeRequestProperties();
-    var responseResolvedPost = makeResponses(name, 201, requestProperties, true);
-    var responseResolvedDelete = makeResponses(name, 204, requestProperties);
-    var responseResolvedGetAndPut = makeResponses(name, 200, requestProperties);
-    var responseResolvedList = makeResponses(name, 200, makeAllResponseProperties());
+    var responseResolvedPost = (0, _responses.makeResponses)(name, 201, requestProperties, true);
+    var responseResolvedDelete = (0, _responses.makeResponses)(name, 204, requestProperties);
+    var responseResolvedGetAndPut = (0, _responses.makeResponses)(name, 200, requestProperties);
+    var responseResolvedList = (0, _responses.makeResponses)(name, 200, makeAllResponseProperties());
     var operationGet = {
         summary: "List ".concat(name),
         description: "List and search ".concat(name),

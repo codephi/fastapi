@@ -1,4 +1,31 @@
-export function extractByMethod(method, target) {
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    extractByMethod: function() {
+        return extractByMethod;
+    },
+    convertOpenAPItoSchemas: function() {
+        return convertOpenAPItoSchemas;
+    },
+    getReferenceSchemaName: function() {
+        return getReferenceSchemaName;
+    },
+    convertToPlural: function() {
+        return convertToPlural;
+    },
+    convertToSingle: function() {
+        return convertToSingle;
+    }
+});
+function extractByMethod(method, target) {
     if (method === "get") {
         return target.get;
     } else if (method === "post") {
@@ -11,7 +38,7 @@ export function extractByMethod(method, target) {
         return target.patch;
     }
 }
-export function convertOpenAPItoSchemas(openAPI) {
+function convertOpenAPItoSchemas(openAPI) {
     var _loop = function(path) {
         var _loop = function(method) {
             if (method !== "parameters") {
@@ -76,15 +103,15 @@ export function convertOpenAPItoSchemas(openAPI) {
     for(var path in openAPI.paths)_loop(path);
     return openAPI;
 }
-export function getReferenceSchemaName(path, method, statusCode) {
+function getReferenceSchemaName(path, method, statusCode) {
     return "#/components/schemas/".concat(getReferenceSchemaNameInner(path, method, statusCode));
 }
 function getReferenceSchemaNameInner(path, method, statusCode) {
     return "".concat(method.toUpperCase(), "_").concat(path.replace(/[\/\:\{\}]/g, "_"), "_").concat(statusCode).replace(/__/g, "_").replace(/_$/, "");
 }
-export function convertToPlural(resourceName) {
+function convertToPlural(resourceName) {
     return resourceName.endsWith("s") ? resourceName : "".concat(resourceName, "s");
 }
-export function convertToSingle(resourceName) {
+function convertToSingle(resourceName) {
     return resourceName.endsWith("s") ? resourceName.slice(0, -1) : resourceName;
 }

@@ -1,3 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    dataTypes: function() {
+        return dataTypes;
+    },
+    convertType: function() {
+        return convertType;
+    }
+});
 function _define_property(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -50,7 +68,7 @@ function _object_spread_props(target, source) {
     }
     return target;
 }
-export var dataTypes = {
+var dataTypes = {
     STRING: {
         type: "string"
     },
@@ -144,7 +162,7 @@ export var dataTypes = {
         format: "time"
     }
 };
-export var convertType = function(sequelizeType) {
+var convertType = function(sequelizeType) {
     var propertyType = dataTypes[sequelizeType];
     if (propertyType === undefined) {
         var occurrence = sequelizeType.search(/[([]/);

@@ -1,16 +1,15 @@
 {
-    "$schema": "https://json.schemastore.org/swcrc",
     "jsc": {
         "parser": {
             "syntax": "typescript",
             "tsx": false,
-            "decorators": false,
-            "dynamicImport": false
+            "decorators": true,
+            "dynamicImport": true
         },
-        "target": "es5",
-        "loose": false,
-        "externalHelpers": false,
-        "keepClassNames": false
+        "target": "es2020",
+        "baseUrl": "."
     },
-    "minify": false
+    "module": {
+        "type": "commonjs"
+    }
 }

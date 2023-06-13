@@ -1,3 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "createTables", {
+    enumerable: true,
+    get: function() {
+        return createTables;
+    }
+});
+const _database = require("../../middle/database");
+const _log = /*#__PURE__*/ _interop_require_default(require("../log"));
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
         var info = gen[key](arg);
@@ -122,9 +139,7 @@ function _ts_generator(thisArg, body) {
         };
     }
 }
-import { global } from "../../middle/database";
-import log from "../log";
-export function createTables(config) {
+function createTables(config) {
     return _createTables.apply(this, arguments);
 }
 function _createTables() {
@@ -135,7 +150,7 @@ function _createTables() {
             switch(_state.label){
                 case 0:
                     closeConnection = _arguments.length > 1 && _arguments[1] !== void 0 ? _arguments[1] : false;
-                    sequelize = global.getSequelize();
+                    sequelize = _database.global.getSequelize();
                     _state.label = 1;
                 case 1:
                     _state.trys.push([
@@ -150,7 +165,7 @@ function _createTables() {
                     ];
                 case 2:
                     _state.sent();
-                    log.info("All tables created.");
+                    _log.default.info("All tables created.");
                     if (!closeConnection) return [
                         3,
                         4
@@ -169,7 +184,7 @@ function _createTables() {
                     ];
                 case 5:
                     error = _state.sent();
-                    log.error("Error creating tables:", error);
+                    _log.default.error("Error creating tables:", error);
                     return [
                         4,
                         sequelize.close()

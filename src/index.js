@@ -1,3 +1,70 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    FastAPI: function() {
+        return FastAPI;
+    },
+    PathBuilder: function() {
+        return _routes.PathBuilder;
+    },
+    RoutesBuilder: function() {
+        return _routes.RoutesBuilder;
+    },
+    makeResponses: function() {
+        return _responses.makeResponses;
+    },
+    SchemaBuilder: function() {
+        return _builder.SchemaBuilder;
+    },
+    AutoColumn: function() {
+        return _builder.AutoColumn;
+    },
+    Model: function() {
+        return _sequelize.SequelizeModel;
+    },
+    Tags: function() {
+        return _openapi.Tags;
+    },
+    log: function() {
+        return _log.default;
+    },
+    Reply: function() {
+        return _fastify.FastifyReply;
+    },
+    Request: function() {
+        return _fastify.FastifyRequest;
+    },
+    modelName: function() {
+        return modelName;
+    }
+});
+const _serve = /*#__PURE__*/ _interop_require_default(require("./middle/serve"));
+const _fastify = require("fastify");
+const _openapi = require("./resources/openapi/index");
+const _routes = require("./resources/routes/index");
+const _createTables = require("./resources/sequelize/createTables");
+const _database = require("./middle/database");
+const _sequelize = require("./resources/sequelize/index");
+const _health = /*#__PURE__*/ _interop_require_default(require("./routes/health"));
+const _openapi1 = /*#__PURE__*/ _interop_require_default(require("./routes/openapi"));
+const _events = require("./resources/events");
+const _util = require("util");
+const _log = /*#__PURE__*/ _interop_require_default(require("./resources/log"));
+const _responses = require("./resources/openapi/responses");
+const _builder = require("./resources/sequelize/builder");
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
         var info = gen[key](arg);
@@ -203,19 +270,7 @@ function _ts_generator(thisArg, body) {
         };
     }
 }
-import api from "./middle/serve";
-import { FastifyRequest, FastifyReply } from "fastify";
-import { Tags, generateOpenapiSchemas } from "./resources/openapi";
-import { PathBuilder, RoutesBuilder, CreateRoutes, routesToPaths } from "./resources/routes";
-import { createTables } from "./resources/sequelize/createTables";
-import { databaseConnect, testDatabaseConnection, setGlobalSequelize } from "./middle/database";
-import { SequelizeModel, importResources } from "./resources/sequelize";
-import healthRoute from "./routes/health";
-import builderOpeapi from "./routes/openapi";
-import { on, emit, remove } from "./resources/events";
-import { promisify } from "util";
-import log from "./resources/log";
-export var FastAPI = /*#__PURE__*/ function() {
+var FastAPI = /*#__PURE__*/ function() {
     "use strict";
     function FastAPI(props) {
         _class_call_check(this, FastAPI);
@@ -291,8 +346,8 @@ export var FastAPI = /*#__PURE__*/ function() {
                 this.listenConfig = props.listen;
             }
         }
-        this.api = api();
-        this.listen = promisify(this.api.listen.bind(this.api));
+        this.api = (0, _serve.default)();
+        this.listen = (0, _util.promisify)(this.api.listen.bind(this.api));
         return this;
     }
     _create_class(FastAPI, [
@@ -305,7 +360,7 @@ export var FastAPI = /*#__PURE__*/ function() {
                     "password",
                     "username"
                 ]);
-                databaseConnect({
+                (0, _database.databaseConnect)({
                     database: database,
                     password: password,
                     username: username,
@@ -317,7 +372,7 @@ export var FastAPI = /*#__PURE__*/ function() {
         {
             key: "setDatabaseInstance",
             value: function setDatabaseInstance(database) {
-                setGlobalSequelize(database);
+                (0, _database.setGlobalSequelize)(database);
                 this.databaseLoaded = true;
             }
         },
@@ -335,7 +390,7 @@ export var FastAPI = /*#__PURE__*/ function() {
                     schema = this.schema;
                 }
                 if (schema) {
-                    this.resources = importResources(schema);
+                    this.resources = (0, _sequelize.importResources)(schema);
                     for(var key in this.resources){
                         var resource = this.resources[key];
                         this.models[modelName(resource.name)] = resource.model;
@@ -352,10 +407,10 @@ export var FastAPI = /*#__PURE__*/ function() {
                 var resources = this.resources;
                 var tags = this.tags;
                 var handlers = this.handlers;
-                var createRoutes = new CreateRoutes(this.api);
+                var createRoutes = new _routes.CreateRoutes(this.api);
                 for(var key in this.resources){
                     var resource = resources[key];
-                    var paths = generateOpenapiSchemas(resource, tags).paths;
+                    var paths = (0, _openapi.generateOpenapiSchemas)(resource, tags).paths;
                     createRoutes.createRouteResource({
                         paths: paths,
                         resource: resource,
@@ -366,12 +421,12 @@ export var FastAPI = /*#__PURE__*/ function() {
                 var paths1 = {};
                 this.routes.forEach(function(route) {
                     createRoutes.createRoutes(_object_spread({}, route));
-                    paths1 = _object_spread({}, paths1, routesToPaths(route));
+                    paths1 = _object_spread({}, paths1, (0, _routes.routesToPaths)(route));
                 });
-                var health = healthRoute();
+                var health = (0, _health.default)();
                 createRoutes.createRoutes(health);
-                var healthPaths = routesToPaths(health);
-                var openapi = builderOpeapi(_object_spread({}, shemasPaths, healthPaths, paths1));
+                var healthPaths = (0, _routes.routesToPaths)(health);
+                var openapi = (0, _openapi1.default)(_object_spread({}, shemasPaths, healthPaths, paths1));
                 createRoutes.createRoutes(openapi);
                 createRoutes.api.setErrorHandler(function(error, request, reply) {
                     reply.send(error);
@@ -414,13 +469,13 @@ export var FastAPI = /*#__PURE__*/ function() {
                                 }
                                 return [
                                     4,
-                                    testDatabaseConnection()
+                                    (0, _database.testDatabaseConnection)()
                                 ];
                             case 1:
                                 _state.sent();
                                 return [
                                     4,
-                                    createTables(createTablesConfig)
+                                    (0, _createTables.createTables)(createTablesConfig)
                                 ];
                             case 2:
                                 _state.sent();
@@ -473,7 +528,7 @@ export var FastAPI = /*#__PURE__*/ function() {
             // Routes
             key: "addRoutes",
             value: function addRoutes(routes) {
-                if (_instanceof(routes, RoutesBuilder) || _instanceof(routes, PathBuilder)) {
+                if (_instanceof(routes, _routes.RoutesBuilder) || _instanceof(routes, _routes.PathBuilder)) {
                     routes = routes.build();
                 }
                 this.routes.push(routes);
@@ -531,33 +586,28 @@ export var FastAPI = /*#__PURE__*/ function() {
             // Events
             key: "on",
             value: function on1(modelName, action, callback) {
-                on(modelName, action, callback);
+                (0, _events.on)(modelName, action, callback);
                 return this;
             }
         },
         {
             key: "emit",
             value: function emit1(modelName, action, err, data) {
-                emit(modelName, action, err, data);
+                (0, _events.emit)(modelName, action, err, data);
                 return this;
             }
         },
         {
             key: "removeListener",
             value: function removeListener(modelName, action) {
-                remove(modelName, action);
+                (0, _events.remove)(modelName, action);
                 return this;
             }
         }
     ]);
     return FastAPI;
 }();
-export { PathBuilder, RoutesBuilder } from "./resources/routes";
-export { makeResponses } from "./resources/openapi/responses";
-export { SchemaBuilder, AutoColumn } from "./resources/sequelize/builder";
-export { SequelizeModel as Model, Tags, log };
-export { FastifyReply as Reply, FastifyRequest as Request };
-export function modelName(text) {
+function modelName(text) {
     var name = text.charAt(0).toUpperCase();
     // se terminar com s, remove a ultima letra
     if (text[text.length - 1] === "s") {

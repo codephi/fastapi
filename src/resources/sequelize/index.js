@@ -1,3 +1,64 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    SequelizeModel: function() {
+        return SequelizeModel;
+    },
+    importResources: function() {
+        return importResources;
+    }
+});
+const _sequelize = require("sequelize");
+const _database = require("../../middle/database");
+const _fs = /*#__PURE__*/ _interop_require_wildcard(require("fs"));
+const _utils = require("../openapi/utils");
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+}
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
+}
 function _assert_this_initialized(self) {
     if (self === void 0) {
         throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -96,11 +157,7 @@ function _create_super(Derived) {
         return _possible_constructor_return(this, result);
     };
 }
-import { DataTypes, Model } from "sequelize";
-import { global } from "../../middle/database";
-import * as fs from "fs";
-import { convertToSingle } from "../openapi/utils";
-export var SequelizeModel = /*#__PURE__*/ function(Model) {
+var SequelizeModel = /*#__PURE__*/ function(Model) {
     "use strict";
     _inherits(SequelizeModel, Model);
     var _super = _create_super(SequelizeModel);
@@ -109,7 +166,7 @@ export var SequelizeModel = /*#__PURE__*/ function(Model) {
         return _super.apply(this, arguments);
     }
     return SequelizeModel;
-}(Model);
+}(_sequelize.Model);
 function generateResourcesFromJSON(jsonSchema) {
     var resources = {};
     var _iteratorNormalCompletion = true, _didIteratorError = false, _iteratorError = undefined;
@@ -118,7 +175,7 @@ function generateResourcesFromJSON(jsonSchema) {
             var table = _step.value;
             var tableColumns = {};
             var tableName = getTableName(table.name);
-            var singleName = convertToSingle(tableName);
+            var singleName = (0, _utils.convertToSingle)(tableName);
             var resurceName = getResourceName(table.name);
             var resource = {
                 primaryKey: null,
@@ -177,9 +234,9 @@ function generateResourcesFromJSON(jsonSchema) {
                     return _super.apply(this, arguments);
                 }
                 return DynamicTable;
-            }(Model);
+            }(_sequelize.Model);
             DynamicTable.init(tableColumns, {
-                sequelize: global.getSequelize(),
+                sequelize: _database.global.getSequelize(),
                 modelName: singleName
             });
             resource.model = DynamicTable;
@@ -290,16 +347,16 @@ function getDefaultValue(columnConstraints, columnType) {
         if (value === "NULL") {
             return null;
         }
-        if (columnTypeString === DataTypes.INTEGER.name) {
+        if (columnTypeString === _sequelize.DataTypes.INTEGER.name) {
             return parseInt(value);
         }
-        if (columnTypeString === DataTypes.FLOAT.name) {
+        if (columnTypeString === _sequelize.DataTypes.FLOAT.name) {
             return parseFloat(value);
         }
-        if (columnTypeString === DataTypes.BOOLEAN.name) {
+        if (columnTypeString === _sequelize.DataTypes.BOOLEAN.name) {
             return value === "true";
         }
-        if (columnTypeString === DataTypes.STRING.name || columnTypeString === DataTypes.ENUM.name || columnTypeString === DataTypes.CHAR.name || columnTypeString === DataTypes.TEXT.name) {
+        if (columnTypeString === _sequelize.DataTypes.STRING.name || columnTypeString === _sequelize.DataTypes.ENUM.name || columnTypeString === _sequelize.DataTypes.CHAR.name || columnTypeString === _sequelize.DataTypes.TEXT.name) {
             return value.slice(1, -1);
         }
         return value;
@@ -334,35 +391,35 @@ function getSequelizeDataType(column) {
     ]);
     var columnType = type.toUpperCase();
     if ((columnType.includes("TEXT") || columnType.includes("VARCHAR")) && attributes.maxLength) {
-        return DataTypes.STRING(attributes.maxLength, attributes.binary);
+        return _sequelize.DataTypes.STRING(attributes.maxLength, attributes.binary);
     } else if (columnType === "STRING") {
-        return DataTypes.STRING(attributes.maxLength, attributes.binary);
+        return _sequelize.DataTypes.STRING(attributes.maxLength, attributes.binary);
     } else if (columnType === "CHAR") {
-        return DataTypes.CHAR(attributes.maxLength, attributes.binary);
+        return _sequelize.DataTypes.CHAR(attributes.maxLength, attributes.binary);
     } else if (columnType === "TEXT") {
-        return DataTypes.TEXT;
+        return _sequelize.DataTypes.TEXT;
     } else if (columnType === "DATE") {
-        return DataTypes.DATE(attributes.maxLength);
+        return _sequelize.DataTypes.DATE(attributes.maxLength);
     } else if (columnType === "TIME") {
-        return DataTypes.TIME;
+        return _sequelize.DataTypes.TIME;
     } else if (columnType === "NOW") {
-        return DataTypes.NOW;
+        return _sequelize.DataTypes.NOW;
     } else if (columnType === "BOOLEAN") {
-        return DataTypes.BOOLEAN;
+        return _sequelize.DataTypes.BOOLEAN;
     } else if (columnType === "UUID") {
-        return DataTypes.UUID;
+        return _sequelize.DataTypes.UUID;
     } else if (columnType === "ENUM") {
-        return DataTypes.ENUM.apply(null, attributes.values);
+        return _sequelize.DataTypes.ENUM.apply(null, attributes.values);
     } else if (columnType === "JSON" || columnType === "JSONTYPE") {
-        return DataTypes.JSON;
+        return _sequelize.DataTypes.JSON;
     } else if (columnType === "INT" || columnType === "INTEGER" || columnType === "SERIAL") {
-        return DataTypes.INTEGER;
+        return _sequelize.DataTypes.INTEGER;
     } else if (columnType === "FLOAT") {
-        return DataTypes.FLOAT(attributes.length, attributes.decimals);
+        return _sequelize.DataTypes.FLOAT(attributes.length, attributes.decimals);
     } else if (columnType === "BIGINT" || columnType === "SMALLINT" || columnType === "TINYINT" || columnType === "MEDIUMINT" || columnType === "DOUBLE" || columnType === "DECIMAL" || columnType === "REAL" || columnType === "NUMERIC") {
-        return DataTypes.NUMBER(getNumberProps(attributes));
+        return _sequelize.DataTypes.NUMBER(getNumberProps(attributes));
     } else if (columnType === "CODE") {
-        return DataTypes.STRING(attributes.maxLength, attributes.binary);
+        return _sequelize.DataTypes.STRING(attributes.maxLength, attributes.binary);
     }
     throw new Error("Unknown column type: ".concat(columnType));
 }
@@ -397,8 +454,8 @@ function getReferencedTableName(constraints) {
     }
     return null;
 }
-export function importResources(target) {
-    var schemaJson = typeof target === "string" ? JSON.parse(fs.readFileSync(target, "utf8")) : target;
+function importResources(target) {
+    var schemaJson = typeof target === "string" ? JSON.parse(_fs.readFileSync(target, "utf8")) : target;
     var resource = generateResourcesFromJSON(schemaJson);
     return resource;
 }

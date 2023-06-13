@@ -1,22 +1,58 @@
-function _define_property(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, {
-            value: value,
-            enumerable: true,
-            configurable: true,
-            writable: true
-        });
-    } else {
-        obj[key] = value;
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "superFiler", {
+    enumerable: true,
+    get: function() {
+        return superFiler;
     }
-    return obj;
+});
+const _pt_BRjson = /*#__PURE__*/ _interop_require_wildcard(require("../../dicts/pt_BR.json"));
+const _sequelize = require("sequelize");
+function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function") return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function(nodeInterop) {
+        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
 }
-import * as dictPtBr from "../../dicts/pt_BR.json";
-import { Op } from "sequelize";
-var spellingDictionary = dictPtBr;
+function _interop_require_wildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+        return obj;
+    }
+    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+        return {
+            default: obj
+        };
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+        return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for(var key in obj){
+        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+            if (desc && (desc.get || desc.set)) {
+                Object.defineProperty(newObj, key, desc);
+            } else {
+                newObj[key] = obj[key];
+            }
+        }
+    }
+    newObj.default = obj;
+    if (cache) {
+        cache.set(obj, newObj);
+    }
+    return newObj;
+}
+const spellingDictionary = _pt_BRjson;
 function fixText(text) {
-    var words = text.toLowerCase().split(" ");
-    var fixedWords = words.map(function(word) {
+    const words = text.toLowerCase().split(' ');
+    const fixedWords = words.map((word)=>{
         if (spellingDictionary[word]) {
             return spellingDictionary[word];
         } else {
@@ -25,49 +61,71 @@ function fixText(text) {
     });
     return fixedWords;
 }
-var formaCondition = function(searchTerm) {
-    return _define_property({}, Op.iLike, "%".concat(searchTerm, "%"));
+const formaCondition = (searchTerm)=>{
+    return {
+        [_sequelize.Op.iLike]: `%${searchTerm}%`
+    };
 };
-var addTerm = function(target, fullTarget) {
-    var history = [
+const addTerm = (target, fullTarget)=>{
+    const history = [
         fullTarget
     ];
     target.push(formaCondition(fullTarget));
-    var targetSplit = fullTarget.split(" ");
+    const targetSplit = fullTarget.split(' ');
     if (targetSplit.length > 1) {
-        targetSplit.forEach(function(word) {
-            var formated = formaCondition(word);
-            if (history.indexOf("%".concat(word, "%")) === -1) {
-                history.push("%".concat(word, "%"));
+        targetSplit.forEach((word)=>{
+            const formated = formaCondition(word);
+            if (history.indexOf(`%${word}%`) === -1) {
+                history.push(`%${word}%`);
                 target.push(formated);
             }
         });
     }
     return target;
 };
-var superFiler = function(fields, searchTerm) {
-    var term = addTerm([], searchTerm);
-    var textFixed = fixText(searchTerm);
-    var textFixedJoin = textFixed.join(" ");
+const superFiler = (fields, searchTerm)=>{
+    let term = addTerm([], searchTerm);
+    const textFixed = fixText(searchTerm);
+    const textFixedJoin = textFixed.join(' ');
     if (searchTerm !== textFixedJoin) {
         term = addTerm(term, textFixedJoin);
     }
-    var termNotAccents = removeAccents(searchTerm);
+    const termNotAccents = removeAccents(searchTerm);
     if (searchTerm !== termNotAccents && textFixedJoin !== termNotAccents) {
         term = addTerm(term, termNotAccents);
     }
-    var termFields = [];
-    fields.forEach(function(field) {
-        term.forEach(function(item) {
-            termFields.push(_define_property({}, field, item));
+    const termFields = [];
+    fields.forEach((field)=>{
+        term.forEach((item)=>{
+            termFields.push({
+                [field]: item
+            });
         });
     });
-    return _define_property({}, Op.or, termFields);
+    return {
+        [_sequelize.Op.or]: termFields
+    };
 };
 function removeAccents(text) {
-    var accentMap = {
-        a: "[a\xe0\xe1\xe2\xe3\xe4\xe5]",
-        ae: "\xe6",
+    const accentMap = {
+        a: '[aàáâãäå]',
+        ae: 'æ',
+        c: 'ç',
+        e: '[eèéêë]',
+        i: '[iìíîï]',
+        n: 'ñ',
+        o: '[oòóôõö]',
+        oe: 'œ',
+        u: '[uùúûűü]',
+        y: '[yÿ]'
+    };
+    for(let letter in accentMap){
+        const regex = new RegExp(accentMap[letter], 'gi');
+        text = text.replace(regex, letter);
+    }
+    return text;
+}
+ae: "\xe6",
         c: "\xe7",
         e: "[e\xe8\xe9\xea\xeb]",
         i: "[i\xec\xed\xee\xef]",
@@ -83,4 +141,3 @@ function removeAccents(text) {
     }
     return text;
 }
-export { superFiler };

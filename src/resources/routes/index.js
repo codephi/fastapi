@@ -1,3 +1,36 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    MethodType: function() {
+        return MethodType;
+    },
+    routesToPaths: function() {
+        return routesToPaths;
+    },
+    PathBuilder: function() {
+        return PathBuilder;
+    },
+    RoutesBuilder: function() {
+        return RoutesBuilder;
+    },
+    CreateRoutes: function() {
+        return CreateRoutes;
+    },
+    resolveResponses: function() {
+        return resolveResponses;
+    }
+});
+const _routes = require("./routes");
+const _responses = require("../openapi/responses");
+const _utils = require("../openapi/utils");
 function _array_like_to_array(arr, len) {
     if (len == null || len > arr.length) len = arr.length;
     for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
@@ -103,10 +136,7 @@ function _unsupported_iterable_to_array(o, minLen) {
     if (n === "Map" || n === "Set") return Array.from(n);
     if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array(o, minLen);
 }
-import { getAll, getOne, create, update, remove } from "./routes";
-import { makeResponses } from "../openapi/responses";
-import { extractByMethod } from "../openapi/utils";
-export var MethodType;
+var MethodType;
 (function(MethodType) {
     MethodType["GET"] = "get";
     MethodType["POST"] = "post";
@@ -123,7 +153,7 @@ function getOperations(value) {
         patch: value.patch
     };
 }
-export function routesToPaths(routes) {
+function routesToPaths(routes) {
     var paths = {};
     Object.keys(routes).forEach(function(path) {
         paths[path] = {};
@@ -161,7 +191,7 @@ export function routesToPaths(routes) {
     });
     return paths;
 }
-export var PathBuilder = /*#__PURE__*/ function() {
+var PathBuilder = /*#__PURE__*/ function() {
     "use strict";
     function PathBuilder(parent, pathName) {
         _class_call_check(this, PathBuilder);
@@ -256,7 +286,7 @@ export var PathBuilder = /*#__PURE__*/ function() {
     ]);
     return PathBuilder;
 }();
-export var RoutesBuilder = /*#__PURE__*/ function() {
+var RoutesBuilder = /*#__PURE__*/ function() {
     "use strict";
     function RoutesBuilder(resourceName) {
         _class_call_check(this, RoutesBuilder);
@@ -285,7 +315,7 @@ export var RoutesBuilder = /*#__PURE__*/ function() {
             key: "responses",
             value: function responses(defaultSuccessStatusCode, successProperties) {
                 var conflict = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
-                return makeResponses(this.resourceName, defaultSuccessStatusCode, successProperties, conflict);
+                return (0, _responses.makeResponses)(this.resourceName, defaultSuccessStatusCode, successProperties, conflict);
             }
         },
         {
@@ -306,7 +336,7 @@ function isHandler(handlers) {
     }
     return false;
 }
-export var CreateRoutes = /*#__PURE__*/ function() {
+var CreateRoutes = /*#__PURE__*/ function() {
     "use strict";
     function CreateRoutes(api) {
         _class_call_check(this, CreateRoutes);
@@ -344,11 +374,11 @@ export var CreateRoutes = /*#__PURE__*/ function() {
                     var _param = _sliced_to_array(param, 2), path = _param[0], value = _param[1];
                     var innerOperation = getOperations(value);
                     Object.keys(innerOperation).forEach(function(method) {
-                        var operation = extractByMethod(method, innerOperation);
+                        var operation = (0, _utils.extractByMethod)(method, innerOperation);
                         if (!operation) {
                             return;
                         }
-                        var handler = isHandler(handlers) ? extractByMethod(method, handlers) : getRouteHandler(method, resource, operation);
+                        var handler = isHandler(handlers) ? (0, _utils.extractByMethod)(method, handlers) : getRouteHandler(method, resource, operation);
                         if (handler === undefined) {
                             return;
                         }
@@ -444,7 +474,7 @@ function filterPropertiesRecursive(properties) {
     });
     return newProperties;
 }
-export function resolveResponses(responses) {
+function resolveResponses(responses) {
     if (!responses) return {};
     var newResponses = {};
     Object.keys(responses).forEach(function(statusCode) {
@@ -465,16 +495,16 @@ export function resolveResponses(responses) {
 function getRouteHandler(method, resource, operation) {
     if (method === "get") {
         if (operation["x-admin"].types.includes("list")) {
-            return getAll(resource);
+            return (0, _routes.getAll)(resource);
         } else {
-            return getOne(resource);
+            return (0, _routes.getOne)(resource);
         }
     } else if (method === "post") {
-        return create(resource);
+        return (0, _routes.create)(resource);
     } else if (method === "put") {
-        return update(resource);
+        return (0, _routes.update)(resource);
     } else if (method === "delete") {
-        return remove(resource);
+        return (0, _routes.remove)(resource);
     }
 }
 function resolvePath(path) {
