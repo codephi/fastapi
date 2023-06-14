@@ -158,8 +158,8 @@ export class FastAPI {
 
     this.sequelize = new Sequelize(
       database,
-      password,
       username,
+      password,
       options as Options
     );
 
