@@ -151,7 +151,7 @@ export class FastAPI {
     return this;
   }
 
-  private databaseInstance() {
+  private loadDatabaseInstance() {
     if (this.databaseLoaded) return;
 
     const { database, password, username, ...options } = this.database;
@@ -176,7 +176,7 @@ export class FastAPI {
   }
 
   loadSchema(schema?: string | Schema): void {
-    this.databaseInstance();
+    this.loadDatabaseInstance();
 
     if (schema === undefined) {
       schema = this.schema;
