@@ -42,7 +42,7 @@ export interface LoadSpecOptions {
 export interface FastAPIOptions {
   routes?: Routes[];
   tags?: Tags;
-  handlers?: Handlers;
+  handlers?: { [path: string]: Handlers };
   schema?: string | Schema;
   resources?: Resources;
   database?: DatabaseOptions;
@@ -84,7 +84,9 @@ export class FastAPI {
     delete: ['delete'],
     list: ['list']
   };
-  handlers: Handlers = {};
+  handlers: {
+    [path: string]: Handlers;
+  };
   private schema?: string | Schema;
   resources: Resources = {};
   models: Models = {};
@@ -305,7 +307,7 @@ export class FastAPI {
     this.routes.push(routes);
   }
 
-  addHandlers(handlers: Handlers): void {
+  addHandlers(handlers: { [path: string]: Handlers }): void {
     this.handlers = { ...this.handlers, ...handlers };
   }
 

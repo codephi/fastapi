@@ -34,7 +34,7 @@ export interface Handlers {
 
 export interface ResourceProps {
   paths: Paths;
-  handlers?: Handlers;
+  handlers?: { [path: string]: Handlers };
   resource?: Resource;
 }
 
@@ -245,24 +245,6 @@ interface RouterInner {
   operation: Operation;
 }
 
-function isHandler(handlers: Handlers | undefined): boolean {
-  if (handlers === undefined) {
-    return false;
-  }
-
-  if (
-    handlers.get ||
-    handlers.post ||
-    handlers.put ||
-    handlers.delete ||
-    handlers.patch
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
 export class CreateRoutes {
   api: FastifyInstance;
 
@@ -290,9 +272,13 @@ export class CreateRoutes {
           return;
         }
 
-        const handler = isHandler(handlers)
-          ? (extractByMethod(method, handlers) as RouteHandler)
-          : getRouteHandler(method, resource, operation);
+        const handler = this.getHandler(
+          handlers,
+          path,
+          method,
+          resource,
+          operation
+        );
 
         if (handler === undefined) {
           return;
@@ -301,6 +287,20 @@ export class CreateRoutes {
         this.createRouteInner({ path, method, operation, handler });
       });
     });
+  }
+
+  getHandler(
+    handlers: { [path: string]: Handlers } | undefined,
+    path: string,
+    method: string,
+    resource: Resource,
+    operation: Operation
+  ): RouteHandler {
+    if (handlers !== undefined && handlers[path] !== undefined) {
+      return extractByMethod(method, handlers[path]) as RouteHandler;
+    }
+
+    return getRouteHandler(method, resource, operation);
   }
 
   createRouteInner({ path, method, operation, handler }: RouterInner) {
