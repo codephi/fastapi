@@ -1,7 +1,7 @@
 import * as os from 'os';
-import { global } from '../middle/database';
-import { Route, Routes, RoutesBuilder } from '../resources/routes';
+import { Routes, RoutesBuilder } from '../resources/routes';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { Sequelize } from 'sequelize';
 
 const healthRoute = new RoutesBuilder('health');
 const responsesAll = healthRoute.responses(200, {
@@ -67,7 +67,7 @@ const responsesAll = healthRoute.responses(200, {
   status: { type: 'string' }
 });
 
-export default (): Routes =>
+export default (sequelize: Sequelize): Routes =>
   healthRoute
     .path('/health')
     .get({
@@ -85,7 +85,7 @@ export default (): Routes =>
       summary: 'Get all health information',
       description: 'Get all health information',
       responses: responsesAll,
-      handler: handlerAll
+      handler: handlerAll(sequelize)
     })
     .build();
 
@@ -93,17 +93,19 @@ function handlerStatus(_request: FastifyRequest, reply: FastifyReply) {
   reply.send({ status: 'UP' });
 }
 
-function handlerAll(_request: FastifyRequest, reply: FastifyReply) {
-  reply.send({
-    memory: getMemoryInfo(),
-    process: getProcessInfo(),
-    os: getOsInfo(),
-    database: getDatabaseInfo(),
-    container: getContainerInfo(),
-    app: getAppInfo(),
-    status: 'UP'
-  } as Response);
-}
+const handlerAll =
+  (sequelize: Sequelize) =>
+  (_request: FastifyRequest, reply: FastifyReply): void => {
+    reply.send({
+      memory: getMemoryInfo(),
+      process: getProcessInfo(),
+      os: getOsInfo(),
+      database: getDatabaseInfo(sequelize),
+      container: getContainerInfo(),
+      app: getAppInfo(),
+      status: 'UP'
+    } as Response);
+  };
 
 interface Response {
   status: string;
@@ -198,8 +200,7 @@ interface DatabaseInfo {
   username: string;
 }
 
-function getDatabaseInfo(): DatabaseInfo {
-  const sequelize = global.getSequelize();
+function getDatabaseInfo(sequelize: Sequelize): DatabaseInfo {
   const dialect = sequelize.getDialect();
   const host = sequelize.config.host as string;
   const port = parseInt(sequelize.config.port as string);

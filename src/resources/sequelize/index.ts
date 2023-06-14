@@ -1,5 +1,4 @@
-import { DataTypes, Model, ModelAttributes, ModelStatic } from 'sequelize';
-import { global } from '../../middle/database';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 import * as fs from 'fs';
 import { convertToSingle } from '../openapi/utils';
 
@@ -61,7 +60,10 @@ export interface Resources {
   [resurceName: string]: Resource;
 }
 
-function generateResourcesFromJSON(jsonSchema: Schema): Resources {
+export function generateResourcesFromJSON(
+  jsonSchema: Schema,
+  sequelize: Sequelize
+): Resources {
   const resources: Resources = {};
 
   for (const table of jsonSchema.tables) {
@@ -107,7 +109,7 @@ function generateResourcesFromJSON(jsonSchema: Schema): Resources {
     class DynamicTable extends Model {}
 
     DynamicTable.init(tableColumns, {
-      sequelize: global.getSequelize(),
+      sequelize,
       modelName: singleName
     });
 
@@ -167,44 +169,6 @@ function getTableName(name: string): string {
   return name.toLowerCase();
 }
 
-function getDefaultValue(
-  columnConstraints: string[],
-  columnType: DataTypesResult
-): any {
-  const columnTypeString = columnType.valueOf().toString();
-  const defaultValue = columnConstraints.find((constraint) =>
-    constraint.startsWith('DEFAULT')
-  );
-
-  if (defaultValue) {
-    const value = defaultValue.split('DEFAULT ')[1];
-    if (value === 'NULL') {
-      return null;
-    }
-    if (columnTypeString === DataTypes.INTEGER.name) {
-      return parseInt(value);
-    }
-    if (columnTypeString === DataTypes.FLOAT.name) {
-      return parseFloat(value);
-    }
-    if (columnTypeString === DataTypes.BOOLEAN.name) {
-      return value === 'true';
-    }
-    if (
-      columnTypeString === DataTypes.STRING.name ||
-      columnTypeString === DataTypes.ENUM.name ||
-      columnTypeString === DataTypes.CHAR.name ||
-      columnTypeString === DataTypes.TEXT.name
-    ) {
-      return value.slice(1, -1);
-    }
-
-    return value;
-  }
-
-  return undefined;
-}
-
 function getNumberProps(attributes: Record<string, any>): Record<string, any> {
   const params: Record<string, any> = {};
 
@@ -255,8 +219,6 @@ function getSequelizeDataType(column: Column): DataTypesResult {
     return DataTypes.DATE(attributes.maxLength);
   } else if (columnType === 'TIME') {
     return DataTypes.TIME;
-  } else if (columnType === 'NOW') {
-    return DataTypes.NOW;
   } else if (columnType === 'BOOLEAN') {
     return DataTypes.BOOLEAN;
   } else if (columnType === 'UUID') {
@@ -289,53 +251,4 @@ function getSequelizeDataType(column: Column): DataTypesResult {
   }
 
   throw new Error(`Unknown column type: ${columnType}`);
-}
-
-function getSequelizeConstraints(columnConstraints: string[]): string[] {
-  // Remover a referência ao modelo pai da restrição de chave estrangeira
-  return columnConstraints.filter(
-    (constraint) => !constraint.includes('REFERENCES')
-  );
-}
-
-function parseReferences(
-  columnConstraints: string[]
-): { model: string; key: string } | null {
-  // Analisar a referência da restrição de chave estrangeira, se existir
-  const referencesConstraint = columnConstraints.find((constraint) =>
-    constraint.includes('REFERENCES')
-  );
-
-  if (referencesConstraint) {
-    const referencedTable = getReferencedTableName([referencesConstraint]);
-    return {
-      model: referencedTable!,
-      key: 'id' // Assumindo que a coluna referenciada é sempre 'id'
-    };
-  }
-
-  return null;
-}
-
-function getReferencedTableName(constraints: string[]): string | null {
-  // Extrair o nome da tabela referenciada da restrição de chave estrangeira
-  const referenceRegex = /REFERENCES\s+(\w+)\s+\(.*\)/;
-  const match = constraints[0].match(referenceRegex);
-
-  if (match) {
-    return match[1];
-  }
-
-  return null;
-}
-
-export function importResources(target: string | Schema): Resources {
-  const schemaJson =
-    typeof target === 'string'
-      ? JSON.parse(fs.readFileSync(target, 'utf8'))
-      : target;
-
-  const resource = generateResourcesFromJSON(schemaJson);
-
-  return resource;
 }

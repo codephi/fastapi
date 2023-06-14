@@ -16,27 +16,21 @@ import {
   CreateRoutes,
   routesToPaths
 } from './resources/routes';
-import { createTables } from './resources/sequelize/createTables';
-import {
-  databaseConnect,
-  testDatabaseConnection,
-  DatabaseConnect,
-  setGlobalSequelize
-} from './middle/database';
 import {
   Resource,
   Resources,
   Schema,
   SequelizeModel,
-  importResources
+  generateResourcesFromJSON
 } from './resources/sequelize';
 import healthRoute from './routes/health';
 import builderOpeapi from './routes/openapi';
 import { on, emit, remove, EventCallback } from './resources/events';
-import { OpenAPI, Paths } from './resources/openapi/openapiTypes';
-import { Sequelize, SyncOptions } from 'sequelize';
+import { Paths } from './resources/openapi/openapiTypes';
+import { Options, Sequelize, SyncOptions } from 'sequelize';
 import { promisify } from 'util';
 import log from './resources/log';
+import * as fs from 'fs';
 
 export interface LoadSpecOptions {
   resources: Resources;
@@ -114,6 +108,7 @@ export class FastAPI {
   api: FastifyInstance;
   private databaseLoaded = false;
   private listen: (options: FastifyListenOptions) => Promise<void>;
+  sequelize?: Sequelize;
 
   constructor(props?: FastAPIOptions) {
     if (props) {
@@ -161,18 +156,18 @@ export class FastAPI {
 
     const { database, password, username, ...options } = this.database;
 
-    databaseConnect({
+    this.sequelize = new Sequelize(
       database,
       password,
       username,
-      options
-    } as DatabaseConnect);
+      options as Options
+    );
 
     this.databaseLoaded = true;
   }
 
-  setDatabaseInstance(database: Sequelize): void {
-    setGlobalSequelize(database);
+  setDatabaseInstance(sequelize: Sequelize): void {
+    this.sequelize = sequelize;
     this.databaseLoaded = true;
   }
 
@@ -188,7 +183,15 @@ export class FastAPI {
     }
 
     if (schema) {
-      this.resources = importResources(schema);
+      const schemaJson =
+        typeof schema === 'string'
+          ? JSON.parse(fs.readFileSync(schema, 'utf8'))
+          : schema;
+
+      this.resources = generateResourcesFromJSON(
+        schemaJson,
+        this.sequelize as Sequelize
+      );
 
       for (const key in this.resources) {
         const resource = this.resources[key];
@@ -227,7 +230,7 @@ export class FastAPI {
       paths = { ...paths, ...routesToPaths(route) };
     });
 
-    const health = healthRoute();
+    const health = healthRoute(this.sequelize as Sequelize);
 
     createRoutes.createRoutes(health);
 
@@ -272,8 +275,33 @@ export class FastAPI {
         createTablesConfig.force = true;
       }
 
-      await testDatabaseConnection();
-      await createTables(createTablesConfig);
+      await this.testDatabaseConnection();
+      await this.createTables(createTablesConfig);
+    }
+  }
+
+  private async createTables(
+    config: SyncOptions,
+    closeConnection = false
+  ): Promise<void> {
+    try {
+      await this.sequelize.sync(config);
+      log.info('All tables created.');
+
+      if (closeConnection) {
+        await this.sequelize.close();
+      }
+    } catch (error) {
+      log.error('Error creating tables:', error);
+      await this.sequelize.close();
+    }
+  }
+
+  async testDatabaseConnection(): Promise<void> {
+    if (this.sequelize) {
+      await this.sequelize.authenticate();
+    } else {
+      throw new Error('Database connection not established');
     }
   }
 
