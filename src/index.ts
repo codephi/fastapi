@@ -316,13 +316,16 @@ export class FastAPI {
   }
 
   // Routes
-  addRoutes(routes: Routes | RoutesBuilder | PathBuilder): FastAPI {
+  addRoutes(routes: Routes | RoutesBuilder | PathBuilder): void {
     if (routes instanceof RoutesBuilder || routes instanceof PathBuilder) {
       routes = routes.build();
     }
 
     this.routes.push(routes);
-    return this;
+  }
+
+  addHandlers(handlers: Handlers): void {
+    this.handlers = { ...this.handlers, ...handlers };
   }
 
   path(path: string, options: Methods): FastAPI {
@@ -383,7 +386,7 @@ export class FastAPI {
 export { PathBuilder, RoutesBuilder } from './resources/routes';
 export { makeResponses } from './resources/openapi/responses';
 export { SchemaBuilder, AutoColumn } from './resources/sequelize/builder';
-export { SequelizeModel as Model, Tags, log };
+export { SequelizeModel as Model, Tags, log, Handlers };
 export { FastifyReply as Reply, FastifyRequest as Request };
 
 export function modelName(text: string): string {
