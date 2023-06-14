@@ -24,7 +24,7 @@ export enum MethodType {
   PATCH = 'patch'
 }
 
-export interface Handlers {
+export interface HandlerMethods {
   get?: RouteHandler;
   post?: RouteHandler;
   put?: RouteHandler;
@@ -32,9 +32,13 @@ export interface Handlers {
   patch?: RouteHandler;
 }
 
+export interface Handlers {
+  [path: string]: HandlerMethods;
+}
+
 export interface ResourceProps {
   paths: Paths;
-  handlers?: { [path: string]: Handlers };
+  handlers?: Handlers;
   resource?: Resource;
 }
 
@@ -290,7 +294,7 @@ export class CreateRoutes {
   }
 
   getHandler(
-    handlers: { [path: string]: Handlers } | undefined,
+    handlers: Handlers | undefined,
     path: string,
     method: string,
     resource: Resource,

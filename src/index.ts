@@ -7,14 +7,15 @@ import {
 } from 'fastify';
 import { Tags, generateOpenapiSchemas } from './resources/openapi';
 import {
-  Handlers,
+  HandlerMethods,
   Methods,
   PathBuilder,
   Route,
   Routes,
   RoutesBuilder,
   CreateRoutes,
-  routesToPaths
+  routesToPaths,
+  Handlers
 } from './resources/routes';
 import {
   Resource,
@@ -36,13 +37,13 @@ export interface LoadSpecOptions {
   resources: Resources;
   tags?: Tags;
   routes?: Routes[];
-  handlers?: Handlers;
+  handlers?: HandlerMethods;
 }
 
 export interface FastAPIOptions {
   routes?: Routes[];
   tags?: Tags;
-  handlers?: { [path: string]: Handlers };
+  handlers?: Handlers;
   schema?: string | Schema;
   resources?: Resources;
   database?: DatabaseOptions;
@@ -85,7 +86,7 @@ export class FastAPI {
     list: ['list']
   };
   handlers: {
-    [path: string]: Handlers;
+    [path: string]: HandlerMethods;
   };
   private schema?: string | Schema;
   resources: Resources = {};
@@ -307,7 +308,7 @@ export class FastAPI {
     this.routes.push(routes);
   }
 
-  addHandlers(handlers: { [path: string]: Handlers }): void {
+  addHandlers(handlers: Handlers): void {
     this.handlers = { ...this.handlers, ...handlers };
   }
 
@@ -369,7 +370,7 @@ export class FastAPI {
 export { PathBuilder, RoutesBuilder } from './resources/routes';
 export { makeResponses } from './resources/openapi/responses';
 export { SchemaBuilder, AutoColumn } from './resources/sequelize/builder';
-export { SequelizeModel as Model, Tags, log, Handlers };
+export { SequelizeModel as Model, Tags, log, HandlerMethods };
 export { FastifyReply as Reply, FastifyRequest as Request };
 export { DataTypes } from 'sequelize';
 

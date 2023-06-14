@@ -1,10 +1,10 @@
 import { RouteHandler } from 'fastify';
-import { Handlers, InnerOperation } from '../routes';
+import { HandlerMethods, InnerOperation } from '../routes';
 import { OpenAPI, Operation, Response, Parameter, Path } from './openapiTypes';
 
 export function extractByMethod(
   method: string,
-  target: InnerOperation | Handlers | Path
+  target: InnerOperation | HandlerMethods | Path
 ): Operation | RouteHandler | undefined {
   if (method === 'get') {
     return target.get;
