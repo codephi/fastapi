@@ -25,11 +25,11 @@ export enum MethodType {
 }
 
 export interface HandlerMethods {
-  get?: RouteHandler;
-  post?: RouteHandler;
-  put?: RouteHandler;
-  delete?: RouteHandler;
-  patch?: RouteHandler;
+  getAll?: RouteHandler;
+  getOne?: RouteHandler;
+  create?: RouteHandler;
+  update?: RouteHandler;
+  remove?: RouteHandler;
 }
 
 export interface Handlers {
@@ -301,10 +301,36 @@ export class CreateRoutes {
     operation: Operation
   ): RouteHandler {
     if (handlers !== undefined && handlers[path] !== undefined) {
-      return extractByMethod(method, handlers[path]) as RouteHandler;
-    }
+      const handler = handlers[path];
 
-    return getRouteHandler(method, resource, operation);
+      if (method === 'get') {
+        if (operation['x-admin'].types.includes('list')) {
+          return handler.getAll ?? getAll(resource);
+        } else {
+          return handler.getOne ?? getOne(resource);
+        }
+      } else if (method === 'post') {
+        return handler.create ?? create(resource);
+      } else if (method === 'put') {
+        return handler.update ?? update(resource);
+      } else if (method === 'delete') {
+        return handler.remove ?? remove(resource);
+      }
+    } else {
+      if (method === 'get') {
+        if (operation['x-admin'].types.includes('list')) {
+          return getAll(resource);
+        } else {
+          return getOne(resource);
+        }
+      } else if (method === 'post') {
+        return create(resource);
+      } else if (method === 'put') {
+        return update(resource);
+      } else if (method === 'delete') {
+        return remove(resource);
+      }
+    }
   }
 
   createRouteInner({ path, method, operation, handler }: RouterInner) {
@@ -431,22 +457,6 @@ export function resolveResponses(responses: Responses) {
   });
 
   return newResponses;
-}
-
-function getRouteHandler(method: string, resource: any, operation: any) {
-  if (method === 'get') {
-    if (operation['x-admin'].types.includes('list')) {
-      return getAll(resource);
-    } else {
-      return getOne(resource);
-    }
-  } else if (method === 'post') {
-    return create(resource);
-  } else if (method === 'put') {
-    return update(resource);
-  } else if (method === 'delete') {
-    return remove(resource);
-  }
 }
 
 function resolvePath(path: string) {

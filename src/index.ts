@@ -370,7 +370,7 @@ export class FastAPI {
 export { PathBuilder, RoutesBuilder } from './resources/routes';
 export { makeResponses } from './resources/openapi/responses';
 export { SchemaBuilder, AutoColumn } from './resources/sequelize/builder';
-export { SequelizeModel as Model, Tags, log, HandlerMethods };
+export { SequelizeModel as Model, Tags, log, HandlerMethods, Handlers };
 export { FastifyReply as Reply, FastifyRequest as Request };
 export { DataTypes } from 'sequelize';
 
