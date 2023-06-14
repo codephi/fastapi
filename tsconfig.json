@@ -6,9 +6,6 @@
     "outDir": "./dist",
     "resolveJsonModule": true,
     "noImplicitAny": true,
-    "declaration": true,
-    "sourceMap": true,
-    "declarationMap": true
   },
   "include": [
     "src/**/*.ts"

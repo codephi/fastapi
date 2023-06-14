@@ -264,33 +264,14 @@ export class FastAPI {
   }
 
   async connect(): Promise<void> {
-    const { database } = this;
-
-    if (this.database.sync !== undefined) {
-      const createTablesConfig: SyncOptions = {};
-
-      if (database.sync.alter === true) {
-        createTablesConfig.alter = true;
-      } else if (database.sync.force === true) {
-        createTablesConfig.force = true;
-      }
-
-      await this.testDatabaseConnection();
-      await this.createTables(createTablesConfig);
-    }
+    await this.testDatabaseConnection();
+    await this.createTables();
   }
 
-  private async createTables(
-    config: SyncOptions,
-    closeConnection = false
-  ): Promise<void> {
+  private async createTables(): Promise<void> {
     try {
-      await this.sequelize.sync(config);
+      await this.sequelize.sync(this.database.sync);
       log.info('All tables created.');
-
-      if (closeConnection) {
-        await this.sequelize.close();
-      }
     } catch (error) {
       log.error('Error creating tables:', error);
       await this.sequelize.close();
@@ -388,6 +369,7 @@ export { makeResponses } from './resources/openapi/responses';
 export { SchemaBuilder, AutoColumn } from './resources/sequelize/builder';
 export { SequelizeModel as Model, Tags, log, Handlers };
 export { FastifyReply as Reply, FastifyRequest as Request };
+export { DataTypes } from 'sequelize';
 
 export function modelName(text: string): string {
   const name = text.charAt(0).toUpperCase();
