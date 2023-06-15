@@ -4,7 +4,9 @@
         "target": "es2022",
         "module": "commonjs",
         "outDir": "dist",
-        "declaration": true
+        "declaration": true,
+        "moduleResolution": "node",
+        "declarationDir": "dist/types",
     },
     "include": [
         "src/**/*.ts"
