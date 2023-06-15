@@ -40,6 +40,10 @@ export interface LoadSpecOptions {
   handlers?: HandlerMethods;
 }
 
+export interface DatabaseOptions extends Options {
+  uri?: string;
+}
+
 export interface FastAPIOptions {
   routes?: Routes[];
   tags?: Tags;
@@ -50,18 +54,6 @@ export interface FastAPIOptions {
   cors?: Cors;
   forceCreateTables?: boolean;
   listen?: FastifyListenOptions;
-}
-
-export interface DatabaseOptions {
-  database?: string | null;
-  username?: string | null;
-  password?: string | null;
-  sync?: SyncOptions;
-  testConnection?: boolean;
-  host?: string;
-  port?: number;
-  dialect?: string;
-  logging?: (sql: string) => void;
 }
 
 export interface Cors {
@@ -92,17 +84,16 @@ export class FastAPI {
   resources: Resources = {};
   models: Models = {};
   database: DatabaseOptions = {
-    database: process.env.DB_NAME || process.env.DATABASE_NAME || null,
-    username: process.env.DB_USER || process.env.DATABASE_USER || null,
-    password: process.env.DB_PASSWORD || process.env.DATABASE_PASSWORD || null,
+    database: null,
+    username: null,
+    password: null,
     host: 'localhost',
     port: 5432,
     dialect: 'postgres',
     logging: undefined,
     sync: {
       force: false
-    },
-    testConnection: true
+    }
   };
   cors: Cors = {
     origin: '*'
@@ -157,14 +148,13 @@ export class FastAPI {
   private loadDatabaseInstance() {
     if (this.databaseLoaded) return;
 
-    const { database, password, username, ...options } = this.database;
+    const { uri, ...database } = this.database;
 
-    this.sequelize = new Sequelize(
-      database,
-      username,
-      password,
-      options as Options
-    );
+    if (uri) {
+      this.sequelize = new Sequelize(uri, database);
+    } else {
+      this.sequelize = new Sequelize(this.database);
+    }
 
     this.databaseLoaded = true;
   }
@@ -261,7 +251,7 @@ export class FastAPI {
     this.loadRoutes();
   }
 
-  setDatabase(database: DatabaseOptions): FastAPI {
+  setDatabase(database: Options): FastAPI {
     this.database = { ...this.database, ...database };
     return this;
   }
