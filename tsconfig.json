@@ -3,6 +3,8 @@
         "baseUrl": "./",
         "target": "es2022",
         "module": "commonjs",
+        "outDir": "dist",
+        "declaration": true
     },
     "include": [
         "src/**/*.ts"

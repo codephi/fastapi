@@ -2,7 +2,7 @@
   "name": "@codephi/fastapi",
   "version": "0.1.5",
   "description": "FastAPI is a powerful library that simplifies the creation of RESTful APIs using Fastify and Sequelize. It allows you to define your database tables and API routes in a JSON file, making the development process faster and more efficient.",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "test": "jest --runInBand --detectOpenHandles --config=jest.config.js",
     "build": "tsc"
