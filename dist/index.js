@@ -53,7 +53,7 @@ class FastAPI {
         delete: ['delete'],
         list: ['list']
     };
-    handlers;
+    handlers = {};
     schema;
     resources = {};
     models = {};

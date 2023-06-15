@@ -144,7 +144,8 @@ function getSequelizeDataType(column) {
         return sequelize_1.DataTypes.UUID;
     }
     else if (columnType === 'ENUM') {
-        return sequelize_1.DataTypes.ENUM.apply(null, attributes.values);
+        const values = attributes.values;
+        return sequelize_1.DataTypes.ENUM.apply(null, values);
     }
     else if (columnType === 'JSON' || columnType === 'JSONTYPE') {
         return sequelize_1.DataTypes.JSON;
