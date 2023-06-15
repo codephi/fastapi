@@ -77,9 +77,7 @@ export class FastAPI {
     delete: ['delete'],
     list: ['list']
   };
-  handlers: {
-    [path: string]: HandlerMethods;
-  };
+  handlers: Handlers = {};
   private schema?: string | Schema;
   resources: Resources = {};
   models: Models = {};
