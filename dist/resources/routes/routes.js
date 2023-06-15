@@ -1,9 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.remove = exports.update = exports.create = exports.getOne = exports.getAll = void 0;
 const superFilter_1 = require("./superFilter");
 const events_1 = require("../events");
-const log_1 = require("../log");
+const log_1 = __importDefault(require("../log"));
 function getAll(resource) {
     return async (request, reply) => {
         try {

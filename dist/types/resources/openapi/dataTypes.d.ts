@@ -7,10 +7,10 @@ interface DataTypes {
 export declare const dataTypes: DataTypes;
 export declare const convertType: (sequelizeType: string) => {
     type: string;
-    format?: string;
+    format?: string | undefined;
 } | {
     maxLength: number;
     type: string;
-    format?: string;
+    format?: string | undefined;
 };
 export {};

@@ -1,7 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.superFilter = void 0;
-const pt_BR_1 = require("../../dicts/pt_BR");
+const pt_BR_1 = __importDefault(require("../../dicts/pt_BR"));
 const sequelize_1 = require("sequelize");
 const { iLike, or } = sequelize_1.Op;
 const spellingDictionary = pt_BR_1.default;
