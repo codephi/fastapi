@@ -1,9 +1,9 @@
-import * as dictPtBr from '../../dicts/pt_BR.json';
+import dictPtBr from '../../dicts/pt_BR';
 import { Op } from 'sequelize';
 
 const { iLike, or } = Op;
 
-const spellingDictionary: { [key: string]: string } = dictPtBr;
+const spellingDictionary = dictPtBr;
 
 function fixText(text: string): string[] {
   const words = text.toLowerCase().split(' ');

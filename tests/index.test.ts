@@ -15,10 +15,6 @@ describe('FastAPI', () => {
       fastAPI.api.log.level = 'silent';
 
       expect(fastAPI).toBeInstanceOf(FastAPI);
-      expect(fastAPI.database.database).toBeNull();
-      expect(fastAPI.database.username).toBeNull();
-      expect(fastAPI.database.password).toBeNull();
-      expect(fastAPI.database.testConnection).toBe(true);
     });
 
     it('should initialize FastAPI with the passed parameters', () => {
@@ -28,14 +24,12 @@ describe('FastAPI', () => {
       fastAPI.setDatabase({
         database: 'testDB',
         username: 'testUser',
-        password: 'testPassword',
-        testConnection: true
+        password: 'testPassword'
       });
 
       expect(fastAPI.database.database).toEqual('testDB');
       expect(fastAPI.database.username).toEqual('testUser');
       expect(fastAPI.database.password).toEqual('testPassword');
-      expect(fastAPI.database.testConnection).toBe(true);
     });
     it('should add a schema for hello', async () => {
       const fastAPI = new FastAPI();

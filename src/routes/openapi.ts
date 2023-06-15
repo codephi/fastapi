@@ -53,6 +53,8 @@ export function objectToJSONSchema7(json: any): JSONSchema7 {
     const value = json[key];
     const valueType = typeof value;
 
+    if (schema.properties === undefined) continue;
+
     if (valueType === 'number') {
       schema.properties[key] = { type: 'number' };
     } else if (valueType === 'bigint') {

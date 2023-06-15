@@ -39,7 +39,7 @@ export interface Handlers {
 export interface ResourceProps {
   paths: Paths;
   handlers?: Handlers;
-  resource?: Resource;
+  resource: Resource;
 }
 
 export interface InnerOperation {
@@ -304,7 +304,10 @@ export class CreateRoutes {
       const handler = handlers[path];
 
       if (method === 'get') {
-        if (operation['x-admin'].types.includes('list')) {
+        if (
+          operation['x-admin'] &&
+          operation['x-admin'].types.includes('list')
+        ) {
           return handler.getAll ?? getAll(resource);
         } else {
           return handler.getOne ?? getOne(resource);
@@ -318,7 +321,10 @@ export class CreateRoutes {
       }
     } else {
       if (method === 'get') {
-        if (operation['x-admin'].types.includes('list')) {
+        if (
+          operation['x-admin'] &&
+          operation['x-admin'].types.includes('list')
+        ) {
           return getAll(resource);
         } else {
           return getOne(resource);
@@ -331,6 +337,8 @@ export class CreateRoutes {
         return remove(resource);
       }
     }
+
+    throw new Error(`Handler not found for ${method} ${path}`);
   }
 
   createRouteInner({ path, method, operation, handler }: RouterInner) {

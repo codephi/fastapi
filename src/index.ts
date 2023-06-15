@@ -84,9 +84,6 @@ export class FastAPI {
   resources: Resources = {};
   models: Models = {};
   database: DatabaseOptions = {
-    database: null,
-    username: null,
-    password: null,
     host: 'localhost',
     port: 5432,
     dialect: 'postgres',
@@ -263,11 +260,11 @@ export class FastAPI {
 
   private async createTables(): Promise<void> {
     try {
-      await this.sequelize.sync(this.database.sync);
+      await this.sequelize?.sync(this.database.sync);
       log.info('All tables created.');
     } catch (error) {
       log.error('Error creating tables:', error);
-      await this.sequelize.close();
+      await this.sequelize?.close();
     }
   }
 
