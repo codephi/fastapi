@@ -36,6 +36,7 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git checkout -b main
           git add dist/
           git commit -m "Update dist folder for version ${{ steps.get_version.outputs.version }}"
