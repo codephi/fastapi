@@ -28,7 +28,7 @@ jobs:
       - name: Check if Version Exists
         id: check_version
         run: |
-          if git rev-parse "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+          if git rev-parse "${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
             echo "A tag v${{ steps.get_version.outputs.version }} already exists."
             echo "Version already exists. Failing the job."
             exit 1
