@@ -25,6 +25,7 @@ jobs:
       - name: Build Application
         shell: bash
         run: |
+            ls
             npm install
             npm run build
             echo "Dist files"
