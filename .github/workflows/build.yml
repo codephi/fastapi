@@ -25,18 +25,7 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Check if Version Exists
-        id: check_version
-        run: |
-          if git rev-parse "${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
-            echo "A tag v${{ steps.get_version.outputs.version }} already exists."
-            echo "version_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "version_exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Build Application
-        if: steps.check_version.outputs.version_exists == 'false'
         shell: bash
         run: |
             ls
@@ -44,7 +33,6 @@ jobs:
             npm run build
 
       - name: Commit Changes to Main Branch
-        if: steps.check_version.outputs.version_exists == 'false'
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
@@ -57,7 +45,6 @@ jobs:
         
       - name: Create Release
         id: create_release
-        if: steps.check_version.outputs.version_exists == 'false'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,7 +55,6 @@ jobs:
           prerelease: false
         
       - name: Merge to Main
-        if: steps.check_version.outputs.version_exists == 'false'
         run: |
             git fetch origin main
             git checkout main
