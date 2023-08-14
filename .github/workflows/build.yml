@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - pre-release
+  pull_request:
+    branches:
+      - pre-release
 
 jobs:
   build:
@@ -27,7 +30,7 @@ jobs:
         run: |
             ls
             npm install
-            npm run build
+            npx -p typescript tsc --init
             echo "Dist files"
             ls dist/
 
