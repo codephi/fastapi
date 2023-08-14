@@ -30,7 +30,7 @@ jobs:
         run: |
             ls
             npm install
-            npx -p typescript tsc --init
+            npm run build
             echo "Dist files"
             ls dist/
 
