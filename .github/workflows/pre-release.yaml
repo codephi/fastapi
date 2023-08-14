@@ -25,9 +25,6 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Print Version
-        run: echo ${{ steps.get_version.outputs.version }}
-
       - name: Build Application
         run: |
           npm install
@@ -42,6 +39,7 @@ jobs:
       - name: Check if Branch Exists
         id: branch_check
         run: |
+          git rev-parse --quiet --verify "refs/heads/v${{ steps.get_version.outputs.version }}"
           if git rev-parse --quiet --verify "refs/heads/v${{ steps.get_version.outputs.version }}" >/dev/null; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
