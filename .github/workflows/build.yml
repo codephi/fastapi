@@ -1,0 +1,39 @@
+name: Pre-Release Workflow
+
+on:
+  push:
+    branches:
+      - pre-release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      
+    - name: Set Up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        
+    - name: Install Dependencies
+      run: npm install
+      
+    - name: Get App Version
+      id: get_version
+      run: echo "::set-output name=version::$(node -p "require('./package.json').version")"
+      
+    - name: Build Application
+      run: npm run build
+      
+    - name: Commit Changes to Main Branch
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+        git checkout main
+        git add dist/
+        git commit -m "Update dist folder for version ${{ steps.get_version.outputs.version }}"
+        git tag -a "v${{ steps.get_version.outputs.version }}" -m "Version ${{ steps.get_version.outputs.version }}"
+        git push origin main --follow-tags
