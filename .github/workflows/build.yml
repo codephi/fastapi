@@ -23,11 +23,10 @@ jobs:
       run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
       
     - name: Build Application
-      shell: bash
       run:
-        npm install 
-        npm run build
-        echo "Dist files"
+        npm install && \
+        npm run build && \
+        echo "Dist files" && \
         ls dist/
       
     - name: Commit Changes to Main Branch
