@@ -32,7 +32,7 @@ jobs:
             npm install
             npm run build
             echo "Dist files"
-            ls dicts
+            ls dist
 
       - name: Commit Changes to Main Branch
         run: |
