@@ -27,6 +27,8 @@ jobs:
       run:
         npm install 
         npm run build
+        echo "Dist files"
+        ls dist/
       
     - name: Commit Changes to Main Branch
       run: |
