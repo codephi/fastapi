@@ -40,7 +40,6 @@ jobs:
       - name: Check if Branch Exists
         id: branch_check
         run: |
-          git rev-parse --quiet --verify "refs/heads/v${{ steps.get_version.outputs.version }}"
           if git ls-remote --heads origin v${{ steps.get_version.outputs.version }} >/dev/null; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
