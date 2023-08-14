@@ -110,6 +110,16 @@ export class SchemaBuilder {
     this.auto = props.auto || [];
   }
 
+  addTable(table: TableBuilder): this {
+    this.schema.tables.push({
+      name: table.name,
+      columns: table.columns,
+      search: table.search
+    });
+
+    return this;
+  }
+
   table(table: string): TableBuilder {
     return new TableBuilder({
       name: table,
