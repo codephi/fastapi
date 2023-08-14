@@ -1,0 +1,62 @@
+name: Pre-Release Workflow
+
+on:
+  push:
+    branches:
+      - pre-release
+  pull_request:
+    branches:
+      - pre-release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Get App Version
+        id: get_version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Build Application
+        run: |
+          npm install
+          npm run build
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+    
+      - name: Check if Branch Exists
+        id: branch_check
+        run: |
+          if git rev-parse --quiet --verify "refs/heads/v${{ steps.get_version.outputs.version }}" >/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout
+        if: steps.branch_check.outputs.exists == 'true'
+        run: |
+            git checkout v${{ steps.get_version.outputs.version }}
+      
+      - name: Create Branch
+        if: steps.branch_check.outputs.exists == 'false'
+        run: |
+          git checkout -b v${{ steps.get_version.outputs.version }}
+
+      - name: Commit Changes
+        run: |
+          git add dist
+          git commit -m "Commit message"
+          git push origin v${{ steps.get_version.outputs.version }}

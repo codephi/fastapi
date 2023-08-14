@@ -1,12 +1,9 @@
-name: Pre-Release Workflow
+name: Release Workflow
 
 on:
-  push:
-    branches:
-      - pre-release
   pull_request:
     branches:
-      - pre-release
+      - main
 
 jobs:
   build:
@@ -25,18 +22,21 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Build Application
-        shell: bash
-        run: |
-            ls
-            npm install
-            npm run build
-
       - name: Commit Changes to Main Branch
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git checkout -b v${{ steps.get_version.outputs.version }}
-          git add dist/
-          git push origin v${{ steps.get_version.outputs.version }} 
+          git tag v${{ steps.get_version.outputs.version }}
+          git push origin main --tags
+        
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: Release ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
