@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.modelName = exports.DataTypes = exports.log = exports.Model = exports.AutoColumn = exports.SchemaBuilder = exports.makeResponses = exports.RoutesBuilder = exports.PathBuilder = exports.FastAPI = void 0;
+exports.modelName = exports.DataTypes = exports.log = exports.Model = exports.ColumnType = exports.TableBuilder = exports.AutoColumn = exports.SchemaBuilder = exports.makeResponses = exports.RoutesBuilder = exports.PathBuilder = exports.FastAPI = void 0;
 const serve_1 = __importDefault(require("./middle/serve"));
 const openapi_1 = require("./resources/openapi");
 const routes_1 = require("./resources/routes");
@@ -279,8 +279,11 @@ Object.defineProperty(exports, "makeResponses", { enumerable: true, get: functio
 var builder_1 = require("./resources/sequelize/builder");
 Object.defineProperty(exports, "SchemaBuilder", { enumerable: true, get: function () { return builder_1.SchemaBuilder; } });
 Object.defineProperty(exports, "AutoColumn", { enumerable: true, get: function () { return builder_1.AutoColumn; } });
-var sequelize_3 = require("sequelize");
-Object.defineProperty(exports, "DataTypes", { enumerable: true, get: function () { return sequelize_3.DataTypes; } });
+Object.defineProperty(exports, "TableBuilder", { enumerable: true, get: function () { return builder_1.TableBuilder; } });
+var sequelize_3 = require("./resources/sequelize");
+Object.defineProperty(exports, "ColumnType", { enumerable: true, get: function () { return sequelize_3.ColumnType; } });
+var sequelize_4 = require("sequelize");
+Object.defineProperty(exports, "DataTypes", { enumerable: true, get: function () { return sequelize_4.DataTypes; } });
 function modelName(text) {
     const name = text.charAt(0).toUpperCase();
     // se terminar com s, remove a ultima letra

@@ -8,9 +8,25 @@ export interface Table {
     columns: Column[];
     search?: string[];
 }
+export declare enum ColumnType {
+    STRING = "string",
+    CHAR = "char",
+    TEXT = "text",
+    DATE = "date",
+    TIME = "time",
+    BOOLEAN = "boolean",
+    UUID = "uuid",
+    ENUM = "enum",
+    JSON = "json",
+    INTEGER = "integer",
+    INT = "int",
+    SERIAL = "int",
+    FLOAT = "float",
+    CODE = "code"
+}
 export interface Column {
     name: string;
-    type: string;
+    type: ColumnType;
     autoIncrement?: boolean;
     values?: string[];
     min?: number;

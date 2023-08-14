@@ -1,8 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateResourcesFromJSON = exports.SequelizeModel = void 0;
+exports.generateResourcesFromJSON = exports.SequelizeModel = exports.ColumnType = void 0;
 const sequelize_1 = require("sequelize");
 const utils_1 = require("../openapi/utils");
+var ColumnType;
+(function (ColumnType) {
+    ColumnType["STRING"] = "string";
+    ColumnType["CHAR"] = "char";
+    ColumnType["TEXT"] = "text";
+    ColumnType["DATE"] = "date";
+    ColumnType["TIME"] = "time";
+    ColumnType["BOOLEAN"] = "boolean";
+    ColumnType["UUID"] = "uuid";
+    ColumnType["ENUM"] = "enum";
+    ColumnType["JSON"] = "json";
+    ColumnType["INTEGER"] = "integer";
+    ColumnType["INT"] = "int";
+    ColumnType["SERIAL"] = "int";
+    ColumnType["FLOAT"] = "float";
+    ColumnType["CODE"] = "code";
+})(ColumnType || (exports.ColumnType = ColumnType = {}));
 class SequelizeModel extends sequelize_1.Model {
 }
 exports.SequelizeModel = SequelizeModel;

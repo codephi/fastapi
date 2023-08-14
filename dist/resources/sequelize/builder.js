@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchemaBuilder = exports.AutoColumn = exports.TableBuilder = void 0;
+const index_1 = require("./index");
 class TableBuilder {
     name;
     columns = [];
@@ -33,7 +34,7 @@ class TableBuilder {
             !this.columnExists('createdAt')) {
             this.column({
                 name: 'createdAt',
-                type: 'date',
+                type: index_1.ColumnType.DATE,
                 imutable: true
             });
         }
@@ -41,13 +42,13 @@ class TableBuilder {
             !this.columnExists('updatedAt')) {
             this.column({
                 name: 'updatedAt',
-                type: 'date'
+                type: index_1.ColumnType.DATE
             });
         }
         if (this.auto.includes(AutoColumn.ID) && !this.columnExists('id')) {
             this.column({
                 name: 'id',
-                type: 'int',
+                type: index_1.ColumnType.INT,
                 autoIncrement: true,
                 primaryKey: true
             });
