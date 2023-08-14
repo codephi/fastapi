@@ -27,7 +27,7 @@ jobs:
         run: |
             npm install
             npm install typescript
-            npx tsx
+            npx tsc
             echo "Dist files"
             pipels dist/
 
