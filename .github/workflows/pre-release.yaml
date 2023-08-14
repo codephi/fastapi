@@ -25,6 +25,9 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Print Version
+        run: echo ${{ steps.get_version.outputs.version }}
+
       - name: Build Application
         run: |
           npm install
@@ -60,5 +63,3 @@ jobs:
           git add dist
           git commit -m "Commit message"
           git push origin v${{ steps.get_version.outputs.version }}
-
-          
