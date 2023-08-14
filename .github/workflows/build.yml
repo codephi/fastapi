@@ -24,10 +24,11 @@ jobs:
 
       - name: Build Application
         shell: bash
-        run: npm install
-          npm run build
-          echo "Dist files"
-          ls dist/
+        run: |
+            npm install
+            npm run build
+            echo "Dist files"
+            pipels dist/
 
       - name: Commit Changes to Main Branch
         run: |
