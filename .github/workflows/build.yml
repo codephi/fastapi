@@ -41,4 +41,4 @@ jobs:
           git add dist/
           git commit -m "Update dist folder for version ${{ steps.get_version.outputs.version }}"
           git tag -a "v${{ steps.get_version.outputs.version }}" -m "Version ${{ steps.get_version.outputs.version }}"
-          git push origin main --follow-tags
+          git push origin main --tags
