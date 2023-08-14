@@ -60,3 +60,5 @@ jobs:
           git add dist
           git commit -m "Commit message"
           git push origin v${{ steps.get_version.outputs.version }}
+
+          
