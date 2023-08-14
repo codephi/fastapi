@@ -26,10 +26,9 @@ jobs:
         shell: bash
         run: |
             npm install
-            npm install typescript
-            npx tsc
+            npm run build
             echo "Dist files"
-            pipels dist/
+            ls dist/
 
       - name: Commit Changes to Main Branch
         run: |
