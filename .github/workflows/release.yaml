@@ -21,6 +21,11 @@ jobs:
         with:
           node-version: 18
 
+      - name: Build
+        run: | 
+          npm install
+          npm run build
+
       - name: Get App Version
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
