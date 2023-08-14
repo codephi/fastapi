@@ -39,25 +39,4 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git checkout -b v${{ steps.get_version.outputs.version }}
           git add dist/
-          git commit -m "Update dist folder for version ${{ steps.get_version.outputs.version }}"
-          git tag -a "${{ steps.get_version.outputs.version }}" -m "Version ${{ steps.get_version.outputs.version }}"
-          git push origin v${{ steps.get_version.outputs.version }} --tags
-        
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get_version.outputs.version }}
-          release_name: Release ${{ steps.get_version.outputs.version }}
-          draft: false
-          prerelease: false
-        
-      - name: Merge to Main
-        run: |
-            git fetch origin main
-            git checkout main
-            git merge v${{ steps.get_version.outputs.version }} --no-ff -m "Merge pre-release v${{ steps.get_version.outputs.version }} into main"
-            git push origin main
-  
+          git push origin v${{ steps.get_version.outputs.version }} 
