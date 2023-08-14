@@ -359,6 +359,7 @@ export {
   AutoColumn,
   TableBuilder
 } from './resources/sequelize/builder';
+export { ColumnType } from './resources/sequelize';
 export { SequelizeModel as Model, Tags, log, HandlerMethods, Handlers };
 export { FastifyReply as Reply, FastifyRequest as Request };
 export { DataTypes } from 'sequelize';

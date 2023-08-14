@@ -7,6 +7,7 @@ import {
   SchemaBuilder
 } from '../src/index';
 import { Sequelize } from 'sequelize';
+import { ColumnType } from '../src/resources/sequelize';
 
 describe('FastAPI', () => {
   describe('Lib and Loaders', () => {
@@ -40,22 +41,22 @@ describe('FastAPI', () => {
         .table('hello')
         .column({
           name: 'id',
-          type: 'integer',
+          type: ColumnType.INT,
           primaryKey: true,
           autoIncrement: true
         })
         .column({
           name: 'message',
-          type: 'string',
+          type: ColumnType.STRING,
           allowNull: false
         })
         .column({
           name: 'createdAt',
-          type: 'date'
+          type: ColumnType.DATE
         })
         .column({
           name: 'updatedAt',
-          type: 'date'
+          type: ColumnType.DATE
         })
         .build();
 
@@ -92,7 +93,7 @@ describe('FastAPI', () => {
       fastAPI.get('/', {
         responses: makeResponses('init', 222, {
           message: {
-            type: 'string'
+            type: ColumnType.STRING
           }
         }),
         handler: (_request: FastifyRequest, reply: FastifyReply) => {
@@ -122,7 +123,7 @@ describe('FastAPI', () => {
         .get({
           responses: makeResponses('init', 222, {
             message: {
-              type: 'string'
+              type: ColumnType.STRING
             }
           }),
           handler: (_request: FastifyRequest, reply: FastifyReply) => {
@@ -165,13 +166,13 @@ describe('FastAPI', () => {
         .table('messages')
         .column({
           name: 'message',
-          type: 'code',
+          type: ColumnType.CODE,
           allowNull: false
         })
         .table('chats')
         .column({
           name: 'messageId',
-          type: 'int',
+          type: ColumnType.INT,
           allowNull: false,
           reference: 'messages'
         })

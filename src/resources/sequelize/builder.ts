@@ -1,4 +1,4 @@
-import { Column, Schema } from './index';
+import { Column, ColumnType, Schema } from './index';
 
 export interface TableBuilderProps {
   name: string;
@@ -46,7 +46,7 @@ export class TableBuilder {
     ) {
       this.column({
         name: 'createdAt',
-        type: 'date',
+        type: ColumnType.DATE,
         imutable: true
       });
     }
@@ -57,14 +57,14 @@ export class TableBuilder {
     ) {
       this.column({
         name: 'updatedAt',
-        type: 'date'
+        type: ColumnType.DATE
       });
     }
 
     if (this.auto.includes(AutoColumn.ID) && !this.columnExists('id')) {
       this.column({
         name: 'id',
-        type: 'int',
+        type: ColumnType.INT,
         autoIncrement: true,
         primaryKey: true
       });
@@ -109,17 +109,7 @@ export class SchemaBuilder {
   constructor(props: SchemaBuilderProps = {}) {
     this.auto = props.auto || [];
   }
-
-  addTable(table: TableBuilder): this {
-    this.schema.tables.push({
-      name: table.name,
-      columns: table.columns,
-      search: table.search
-    });
-
-    return this;
-  }
-
+  
   table(table: string): TableBuilder {
     return new TableBuilder({
       name: table,
