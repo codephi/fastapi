@@ -25,18 +25,7 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
       
-      - name: Check if Branch Exists
-        id: branch_check
-        run: |
-          git ls-remote --heads origin v${{ steps.get_version.outputs.version }} >/dev/null;
-          if git ls-remote --heads origin v${{ steps.get_version.outputs.version }} >/dev/null; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Commit Changes to Main Branch
-        if: steps.branch_check.outputs.exists == 'false'
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
@@ -48,7 +37,6 @@ jobs:
           git push origin main --tags
         
       - name: Create Release
-        if: steps.branch_check.outputs.exists == 'false'
         id: create_release
         uses: actions/create-release@v1
         env:
