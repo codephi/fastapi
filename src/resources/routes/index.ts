@@ -341,6 +341,20 @@ export class CreateRoutes {
     throw new Error(`Handler not found for ${method} ${path}`);
   }
 
+  getMediaType(operation: Operation): string {
+    if (operation.requestBody !== undefined) {
+      const requestBody = operation.requestBody as RequestBody;
+
+      const keys = Object.keys(requestBody.content);
+
+      if (keys.length > 0) {
+        return keys[0];
+      }
+    }
+
+    return 'application/json';
+  }
+
   createRouteInner({ path, method, operation, handler }: RouterInner) {
     const route = {
       method: method.toUpperCase(),
@@ -352,8 +366,9 @@ export class CreateRoutes {
     } as RouteOptions;
 
     if (route.schema !== undefined && operation.requestBody !== undefined) {
+      const mediaType = this.getMediaType(operation);
       const responseBody = operation.requestBody as RequestBody;
-      const schema = responseBody.content['application/json'].schema as Schema;
+      const schema = responseBody.content[mediaType].schema as Schema;
 
       route.schema.body = responseToProperties(
         filterPropertiesRecursive(schema)
