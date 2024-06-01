@@ -22,9 +22,11 @@ jobs:
           node-version: 18
 
       - name: Build
-        run: | 
+        run: |
           npm install
           npm run build
 
       - name: Create Release
         uses: cogup/actions/lib-release@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
