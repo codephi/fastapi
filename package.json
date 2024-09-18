@@ -14,7 +14,7 @@
     "@types/json-schema": "^7.0.12",
     "@types/node": "^20.2.5",
     "@types/pino": "^7.0.5",
-    "fastify": "4.17.0",
+    "fastify": "4.28.1",
     "json-schema": "^0.4.0",
     "pino": "^8.14.1",
     "sequelize": "^6.31.1"
